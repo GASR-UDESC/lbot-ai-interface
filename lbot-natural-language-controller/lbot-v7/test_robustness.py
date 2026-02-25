@@ -47,7 +47,18 @@ PREPROCESSING_TESTS = [
     ("ande 500 milimetros para trás",       "ande 50 centímetros para trás"),
     ("ande 3 passos para frente",           "ande 225 centímetros para frente"),
     ("ande 1 jarda para direita",           "ande 91 centímetros para direita"),
-    ("mova-se 1 quilômetro para frente",    "mova-se 100000 centímetros para frente"),
+
+    # ── Clamping (values > 999 cm → 999) ──
+    ("mova-se 1 quilômetro para frente",    "mova-se 999 centímetros para frente"),
+    ("ande 10 metros para frente",          "ande 999 centímetros para frente"),
+    ("ande 50 metros para trás",            "ande 999 centímetros para trás"),
+    ("ande 1500 milímetros para frente",    "ande 150 centímetros para frente"),  # 150cm < 999, no clamp
+
+    # ── 3-digit values (should pass through unchanged) ──
+    ("ande 350 centímetros para frente",    "ande 350 centímetros para frente"),
+    ("ande 999 centímetros para trás",      "ande 999 centímetros para trás"),
+    ("gire 270 graus para esquerda",        "gire 270 graus para esquerda"),
+    ("gire 360 graus para direita",         "gire 360 graus para direita"),
 
     # ── Abbreviation expansion ──
     ("ande 40cm para frente",               "ande 40 centímetros para frente"),
@@ -55,6 +66,7 @@ PREPROCESSING_TESTS = [
     ("gire 90° para direita",               "gire 90 graus para direita"),
     ("ande 2m para frente",                 "ande 200 centímetros para frente"),
     ("ande 500mm para trás",                "ande 50 centímetros para trás"),
+    ("ande 350cm para frente",              "ande 350 centímetros para frente"),
 
     # ── Accent normalization ──
     ("ande 40 centimetros para frente",     "ande 40 centímetros para frente"),
@@ -71,6 +83,8 @@ PREPROCESSING_TESTS = [
      "mova-se 150 centímetros para frente"),
     ("ande duzentos centímetros para esquerda",
      "ande 200 centímetros para esquerda"),
+    ("ande trezentos e cinquenta centímetros para frente",
+     "ande 350 centímetros para frente"),
 
     # ── Informal normalization ──
     ("vai 40 centímetros pra frente",       None),  # vai → vá
@@ -104,6 +118,14 @@ TRANSLATION_TESTS = [
     ("vire 90 graus sentido horário",                    "R90R;"),
     ("gire 90 graus sentido anti-horário",               "R90L;"),
 
+    # ── 3-digit values ──
+    ("ande 350 centímetros para frente",                 "D350F;"),
+    ("ande 999 centímetros para trás",                   "D999B;"),
+    ("ande 500 centímetros para esquerda",               "D500L;"),
+    ("gire 270 graus para esquerda",                     "R270L;"),
+    ("gire 360 graus para direita",                      "R360R;"),
+    ("gire 120 graus para direita",                      "R120R;"),
+
     # ── Compound standard ──
     ("vá 40 centímetros para frente, depois gire 90 graus para direita",
      "D40F;R90R;"),
@@ -112,15 +134,24 @@ TRANSLATION_TESTS = [
     ("ande 50 centímetros para frente, gire 90 graus para esquerda, depois ande 20 centímetros para direita",
      "D50F;R90L;D20R;"),
 
-    # ── Multi-unit (model should handle after preprocessing) ──
+    # ── Compound with 3-digit values ──
+    ("ande 350 centímetros para frente, depois gire 270 graus para esquerda",
+     "D350F;R270L;"),
+
+    # ── Multi-unit (model should handle after preprocessing + clamping) ──
     ("ande 2 metros para frente",                        "D200F;"),
     ("ande 500 milímetros para trás",                    "D50B;"),
     ("ande 3 passos para frente",                        "D225F;"),
     ("ande 1 jarda para direita",                        "D91R;"),
 
+    # ── Clamping (values > 999 → 999) ──
+    ("ande 10 metros para frente",                       "D999F;"),
+    ("mova-se 1 quilômetro para trás",                   "D999B;"),
+
     # ── Abbreviations ──
     ("ande 40cm para frente",                            "D40F;"),
     ("gire 90° para direita",                            "R90R;"),
+    ("ande 350cm para trás",                             "D350B;"),
 
     # ── Missing accents ──
     ("ande 40 centimetros para frente",                  "D40F;"),
@@ -130,6 +161,7 @@ TRANSLATION_TESTS = [
     ("ande quarenta centímetros para frente",             "D40F;"),
     ("gire noventa graus para direita",                  "R90R;"),
     ("vá vinte e cinco centímetros para trás",           "D25B;"),
+    ("ande trezentos e cinquenta centímetros para frente", "D350F;"),
 
     # ── Informal ──
     ("vai 40 centímetros pra frente",                    "D40F;"),
@@ -138,6 +170,7 @@ TRANSLATION_TESTS = [
     # ── Combined ──
     ("vai 40cm pra frente",                              "D40F;"),
     ("ande 2m pra frente depois roda 90° pra esquerda",  "D200F;R90L;"),
+    ("vai 350cm pra frente",                             "D350F;"),
 ]
 
 

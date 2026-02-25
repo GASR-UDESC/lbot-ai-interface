@@ -204,11 +204,37 @@ def _convert_units(text: str) -> str:
             value_str = match.group(1).replace(',', '.')
             value = float(value_str)
             cm_value = round(value * f)
+            # Clamp to 999 cm (model max range)
+            cm_value = min(cm_value, 999)
             unit = "centímetro" if cm_value == 1 else "centímetros"
             return f"{cm_value} {unit}"
         
         text = re.sub(pattern, _replace, text, flags=re.IGNORECASE)
     
+    return text
+
+
+# --- Value clamping ---
+
+def _clamp_values(text: str) -> str:
+    """Clamp distance values > 999 to 999 cm.
+    
+    The model is trained on distances 1-999 cm. Any value that
+    exceeds this range (e.g. after unit conversion) is clamped.
+    
+    Examples:
+        "1000 centímetros" -> "999 centímetros"
+        "5000 centímetros" -> "999 centímetros"
+        "50 centímetros" -> "50 centímetros" (unchanged)
+    """
+    def _clamp_match(match):
+        value = int(match.group(1))
+        rest = match.group(2)
+        if value > 999:
+            return f"999{rest}"
+        return match.group(0)
+    
+    text = re.sub(r'(\d+)(\s+cent[ií]metros?)\b', _clamp_match, text)
     return text
 
 
@@ -343,8 +369,9 @@ def preprocess_input(text: str) -> str:
     3. Number words → digits
     4. Unit conversion (metros, mm, km, jardas, passos → centímetros)
     5. Abbreviation expansion (cm, °)
-    6. Accent fixes
-    7. Punctuation normalization (insert commas before connectors)
+    6. Value clamping (distances > 999 cm → 999 cm)
+    7. Accent fixes
+    8. Punctuation normalization (insert commas before connectors)
     
     Args:
         text: Raw user input
@@ -375,10 +402,13 @@ def preprocess_input(text: str) -> str:
     # 5. Abbreviation expansion (cm → centímetros, ° → graus)
     text = _expand_abbreviations(text)
     
-    # 6. Accent fixes
+    # 6. Clamp distances > 999 cm to 999
+    text = _clamp_values(text)
+    
+    # 7. Accent fixes
     text = _fix_accents(text)
     
-    # 7. Punctuation normalization
+    # 8. Punctuation normalization
     text = _normalize_punctuation(text)
     
     return text
