@@ -1,6 +1,6 @@
 # L-Bot Orchestrator
 
-Voice orchestrator for the L-Bot robot. Captures audio from a microphone and transcribes speech in real time using [Vosk](https://alphacephei.com/vosk/) — fully offline, no internet required.
+Voice orchestrator for the L-Bot robot. Captures audio from a microphone and transcribes speech in real time using [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (CTranslate2 backend) — fully offline, no internet required after model download.
 
 Designed to run on a **Raspberry Pi** with a USB microphone.
 
@@ -9,10 +9,20 @@ Designed to run on a **Raspberry Pi** with a USB microphone.
 ```
   ┌────────────┐      ┌──────────────────┐      ┌──────────────────┐
   │ Microphone │─────▶│  VoiceListener   │─────▶│  Terminal output  │
-  │ (USB/built │      │  (Vosk STT)      │      │  (transcription)  │
+  │ (USB/built │      │  (Whisper STT)   │      │  (transcription)  │
   │  -in)      │      │  16 kHz / mono   │      │                   │
   └────────────┘      └──────────────────┘      └──────────────────┘
 ```
+
+### Key Features (v0.3)
+
+- **Adaptive noise calibration** — automatically measures ambient noise on startup and sets the silence threshold accordingly.
+- **Pre-buffer ring** — keeps ~500 ms of audio before speech is detected so the first syllable is never clipped.
+- **Audio peak-normalisation** — normalises volume to –1 dBFS before transcription for consistent results regardless of mic gain.
+- **Domain-specific prompt** — primes Whisper with L-Bot robot vocabulary (directions, body parts, units) to reduce hallucinations.
+- **Silero VAD + tuned params** — faster-whisper's built-in Silero VAD with optimised thresholds for Portuguese speech.
+- **Noise burst filtering** — discards audio segments shorter than 0.4 s (clicks, pops, bumps).
+- **int8 quantisation** — 4-6× speed-up on CPU with minimal accuracy loss.
 
 > **Future:** the transcribed text will feed into `lbot-v7` (NLP seq2seq model) to translate Portuguese commands into LBML, which are then sent to the robot via `lbot-socket-control` (TCP:9999).
 
@@ -30,14 +40,11 @@ Designed to run on a **Raspberry Pi** with a USB microphone.
 # 1. Install Python dependencies
 pip install -r requirements.txt
 
-# 2. Download the Vosk model for Portuguese (~39 MB)
-bash setup_model.sh
-
-# 3. Run the voice listener
+# 2. Run the voice listener (model is auto-downloaded on first run)
 python main.py
 ```
 
-Speak in Portuguese — you'll see partial transcriptions (grey) and final results (bold) printed to the terminal.
+Speak in Portuguese — you'll see status hints (grey) and final transcriptions (bold) printed to the terminal.
 
 Press **Ctrl-C** to stop.
 
@@ -46,10 +53,13 @@ Press **Ctrl-C** to stop.
 ```
 python main.py --help
 
-  --list-devices       List available audio input devices and exit
-  --device N           Use audio input device N (see --list-devices)
-  --model-path PATH    Path to Vosk model directory
-  --sample-rate HZ     Audio sample rate (default: 16000)
+  --list-devices          List available audio input devices and exit
+  --device N              Use audio input device N (see --list-devices)
+  --model-size SIZE       tiny (~75 MB), base (~145 MB), small (~244 MB, default)
+  --sample-rate HZ        Audio sample rate (default: 16000)
+  --language LANG         BCP-47 language code (default: pt)
+  --silence-threshold F   RMS threshold for silence (0-1). Default: auto-calibrated
+  --silence-duration F    Seconds of silence to end a segment (default: 1.0)
 ```
 
 ## Raspberry Pi Setup
@@ -88,24 +98,18 @@ python main.py --help
 ### Troubleshooting (RPi)
 
 - **"No default input device":** Make sure a USB mic is connected. Run `arecord -l` to check.
-- **Low accuracy:** The small model (`vosk-model-small-pt-0.3`, 39 MB) trades accuracy for speed. For better results, download the large model (~1.8 GB):
-  ```bash
-  # Edit setup_model.sh or download manually:
-  wget https://alphacephei.com/vosk/models/vosk-model-pt-fb-v0.1.1-20220516_2113.zip
-  unzip vosk-model-pt-fb-v0.1.1-20220516_2113.zip -d models/
-  python main.py --model-path models/vosk-model-pt-fb-v0.1.1-20220516_2113
-  ```
-- **High latency:** Reduce `blocksize` in `voice_listener.py` (default 4000 ≈ 250 ms).
+- **Low accuracy:** Try the `small` model (default) for best accuracy, or `tiny` for constrained devices. You can also set `--language pt` explicitly.
+- **Clipping at the start of speech:** The pre-buffer should handle this automatically. If it persists, try lowering `--silence-threshold`.
+- **Too many false triggers:** Increase `--silence-threshold` or ensure the ambient calibration runs in a quiet environment.
+- **High latency:** Use `--model-size tiny` for fastest inference on RPi Zero 2W.
 
 ## Project Structure
 
 ```
 lbot-orchestrator/
 ├── main.py              # CLI entry-point
-├── voice_listener.py    # VoiceListener class (mic capture + Vosk STT)
-├── setup_model.sh       # Downloads the Vosk Portuguese model
+├── voice_listener.py    # VoiceListener class (mic capture + faster-whisper STT)
 ├── requirements.txt     # Python dependencies
 ├── README.md            # This file
-└── models/              # Vosk model(s) — created by setup_model.sh
-    └── vosk-model-small-pt-0.3/
+└── models/              # (legacy Vosk models — no longer used)
 ```

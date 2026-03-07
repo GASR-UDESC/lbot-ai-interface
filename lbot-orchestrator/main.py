@@ -22,7 +22,7 @@ import sounddevice as sd
 
 from voice_listener import VoiceListener
 
-DEFAULT_MODEL_SIZE = "base"
+DEFAULT_MODEL_SIZE = "small"
 DEFAULT_SAMPLE_RATE = 16_000
 
 
@@ -73,6 +73,18 @@ def parse_args() -> argparse.Namespace:
         default="pt",
         help="Código de idioma BCP-47 para o Whisper. Padrão: pt",
     )
+    parser.add_argument(
+        "--silence-threshold",
+        type=float,
+        default=None,
+        help="Threshold RMS para silêncio (0-1). Padrão: auto-calibrado.",
+    )
+    parser.add_argument(
+        "--silence-duration",
+        type=float,
+        default=1.0,
+        help="Segundos de silêncio para encerrar um segmento de fala. Padrão: 1.0",
+    )
     return parser.parse_args()
 
 
@@ -84,7 +96,7 @@ def main() -> None:
         sys.exit(0)
 
     print("╔══════════════════════════════════════════╗")
-    print("║   L-Bot Voice Orchestrator  (v0.2)       ║")
+    print("║   L-Bot Voice Orchestrator  (v0.3)       ║")
     print("║   faster-whisper  •  Offline  •  int8    ║")
     print("╚══════════════════════════════════════════╝\n")
 
@@ -93,6 +105,8 @@ def main() -> None:
         sample_rate=args.sample_rate,
         device=args.device,
         language=args.language,
+        silence_threshold=args.silence_threshold,
+        silence_duration=args.silence_duration,
     )
     listener.listen()
 
