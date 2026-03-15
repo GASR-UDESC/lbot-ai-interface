@@ -1,6 +1,12 @@
 # L-Bot Orchestrator
 
-Voice orchestrator for the L-Bot robot. Captures audio from a microphone and transcribes speech in real time using [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (CTranslate2 backend) — fully offline, no internet required after model download.
+Voice orchestrator for the L-Bot robot. Implements a full conversational loop:
+
+1. **STT** — Captures audio from a microphone and transcribes speech in real time using [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (CTranslate2 backend, offline).
+2. **LLM** — Sends transcribed text to a local LLM (via LM Studio API) for conversational responses.
+3. **TTS** — Speaks the LLM response aloud using [piper-tts](https://github.com/rhasspy/piper) (ONNX neural TTS, offline).
+
+The microphone is automatically paused during TTS playback to prevent feedback loops.
 
 Designed to run on a **Raspberry Pi** with a USB microphone.
 
@@ -8,14 +14,26 @@ Designed to run on a **Raspberry Pi** with a USB microphone.
 
 ```
   ┌────────────┐      ┌──────────────────┐      ┌──────────────────┐
-  │ Microphone │─────▶│  VoiceListener   │─────▶│  Terminal output  │
-  │ (USB/built │      │  (Whisper STT)   │      │  (transcription)  │
-  │  -in)      │      │  16 kHz / mono   │      │                   │
-  └────────────┘      └──────────────────┘      └──────────────────┘
+  │ Microphone │─────▶│  VoiceListener   │──┬──▶│  Terminal output  │
+  │ (USB/built │      │  (Whisper STT)   │  │   │  (transcription)  │
+  │  -in)      │      │  16 kHz / mono   │  │   └──────────────────┘
+  └────────────┘      └──────────────────┘  │
+       ▲                                    │   text
+       │ pause/resume                       ▼
+       │                              ┌──────────────┐
+  ┌────────────┐     streamed tokens  │   LLMClient  │
+  │  Speaker   │◀─────────────────────│  (LM Studio) │
+  │ (TTS out)  │      ┌──────────┐    └──────────────┘
+  └────────────┘◀─────│ TTSSpeaker│           │
+                      │  (piper) │◀───────────┘
+                      └──────────┘   full response
 ```
 
-### Key Features (v0.3)
+### Key Features (v0.5)
 
+- **Full conversational loop** — STT → LLM → TTS: speak to the robot, it understands and talks back.
+- **Offline TTS** — piper-tts with pt-BR neural voice (ONNX, ~40 MB). No internet required.
+- **Mic pause during TTS** — automatically pauses the microphone while the robot speaks to prevent feedback loops.
 - **Adaptive noise calibration** — automatically measures ambient noise on startup and sets the silence threshold accordingly.
 - **Pre-buffer ring** — keeps ~500 ms of audio before speech is detected so the first syllable is never clipped.
 - **Audio peak-normalisation** — normalises volume to –1 dBFS before transcription for consistent results regardless of mic gain.
@@ -40,11 +58,17 @@ Designed to run on a **Raspberry Pi** with a USB microphone.
 # 1. Install Python dependencies
 pip install -r requirements.txt
 
-# 2. Run the voice listener (model is auto-downloaded on first run)
+# 2. Download STT + TTS models
+bash setup_model.sh
+
+# 3. Start the LLM server (LM Studio, ollama, etc.)
+#    LM Studio: Developer → Start Server (port 1234)
+
+# 4. Run the voice orchestrator
 python main.py
 ```
 
-Speak in Portuguese — you'll see status hints (grey) and final transcriptions (bold) printed to the terminal.
+Speak in Portuguese — you'll see transcriptions in the terminal and hear the AI response through your speakers.
 
 Press **Ctrl-C** to stop.
 
@@ -60,6 +84,16 @@ python main.py --help
   --language LANG         BCP-47 language code (default: pt)
   --silence-threshold F   RMS threshold for silence (0-1). Default: auto-calibrated
   --silence-duration F    Seconds of silence to end a segment (default: 1.0)
+
+  LLM:
+  --no-llm                Disable LLM (STT-only mode)
+  --llm-api-base URL      LLM API URL (default: http://localhost:1234/v1)
+  --system-prompt TEXT    Custom system prompt for the LLM
+
+  TTS:
+  --no-tts                Disable TTS (text-only LLM responses)
+  --tts-model PATH        Path to piper .onnx model (default: models/pt_BR-faber-medium.onnx)
+  --tts-speaker ID        Speaker ID for multi-speaker models
 ```
 
 ## Raspberry Pi Setup
@@ -107,9 +141,15 @@ python main.py --help
 
 ```
 lbot-orchestrator/
-├── main.py              # CLI entry-point
+├── main.py              # CLI entry-point (STT + LLM + TTS loop)
 ├── voice_listener.py    # VoiceListener class (mic capture + faster-whisper STT)
+├── llm_client.py        # LLMClient class (OpenAI-compatible API, streaming)
+├── tts_speaker.py       # TTSSpeaker class (piper-tts, offline neural TTS)
 ├── requirements.txt     # Python dependencies
+├── setup_model.sh       # Download STT + TTS models
 ├── README.md            # This file
-└── models/              # (legacy Vosk models — no longer used)
+└── models/
+    ├── pt_BR-faber-medium.onnx       # piper TTS voice model (~40 MB)
+    ├── pt_BR-faber-medium.onnx.json  # piper model config
+    └── vosk-model-small-pt-0.3/      # (legacy — no longer used)
 ```

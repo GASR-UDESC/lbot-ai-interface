@@ -4,11 +4,12 @@ main.py — Entry-point for the L-Bot voice orchestrator.
 
 Captures microphone audio and transcribes it in real time using faster-whisper.
 By default, sends transcribed text to a local LLM (via LM Studio API) for
-conversational responses.  Use --no-llm for STT-only mode.
+conversational responses and speaks the response aloud using piper-tts.
 
 Usage:
-    python main.py                        # STT + LLM (default)
+    python main.py                        # STT + LLM + TTS (default)
     python main.py --no-llm               # STT only
+    python main.py --no-tts               # STT + LLM, no voice output
     python main.py --list-devices         # show available audio devices
     python main.py --device 2             # use a specific mic
     python main.py --model-size tiny      # fastest (RPi Zero 2W)
@@ -19,10 +20,13 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 import sounddevice as sd
 
 from voice_listener import VoiceListener
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
 
 DEFAULT_MODEL_SIZE = "small"
 DEFAULT_SAMPLE_RATE = 16_000
@@ -107,6 +111,25 @@ def parse_args() -> argparse.Namespace:
         help="Prompt de sistema para o LLM. Padrão: assistente genérico em português.",
     )
 
+    # ── TTS integration ────────────────────────────────────────────────────
+    parser.add_argument(
+        "--no-tts",
+        action="store_true",
+        help="Desativa síntese de voz (TTS). Respostas apenas no terminal.",
+    )
+    parser.add_argument(
+        "--tts-model",
+        type=str,
+        default=str(_SCRIPT_DIR / "models" / "pt_BR-faber-medium.onnx"),
+        help="Caminho do modelo piper .onnx. Padrão: models/pt_BR-faber-medium.onnx",
+    )
+    parser.add_argument(
+        "--tts-speaker",
+        type=int,
+        default=None,
+        help="ID do speaker para modelos multi-speaker. Padrão: speaker padrão.",
+    )
+
     return parser.parse_args()
 
 
@@ -119,14 +142,16 @@ def main() -> None:
 
     # ── Banner ─────────────────────────────────────────────────────────────
     llm_mode = not args.no_llm
+    tts_mode = llm_mode and not args.no_tts
     if llm_mode:
+        tts_label = " + TTS" if tts_mode else ""
         print("╔══════════════════════════════════════════╗")
-        print("║   L-Bot Voice Orchestrator  (v0.4)       ║")
-        print("║   faster-whisper + LLM  •  Streaming    ║")
+        print(f"║   L-Bot Voice Orchestrator  (v0.5)       ║")
+        print(f"║   STT + LLM{tts_label}  •  Streaming          ║")
         print("╚══════════════════════════════════════════╝\n")
     else:
         print("╔══════════════════════════════════════════╗")
-        print("║   L-Bot Voice Orchestrator  (v0.4)       ║")
+        print("║   L-Bot Voice Orchestrator  (v0.5)       ║")
         print("║   faster-whisper  •  Offline  •  int8    ║")
         print("╚══════════════════════════════════════════╝\n")
 
@@ -141,6 +166,26 @@ def main() -> None:
 
         llm_client = LLMClient(**llm_kwargs)
 
+    # ── TTS setup (optional) ───────────────────────────────────────────────
+    tts_speaker = None
+    if tts_mode:
+        from tts_speaker import TTSSpeaker
+
+        tts_speaker = TTSSpeaker(
+            model_path=args.tts_model,
+            speaker_id=args.tts_speaker,
+        )
+
+    # ── Voice listener (created before callbacks so closure can reference it)
+    listener = VoiceListener(
+        model_size=args.model_size,
+        sample_rate=args.sample_rate,
+        device=args.device,
+        language=args.language,
+        silence_threshold=args.silence_threshold,
+        silence_duration=args.silence_duration,
+    )
+
     # ── Callbacks ──────────────────────────────────────────────────────────
     on_result = None
     if llm_client is not None:
@@ -150,23 +195,27 @@ def main() -> None:
                 return
             print(f"\r\033[K\033[1m  🗣 {text}\033[0m")
             print("\033[96m  🤖 \033[0m", end="", flush=True)
+            full_response: list[str] = []
             try:
                 for token in llm_client.chat_stream(text):
                     print(token, end="", flush=True)
+                    full_response.append(token)
             except Exception as exc:
                 print(f"\n\033[91m  [ERRO LLM] {exc}\033[0m")
             print("\n")
 
-    # ── Voice listener ─────────────────────────────────────────────────────
-    listener = VoiceListener(
-        model_size=args.model_size,
-        sample_rate=args.sample_rate,
-        device=args.device,
-        language=args.language,
-        silence_threshold=args.silence_threshold,
-        silence_duration=args.silence_duration,
-        on_result=on_result,
-    )
+            # Speak the response aloud (pause mic to avoid feedback)
+            if tts_speaker is not None and full_response:
+                response_text = "".join(full_response)
+                listener.pause()
+                try:
+                    tts_speaker.speak(response_text)
+                finally:
+                    listener.resume()
+
+    listener._on_result = on_result or listener._default_result
+
+    # ── Start listening ────────────────────────────────────────────────────
     listener.listen()
 
 

@@ -28,6 +28,7 @@ from __future__ import annotations
 import collections
 import queue
 import sys
+import threading
 import time
 from typing import Callable, Optional
 
@@ -122,6 +123,11 @@ class VoiceListener:
         self._pre_buffer: collections.deque[np.ndarray] = collections.deque(
             maxlen=_PRE_BUFFER_CHUNKS
         )
+
+        # Pause control — when cleared, the listen loop discards audio so
+        # that TTS playback is not captured by the STT pipeline.
+        self._active = threading.Event()
+        self._active.set()  # start in active (listening) state
 
         # Load model --------------------------------------------------------
         print(
@@ -246,6 +252,22 @@ class VoiceListener:
                 parts.append(text)
         return " ".join(parts)
 
+    # -- pause / resume -----------------------------------------------------
+    def pause(self) -> None:
+        """Pause speech capture (e.g. while TTS is playing)."""
+        self._active.clear()
+
+    def resume(self) -> None:
+        """Resume speech capture after a pause."""
+        # Drain any audio that accumulated in the queue during the pause
+        while not self._audio_q.empty():
+            try:
+                self._audio_q.get_nowait()
+            except queue.Empty:
+                break
+        self._pre_buffer.clear()
+        self._active.set()
+
     # -- public API ---------------------------------------------------------
     def listen(self) -> None:
         """Start listening (blocking).  Press Ctrl-C to stop."""
@@ -275,6 +297,11 @@ class VoiceListener:
             ):
                 while True:
                     chunk = self._audio_q.get()
+
+                    # While paused, discard audio to avoid capturing
+                    # TTS output through the microphone.
+                    if not self._active.is_set():
+                        continue
 
                     if not self._is_silent(chunk):
                         if not speaking:
