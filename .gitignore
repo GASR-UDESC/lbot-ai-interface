@@ -1,0 +1,3 @@
+# Model weights (too large for git)
+*.gguf
+*.pt
