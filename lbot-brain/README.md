@@ -41,9 +41,14 @@ Current execution behavior:
 - `WELL_DEFINED_MOVEMENT`: translates with `lbot-v7` and sends to `ESP32`.
 - `BAD_DEFINED_MOVEMENT`: no-op (`output="NOOP"`).
 - `LOCATION_MOVEMENT`: no-op (`output="NOOP"`).
-- `VIEW`: captures image and asks multimodal LLM.
 - `VIEW`: captures image, asks multimodal LLM, and always speaks the result.
 - `SPEAK`: calls `Speaker`.
+
+Safety guardrails (turn-level):
+
+- `WELL_DEFINED_MOVEMENT` only executes when current user turn has movement intent.
+- `VIEW` only executes when current user turn has visual intent.
+- Commands that do not match current turn intent are blocked.
 
 `main.py` only wires these classes and runs the loop.
 

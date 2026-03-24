@@ -81,10 +81,16 @@ class Orchestrator:
                 "message": user_text,
             }
             planned_commands = self._plan_commands(payload)
-            executed = self._execute_commands(planned_commands)
+            guarded_commands = self._apply_turn_guards(planned_commands, user_text)
+            executed = self._execute_commands(guarded_commands)
 
             self._past_messages.append({"role": "user", "content": user_text})
-            self._past_messages.append({"role": "assistant", "content": json.dumps(executed, ensure_ascii=False)})
+            self._past_messages.append(
+                {
+                    "role": "assistant",
+                    "content": self._summarize_executed_commands(executed),
+                }
+            )
             self._past_commands.extend(executed)
 
             self._trim_history()
@@ -213,6 +219,106 @@ class Orchestrator:
                 print(f"[ORCHESTRATOR] {speak_item}")
 
         return executed
+
+    def _apply_turn_guards(
+        self,
+        commands: list[dict[str, str]],
+        user_text: str,
+    ) -> list[dict[str, str]]:
+        """Block planner commands that do not match current turn intent."""
+        movement_intent = self._has_movement_intent(user_text)
+        view_intent = self._has_view_intent(user_text)
+
+        filtered: list[dict[str, str]] = []
+        for item in commands:
+            command = item["command"]
+
+            if command == "WELL_DEFINED_MOVEMENT" and not movement_intent:
+                print(
+                    "[ORCHESTRATOR][GUARD] Blocked WELL_DEFINED_MOVEMENT "
+                    "(no movement intent in current turn)."
+                )
+                continue
+
+            if command == "VIEW" and not view_intent:
+                print(
+                    "[ORCHESTRATOR][GUARD] Blocked VIEW "
+                    "(no visual intent in current turn)."
+                )
+                continue
+
+            filtered.append(item)
+
+        if filtered:
+            return filtered
+
+        return [
+            {
+                "command": "SPEAK",
+                "input": "Entendi. Pode repetir de forma objetiva o que devo fazer agora?",
+            }
+        ]
+
+    @staticmethod
+    def _has_movement_intent(text: str) -> bool:
+        t = text.lower()
+        movement_keywords = (
+            "ande",
+            "andar",
+            "mova",
+            "mover",
+            "movimente",
+            "gire",
+            "girar",
+            "vire",
+            "virar",
+            "frente",
+            "tras",
+            "trás",
+            "esquerda",
+            "direita",
+            "centimetro",
+            "centímetro",
+            "cm",
+            "grau",
+            "graus",
+            "metro",
+            "metros",
+        )
+        return any(keyword in t for keyword in movement_keywords)
+
+    @staticmethod
+    def _has_view_intent(text: str) -> bool:
+        t = text.lower()
+        view_keywords = (
+            "o que voce esta vendo",
+            "o que você está vendo",
+            "o que voce ta vendo",
+            "o que você ta vendo",
+            "o que voce ve",
+            "o que você vê",
+            "descreva o que voce esta vendo",
+            "descreva o que você está vendo",
+            "descreva a cena",
+            "olhe",
+            "verifique",
+            "veja",
+            "enxergando",
+            "vendo",
+        )
+        return any(keyword in t for keyword in view_keywords)
+
+    @staticmethod
+    def _summarize_executed_commands(executed: list[dict[str, Any]]) -> str:
+        if not executed:
+            return "Nenhum comando executado."
+
+        parts: list[str] = []
+        for item in executed:
+            command = str(item.get("command", ""))
+            output = str(item.get("output", ""))
+            parts.append(f"{command} -> {output}")
+        return " | ".join(parts)
 
     def _execute_single(self, command: str, command_input: str) -> str:
         if command == "WELL_DEFINED_MOVEMENT":
