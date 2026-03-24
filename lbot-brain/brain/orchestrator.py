@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import difflib
 import json
+import time
 from typing import Any
 
 from brain.commands.models import BAD_DEFINED_MOVEMENT, LOCATION_MOVEMENT, SPEAK, VIEW, WELL_DEFINED_MOVEMENT
@@ -19,78 +21,7 @@ ALLOWED_COMMANDS = {
     "SPEAK",
 }
 
-PLANNER_SYSTEM_PROMPT = """Voce e o cerebro do robo LBOT.
-
-Seu trabalho e converter a entrada do usuario em uma lista JSON de comandos para execucao sequencial.
-
-## Entrada recebida (apos este system prompt)
-Voce recebera um JSON neste formato:
-
-{
-  "past_commands": [],
-  "past_messages": [],
-  "message": ""
-}
-
-### Significado dos campos
-- past_commands: historico de comandos ja gerados/executados na sessao. Alguns itens podem conter output.
-- past_messages: historico de mensagens trocadas na sessao (usuario e assistente/sistema de aplicacao, quando disponivel).
-- message: mensagem atual do usuario (a principal para decidir a proxima acao).
-
-Observacao: se a aplicacao enviar past_commads em vez de past_commands, trate como equivalente.
-
-## Objetivo
-Dado o JSON de entrada, retornar somente um array JSON com comandos do LBOT, em ordem de execucao.
-
-## Comandos permitidos
-Voce so pode usar:
-
-- WELL_DEFINED_MOVEMENT -> movimento claramente especificado e executavel.
-- BAD_DEFINED_MOVEMENT -> movimento ambiguo/incompleto.
-- LOCATION_MOVEMENT -> deslocamento para destino/local.
-- VIEW -> percepcao visual do ambiente.
-- SPEAK -> conversa, confirmacao, explicacao, limitacoes, pedido de esclarecimento.
-
-## Formato de saida (obrigatorio)
-Retorne apenas:
-
-[
-  {
-    "command": "SPEAK",
-    "input": "..."
-  }
-]
-
-### Regras de saida
-- A resposta deve ser somente JSON valido (sem markdown, sem explicacoes externas).
-- Retorne um array de 1..N comandos.
-- Cada item deve conter apenas:
-  - command (string, um dos 5 comandos permitidos)
-  - input (string)
-- Nao invente campos adicionais.
-
-## Regras de decisao
-1. Pedido composto => multiplos comandos
-2. Movimento claro => WELL_DEFINED_MOVEMENT
-3. Movimento ambiguo => BAD_DEFINED_MOVEMENT (normalmente com SPEAK)
-4. Ir para local => LOCATION_MOVEMENT
-5. Visao => VIEW
-6. Conversa geral => SPEAK
-7. Uso de memoria da sessao com past_commands/past_messages
-8. Nao alucinar
-9. Respeitar limitacoes do robo
-10. Em conflito/ambiguidade, pedir clarificacao com SPEAK
-
-## Heuristica rapida
-- ande/gire/mova X cm... => WELL_DEFINED_MOVEMENT
-- vai ali / se move um pouco => BAD_DEFINED_MOVEMENT (+ SPEAK)
-- va para a cozinha => LOCATION_MOVEMENT
-- o que voce esta vendo? => VIEW
-- pergunta/conversa/limite => SPEAK
-
-## Regra final obrigatoria
-Responda com apenas o JSON (array de comandos), sem qualquer texto adicional.
-"""
+DEFAULT_PLANNER_SYSTEM_PROMPT = "Retorne apenas um array JSON de comandos do LBOT."
 
 
 class Orchestrator:
@@ -104,7 +35,7 @@ class Orchestrator:
         camera: Camera,
         esp32: ESP32,
         movement_translator: MovementTranslatorV7,
-        planner_system_prompt: str = PLANNER_SYSTEM_PROMPT,
+        planner_system_prompt: str = DEFAULT_PLANNER_SYSTEM_PROMPT,
     ) -> None:
         self.microphone = microphone
         self.llm = llm
@@ -117,6 +48,16 @@ class Orchestrator:
         self._past_commands: list[dict[str, Any]] = []
         self._past_messages: list[dict[str, Any]] = []
 
+        self._last_spoken_text = ""
+        self._last_spoken_at = 0.0
+        self._last_user_text = ""
+        self._last_user_at = 0.0
+
+        self._echo_cooldown_seconds = 1.3
+        self._echo_similarity_threshold = 0.72
+        self._dedupe_window_seconds = 4.0
+        self._dedupe_similarity_threshold = 0.9
+
     def start(self) -> None:
         self.microphone.set_on_result(self._on_transcript)
         print("[ORCHESTRATOR] Running. Listening for voice input...")
@@ -125,6 +66,11 @@ class Orchestrator:
     def _on_transcript(self, text: str) -> None:
         user_text = text.strip()
         if not user_text:
+            return
+
+        print(f"[ORCHESTRATOR][STT_USER] {user_text}")
+
+        if self._should_ignore_transcript(user_text):
             return
 
         self.microphone.pause()
@@ -142,12 +88,49 @@ class Orchestrator:
             self._past_commands.extend(executed)
 
             self._trim_history()
+            self._last_user_text = user_text
+            self._last_user_at = time.monotonic()
         except Exception as exc:
             print(f"[ORCHESTRATOR][ERROR] {exc}")
         finally:
             self.microphone.resume()
 
+    def _should_ignore_transcript(self, user_text: str) -> bool:
+        now = time.monotonic()
+
+        if self._last_spoken_at > 0 and now - self._last_spoken_at < self._echo_cooldown_seconds:
+            print("[ORCHESTRATOR] Ignored transcript (speak cooldown).")
+            return True
+
+        if self._last_spoken_text:
+            echo_similarity = self._similarity(user_text, self._last_spoken_text)
+            if echo_similarity >= self._echo_similarity_threshold:
+                print(
+                    "[ORCHESTRATOR] Ignored transcript "
+                    f"(echo similarity={echo_similarity:.2f})."
+                )
+                return True
+
+        if self._last_user_text and now - self._last_user_at < self._dedupe_window_seconds:
+            user_similarity = self._similarity(user_text, self._last_user_text)
+            if user_similarity >= self._dedupe_similarity_threshold:
+                print(
+                    "[ORCHESTRATOR] Ignored transcript "
+                    f"(duplicate similarity={user_similarity:.2f})."
+                )
+                return True
+
+        return False
+
+    @staticmethod
+    def _similarity(a: str, b: str) -> float:
+        return difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
     def _plan_commands(self, payload: dict[str, Any]) -> list[dict[str, str]]:
+        message = str(payload.get("message", "")).strip()
+        if self._is_history_query(message):
+            return [{"command": "SPEAK", "input": self._build_history_reply()}]
+
         raw_response = self.llm.complete(
             [
                 {"role": "system", "content": self.planner_system_prompt},
@@ -219,6 +202,16 @@ class Orchestrator:
             executed.append(executed_item)
             print(f"[ORCHESTRATOR] {executed_item}")
 
+            if command == "VIEW":
+                speak_output = self._speak_text(str(output))
+                speak_item = {
+                    "command": "SPEAK",
+                    "input": str(output),
+                    "output": speak_output,
+                }
+                executed.append(speak_item)
+                print(f"[ORCHESTRATOR] {speak_item}")
+
         return executed
 
     def _execute_single(self, command: str, command_input: str) -> str:
@@ -250,11 +243,48 @@ class Orchestrator:
             return str(view.output)
 
         speak = SPEAK(input=command_input, output="SENT")
-        if self.speaker is None:
-            speak.output = "NO_SPEAKER"
-            return str(speak.output)
-        self.speaker.speak(speak.input)
+        speak.output = self._speak_text(speak.input)
         return str(speak.output)
+
+    def _speak_text(self, text: str) -> str:
+        if not text.strip():
+            return "EMPTY"
+        if self.speaker is None:
+            return "NO_SPEAKER"
+        self.speaker.speak(text)
+        self._last_spoken_text = text
+        self._last_spoken_at = time.monotonic()
+        return "SENT"
+
+    def _is_history_query(self, message: str) -> bool:
+        msg = message.lower()
+        triggers = (
+            "quais comandos",
+            "comandos executados",
+            "o que voce executou",
+            "o que você executou",
+            "o que ja executou",
+            "o que já executou",
+            "o que voce fez",
+            "o que você fez",
+        )
+        return any(trigger in msg for trigger in triggers)
+
+    def _build_history_reply(self) -> str:
+        if not self._past_commands:
+            return "Ainda nao executei comandos nesta sessao."
+
+        recent = self._past_commands[-8:]
+        parts: list[str] = []
+        for item in recent:
+            command = str(item.get("command", ""))
+            command_input = str(item.get("input", "")).strip()
+            if command_input:
+                parts.append(f"{command}: {command_input}")
+            else:
+                parts.append(command)
+
+        return "Comandos recentes executados: " + " | ".join(parts)
 
     def _trim_history(self, max_messages: int = 40, max_commands: int = 100) -> None:
         if len(self._past_messages) > max_messages:

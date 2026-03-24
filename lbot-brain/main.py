@@ -23,6 +23,7 @@ DEFAULT_MODEL_SIZE = "small"
 DEFAULT_SAMPLE_RATE = 16_000
 DEFAULT_LLM_MODEL = "qwen3.5-2b"
 DEFAULT_TTS_MODEL = SCRIPT_DIR.parent / "lbot-orchestrator" / "models" / "pt_BR-faber-medium.onnx"
+DEFAULT_SYSTEM_PROMPT_FILE = SCRIPT_DIR / "system-prompt.txt"
 DEFAULT_V7_MODEL = (
     SCRIPT_DIR.parent
     / "lbot-natural-language-controller"
@@ -67,6 +68,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-tts", action="store_true")
     parser.add_argument("--tts-model", default=str(DEFAULT_TTS_MODEL))
     parser.add_argument("--tts-speaker", type=int, default=None)
+    parser.add_argument("--planner-system-prompt-file", default=str(DEFAULT_SYSTEM_PROMPT_FILE))
     parser.add_argument("--v7-model", default=str(DEFAULT_V7_MODEL))
     return parser.parse_args()
 
@@ -111,6 +113,12 @@ def main() -> None:
     )
     camera = Camera()
     esp32 = ESP32()
+
+    planner_prompt_file = Path(args.planner_system_prompt_file).expanduser().resolve()
+    if not planner_prompt_file.exists():
+        sys.exit(f"[ERROR] Planner system prompt file not found: {planner_prompt_file}")
+    planner_system_prompt = planner_prompt_file.read_text(encoding="utf-8")
+
     try:
         movement_translator = MovementTranslatorV7(model_path=args.v7_model)
     except Exception as exc:
@@ -122,6 +130,7 @@ def main() -> None:
     print(f"[CAMERA] Mock image: {camera.capture()}")
     print(f"[ESP32] Placeholder connected={esp32.connected}")
     print(f"[WELL_DEFINED_MOVEMENT] Translator ready: {args.v7_model}")
+    print(f"[PLANNER] System prompt file: {planner_prompt_file}")
 
     orchestrator = Orchestrator(
         microphone=microphone,
@@ -130,6 +139,7 @@ def main() -> None:
         camera=camera,
         esp32=esp32,
         movement_translator=movement_translator,
+        planner_system_prompt=planner_system_prompt,
     )
 
     print("L-Bot Brain running. Press Ctrl-C to stop.")

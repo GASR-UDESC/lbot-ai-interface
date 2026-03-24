@@ -42,6 +42,7 @@ Current execution behavior:
 - `BAD_DEFINED_MOVEMENT`: no-op (`output="NOOP"`).
 - `LOCATION_MOVEMENT`: no-op (`output="NOOP"`).
 - `VIEW`: captures image and asks multimodal LLM.
+- `VIEW`: captures image, asks multimodal LLM, and always speaks the result.
 - `SPEAK`: calls `Speaker`.
 
 `main.py` only wires these classes and runs the loop.
@@ -87,6 +88,7 @@ Useful flags:
 - `--llm-api-base http://localhost:1234/v1`
 - `--llm-model qwen3.5-2b` (default)
 - `--tts-model ../lbot-orchestrator/models/pt_BR-faber-medium.onnx`
+- `--planner-system-prompt-file ./system-prompt.txt`
 - `--v7-model ../lbot-natural-language-controller/lbot-v7/lbot_translator_v7.pt`
 
 ## Reused resources
