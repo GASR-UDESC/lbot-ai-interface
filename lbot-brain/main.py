@@ -64,6 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--llm-api-base", default="http://localhost:1234/v1")
     parser.add_argument("--llm-model", default=DEFAULT_LLM_MODEL)
     parser.add_argument("--system-prompt", default=None)
+    parser.add_argument("--system-prompt-file", default=str(DEFAULT_SYSTEM_PROMPT_FILE))
 
     parser.add_argument("--no-tts", action="store_true")
     parser.add_argument("--tts-model", default=str(DEFAULT_TTS_MODEL))
@@ -85,12 +86,18 @@ def main() -> None:
 
     llm = None
     if llm_enabled:
+        system_prompt_file = Path(args.system_prompt_file).expanduser().resolve()
+        if not system_prompt_file.exists():
+            sys.exit(f"[ERROR] System prompt file not found: {system_prompt_file}")
+        system_prompt = system_prompt_file.read_text(encoding="utf-8")
+        if args.system_prompt is not None:
+            system_prompt = args.system_prompt
+
         llm_kwargs = {
             "api_base": args.llm_api_base,
             "model": args.llm_model,
+            "system_prompt": system_prompt,
         }
-        if args.system_prompt is not None:
-            llm_kwargs["system_prompt"] = args.system_prompt
         try:
             llm = LLM(**llm_kwargs)
         except Exception as exc:

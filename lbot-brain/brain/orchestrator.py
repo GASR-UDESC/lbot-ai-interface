@@ -45,15 +45,13 @@ class Orchestrator:
         self.movement_translator = movement_translator
         self.planner_system_prompt = planner_system_prompt
 
-        self._past_commands: list[dict[str, Any]] = []
-        self._past_messages: list[dict[str, Any]] = []
-
         self._last_spoken_text = ""
         self._last_spoken_at = 0.0
         self._last_user_text = ""
         self._last_user_at = 0.0
 
         self._echo_cooldown_seconds = 1.3
+        self._echo_similarity_window_seconds = 3.0
         self._echo_similarity_threshold = 0.72
         self._dedupe_window_seconds = 4.0
         self._dedupe_similarity_threshold = 0.9
@@ -75,25 +73,9 @@ class Orchestrator:
 
         self.microphone.pause()
         try:
-            payload = {
-                "past_commands": self._past_commands,
-                "past_messages": self._past_messages,
-                "message": user_text,
-            }
+            payload = self._build_planner_payload(user_text)
             planned_commands = self._plan_commands(payload)
-            guarded_commands = self._apply_turn_guards(planned_commands, user_text)
-            executed = self._execute_commands(guarded_commands)
-
-            self._past_messages.append({"role": "user", "content": user_text})
-            self._past_messages.append(
-                {
-                    "role": "assistant",
-                    "content": self._summarize_executed_commands(executed),
-                }
-            )
-            self._past_commands.extend(executed)
-
-            self._trim_history()
+            executed = self._execute_commands(planned_commands)
             self._last_user_text = user_text
             self._last_user_at = time.monotonic()
         except Exception as exc:
@@ -108,7 +90,10 @@ class Orchestrator:
             print("[ORCHESTRATOR] Ignored transcript (speak cooldown).")
             return True
 
-        if self._last_spoken_text:
+        if (
+            self._last_spoken_text
+            and now - self._last_spoken_at < self._echo_similarity_window_seconds
+        ):
             echo_similarity = self._similarity(user_text, self._last_spoken_text)
             if echo_similarity >= self._echo_similarity_threshold:
                 print(
@@ -132,18 +117,17 @@ class Orchestrator:
     def _similarity(a: str, b: str) -> float:
         return difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
-    def _plan_commands(self, payload: dict[str, Any]) -> list[dict[str, str]]:
-        message = str(payload.get("message", "")).strip()
-        if self._is_history_query(message):
-            return [{"command": "SPEAK", "input": self._build_history_reply()}]
+    def _build_planner_payload(self, user_text: str) -> dict[str, Any]:
+        return {"message": user_text}
 
+    def _plan_commands(self, payload: dict[str, Any]) -> list[dict[str, str]]:
         raw_response = self.llm.complete(
             [
                 {"role": "system", "content": self.planner_system_prompt},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
             temperature=0.0,
-            max_tokens=600,
+            max_tokens=220,
         )
         return self._parse_planner_response(raw_response)
 
@@ -220,110 +204,16 @@ class Orchestrator:
 
         return executed
 
-    def _apply_turn_guards(
-        self,
-        commands: list[dict[str, str]],
-        user_text: str,
-    ) -> list[dict[str, str]]:
-        """Block planner commands that do not match current turn intent."""
-        movement_intent = self._has_movement_intent(user_text)
-        view_intent = self._has_view_intent(user_text)
-
-        filtered: list[dict[str, str]] = []
-        for item in commands:
-            command = item["command"]
-
-            if command == "WELL_DEFINED_MOVEMENT" and not movement_intent:
-                print(
-                    "[ORCHESTRATOR][GUARD] Blocked WELL_DEFINED_MOVEMENT "
-                    "(no movement intent in current turn)."
-                )
-                continue
-
-            if command == "VIEW" and not view_intent:
-                print(
-                    "[ORCHESTRATOR][GUARD] Blocked VIEW "
-                    "(no visual intent in current turn)."
-                )
-                continue
-
-            filtered.append(item)
-
-        if filtered:
-            return filtered
-
-        return [
-            {
-                "command": "SPEAK",
-                "input": "Entendi. Pode repetir de forma objetiva o que devo fazer agora?",
-            }
-        ]
-
-    @staticmethod
-    def _has_movement_intent(text: str) -> bool:
-        t = text.lower()
-        movement_keywords = (
-            "ande",
-            "andar",
-            "mova",
-            "mover",
-            "movimente",
-            "gire",
-            "girar",
-            "vire",
-            "virar",
-            "frente",
-            "tras",
-            "trás",
-            "esquerda",
-            "direita",
-            "centimetro",
-            "centímetro",
-            "cm",
-            "grau",
-            "graus",
-            "metro",
-            "metros",
-        )
-        return any(keyword in t for keyword in movement_keywords)
-
-    @staticmethod
-    def _has_view_intent(text: str) -> bool:
-        t = text.lower()
-        view_keywords = (
-            "o que voce esta vendo",
-            "o que você está vendo",
-            "o que voce ta vendo",
-            "o que você ta vendo",
-            "o que voce ve",
-            "o que você vê",
-            "descreva o que voce esta vendo",
-            "descreva o que você está vendo",
-            "descreva a cena",
-            "olhe",
-            "verifique",
-            "veja",
-            "enxergando",
-            "vendo",
-        )
-        return any(keyword in t for keyword in view_keywords)
-
-    @staticmethod
-    def _summarize_executed_commands(executed: list[dict[str, Any]]) -> str:
-        if not executed:
-            return "Nenhum comando executado."
-
-        parts: list[str] = []
-        for item in executed:
-            command = str(item.get("command", ""))
-            output = str(item.get("output", ""))
-            parts.append(f"{command} -> {output}")
-        return " | ".join(parts)
-
     def _execute_single(self, command: str, command_input: str) -> str:
         if command == "WELL_DEFINED_MOVEMENT":
             movement = WELL_DEFINED_MOVEMENT(input=command_input, output="")
             movement.output = self.movement_translator.translate(movement.input)
+            if movement.output == "ERRO":
+                print(
+                    "[ORCHESTRATOR] WELL_DEFINED_MOVEMENT translation failed; "
+                    "fallback kept silent."
+                )
+                return "ERRO"
             if movement.output and movement.output != "ERRO":
                 self.esp32.send(movement.output)
             return str(movement.output)
@@ -362,38 +252,3 @@ class Orchestrator:
         self._last_spoken_at = time.monotonic()
         return "SENT"
 
-    def _is_history_query(self, message: str) -> bool:
-        msg = message.lower()
-        triggers = (
-            "quais comandos",
-            "comandos executados",
-            "o que voce executou",
-            "o que você executou",
-            "o que ja executou",
-            "o que já executou",
-            "o que voce fez",
-            "o que você fez",
-        )
-        return any(trigger in msg for trigger in triggers)
-
-    def _build_history_reply(self) -> str:
-        if not self._past_commands:
-            return "Ainda nao executei comandos nesta sessao."
-
-        recent = self._past_commands[-8:]
-        parts: list[str] = []
-        for item in recent:
-            command = str(item.get("command", ""))
-            command_input = str(item.get("input", "")).strip()
-            if command_input:
-                parts.append(f"{command}: {command_input}")
-            else:
-                parts.append(command)
-
-        return "Comandos recentes executados: " + " | ".join(parts)
-
-    def _trim_history(self, max_messages: int = 40, max_commands: int = 100) -> None:
-        if len(self._past_messages) > max_messages:
-            self._past_messages = self._past_messages[-max_messages:]
-        if len(self._past_commands) > max_commands:
-            self._past_commands = self._past_commands[-max_commands:]

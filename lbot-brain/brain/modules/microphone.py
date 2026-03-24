@@ -14,13 +14,6 @@ BLOCK_SIZE = 2_400
 DEFAULT_SAMPLE_RATE = 16_000
 MIN_SPEECH_DURATION = 0.4
 PRE_BUFFER_CHUNKS = 4
-INITIAL_PROMPT = (
-    "Comando para o robo L-Bot: andar para frente, virar a esquerda, "
-    "virar a direita, parar, mover para tras, girar, levantar braco, "
-    "abaixar braco, velocidade, graus, centimetros, metros, abrir garra, "
-    "fechar garra, ligar, desligar, posicao inicial, sensor, distancia, "
-    "angulo, repetir, esperar, seguir linha, desviar obstaculo."
-)
 
 
 class Microphone:
@@ -186,7 +179,6 @@ class Microphone:
             beam_size=8,
             best_of=3,
             patience=1.5,
-            initial_prompt=INITIAL_PROMPT,
             vad_filter=True,
             vad_parameters={
                 "min_silence_duration_ms": 250,

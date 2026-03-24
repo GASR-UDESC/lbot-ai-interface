@@ -8,12 +8,6 @@ from typing import Iterator
 from openai import OpenAI
 
 
-DEFAULT_SYSTEM_PROMPT = (
-    "Voce e um assistente virtual inteligente e prestativo. "
-    "Responda sempre em portugues de forma clara e concisa."
-)
-
-
 class LLM:
     """Encapsulates OpenAI-compatible chat client (LM Studio, Ollama, etc.)."""
 
@@ -21,7 +15,7 @@ class LLM:
         self,
         api_base: str = "http://localhost:1234/v1",
         model: str = "local-model",
-        system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+        system_prompt: str = "",
         temperature: float = 0.7,
         max_tokens: int = 512,
     ) -> None:
