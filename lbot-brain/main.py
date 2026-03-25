@@ -22,7 +22,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_MODEL_SIZE = "small"
 DEFAULT_SAMPLE_RATE = 16_000
 DEFAULT_LLM_MODEL = "qwen3.5-2b"
-DEFAULT_TTS_MODEL = SCRIPT_DIR.parent / "lbot-orchestrator" / "models" / "pt_BR-faber-medium.onnx"
+DEFAULT_TTS_MODEL = SCRIPT_DIR / "models" / "pt_BR-faber-medium.onnx"
 DEFAULT_SYSTEM_PROMPT_FILE = SCRIPT_DIR / "system-prompt.txt"
 DEFAULT_V7_MODEL = (
     SCRIPT_DIR.parent
