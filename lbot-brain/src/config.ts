@@ -25,13 +25,8 @@ function parseNumber(value: string | undefined, fallback: number): number {
 
 export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const repoRoot = path.resolve(__dirname, "..");
-  const codeRoot = path.resolve(repoRoot, "..");
-  const v7Root = path.resolve(
-    codeRoot,
-    "lbot-ai-interface",
-    "lbot-natural-language-controller",
-    "lbot-v7",
-  );
+  const workspaceRoot = path.resolve(repoRoot, "..");
+  const v7Root = path.resolve(workspaceRoot, "lbot-natural-language-controller", "lbot-v7");
 
   return {
     model: env.LBOT_MODEL ?? "qwen3.5-4b",
