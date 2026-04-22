@@ -1,36 +1,10 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import { loadAppConfig } from "../config";
-import { handleTurn } from "../core/handle-turn";
-import { Session } from "../core/session";
-import { LmStudioClient } from "../llm/lm-studio-client";
-import { LlmPlanner } from "../llm/planner";
-import { ToolExecutor } from "../runtime/executor";
-import { createToolRegistry } from "../runtime/registry";
+import { createCliRuntime, type CliRuntime } from "./runtime";
+import { formatPlannerError, isExitCommand, processCliTurn } from "./turn";
 
-function formatToolErrorMessage(tool: string, summary: string, errorCode?: string): string {
-  return `[erro] ${tool}${errorCode ? ` ${errorCode}` : ""}: ${summary}`;
-}
-
-function shouldPrintSuccessfulToolResult(tool: string): boolean {
-  return tool === "vision.describe";
-}
-
-export async function runCli(): Promise<void> {
-  const config = loadAppConfig();
-  const session = new Session();
-  const registry = createToolRegistry(config);
-  const planner = new LlmPlanner(
-    new LmStudioClient({
-      baseURL: config.lmStudioBaseUrl,
-      apiKey: config.lmStudioApiKey,
-      model: config.model,
-      temperature: config.plannerTemperature,
-        maxTokens: config.plannerMaxTokens,
-      }),
-  );
-  const executor = new ToolExecutor(registry);
+export async function runTextCli(runtime: CliRuntime = createCliRuntime()): Promise<void> {
   const rl = createInterface({ input, output });
 
   console.log("lbot> Cerebro online. Digite 'exit' para sair.");
@@ -43,42 +17,31 @@ export async function runCli(): Promise<void> {
         continue;
       }
 
-      if (userText === "exit" || userText === "quit") {
+      if (isExitCommand(userText)) {
         break;
       }
 
       try {
-        const outcome = await handleTurn({
+        const processed = await processCliTurn({
           userText,
-          session,
-          planner,
-          executor,
+          session: runtime.session,
+          planner: runtime.planner,
+          executor: runtime.executor,
         });
 
-        console.log(`lbot> ${outcome.plan.assistantText}`);
-
-        if (outcome.toolResult && !outcome.toolResult.ok) {
-          console.log(
-            formatToolErrorMessage(
-              outcome.toolResult.tool,
-              outcome.toolResult.summary,
-              outcome.toolResult.errorCode,
-            ),
-          );
-        } else if (
-          outcome.toolResult &&
-          shouldPrintSuccessfulToolResult(outcome.toolResult.tool)
-        ) {
-          console.log(`lbot> ${outcome.toolResult.summary}`);
+        for (const line of processed.consoleLines) {
+          console.log(line);
         }
       } catch (error) {
-        console.log(
-          `[erro] planner: ${error instanceof Error ? error.message : String(error)}`,
-        );
+        console.log(formatPlannerError(error));
       }
     }
   } finally {
     rl.close();
-    await registry.dispose?.();
+    await runtime.dispose();
   }
+}
+
+export async function runCli(): Promise<void> {
+  await runTextCli();
 }
