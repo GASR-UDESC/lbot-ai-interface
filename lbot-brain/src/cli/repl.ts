@@ -7,7 +7,7 @@ import { Session } from "../core/session";
 import { LmStudioClient } from "../llm/lm-studio-client";
 import { LlmPlanner } from "../llm/planner";
 import { ToolExecutor } from "../runtime/executor";
-import { createStubToolRegistry } from "../runtime/registry";
+import { createToolRegistry } from "../runtime/registry";
 
 function formatToolErrorMessage(tool: string, summary: string, errorCode?: string): string {
   return `[erro] ${tool}${errorCode ? ` ${errorCode}` : ""}: ${summary}`;
@@ -16,16 +16,17 @@ function formatToolErrorMessage(tool: string, summary: string, errorCode?: strin
 export async function runCli(): Promise<void> {
   const config = loadAppConfig();
   const session = new Session();
+  const registry = createToolRegistry(config);
   const planner = new LlmPlanner(
     new LmStudioClient({
       baseURL: config.lmStudioBaseUrl,
       apiKey: config.lmStudioApiKey,
       model: config.model,
       temperature: config.plannerTemperature,
-      maxTokens: config.plannerMaxTokens,
-    }),
+        maxTokens: config.plannerMaxTokens,
+      }),
   );
-  const executor = new ToolExecutor(createStubToolRegistry());
+  const executor = new ToolExecutor(registry);
   const rl = createInterface({ input, output });
 
   console.log("lbot> Cerebro online. Digite 'exit' para sair.");
@@ -69,5 +70,6 @@ export async function runCli(): Promise<void> {
     }
   } finally {
     rl.close();
+    await registry.dispose?.();
   }
 }
