@@ -1,3 +1,4 @@
+import { extractFirstJsonObject } from "../../llm/extract-json";
 import { LmStudioHttpError, type LlmMessage, type LmStudioClient } from "../../llm/lm-studio-client";
 import type { ToolExecutionResult } from "../../core/types";
 import { FrameCaptureError, type FrameSource, type VisionModule } from "./types";
@@ -6,6 +7,17 @@ interface VisionModuleConfig {
   client: LmStudioClient;
   frameSource: FrameSource;
 }
+
+const visionFinalAnswerJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    answer: {
+      type: "string",
+    },
+  },
+  required: ["answer"],
+} as const;
 
 function createFailureResult(input: {
   summary: string;
@@ -23,16 +35,49 @@ function createFailureResult(input: {
   };
 }
 
-function buildVisionMessages(userText: string, imageDataUrl: string): LlmMessage[] {
+function stripThinkSections(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+}
+
+function normalizeModelOutput(text: string): string {
+  const cleaned = stripThinkSections(text).trim();
+  return cleaned || text.trim();
+}
+
+function parseVisionFinalAnswer(rawResponse: string): string {
+  const jsonText = extractFirstJsonObject(rawResponse);
+
+  if (!jsonText) {
+    throw new Error("Vision final response did not contain a valid JSON object.");
+  }
+
+  const parsed = JSON.parse(jsonText) as { answer?: unknown };
+
+  if (typeof parsed.answer !== "string") {
+    throw new Error("Vision final response did not contain a string answer.");
+  }
+
+  const answer = normalizeModelOutput(parsed.answer);
+
+  if (!answer) {
+    throw new Error("Vision final response contained an empty answer.");
+  }
+
+  return answer;
+}
+
+function buildVisionAnalysisMessages(userText: string, imageDataUrl: string): LlmMessage[] {
   return [
     {
       role: "system",
       content: [
-        "Voce e o modulo de visao do lbot.",
+        "Voce e o modulo interno de analise visual do lbot.",
         "Responda em portugues do Brasil.",
-        "Use a imagem e o pedido do usuario para responder de forma objetiva.",
+        "Sua saida nesta etapa e interna e nao sera mostrada diretamente ao usuario.",
+        "Analise a imagem com cuidado e produza observacoes factuais uteis para responder ao pedido do usuario.",
+        "Voce pode organizar a analise em itens curtos, mas nao invente detalhes.",
         "Se algo nao puder ser confirmado pela imagem, diga claramente que nao consegue confirmar.",
-        "Nao invente detalhes, nao finja ter sensores extras e nao assuma informacoes fora da imagem.",
+        "Nao finja ter sensores extras e nao assuma informacoes fora da imagem.",
       ].join("\n"),
     },
     {
@@ -40,7 +85,10 @@ function buildVisionMessages(userText: string, imageDataUrl: string): LlmMessage
       content: [
         {
           type: "text",
-          text: `Pedido do usuario: ${userText}`,
+          text: [
+            `Pedido do usuario: ${userText}`,
+            "Primeiro gere apenas uma analise visual interna detalhada. Nao escreva a resposta final ao usuario ainda.",
+          ].join("\n"),
         },
         {
           type: "image_url",
@@ -50,6 +98,32 @@ function buildVisionMessages(userText: string, imageDataUrl: string): LlmMessage
           },
         },
       ],
+    },
+  ];
+}
+
+function buildVisionFinalAnswerMessages(userText: string, analysis: string): LlmMessage[] {
+  return [
+    {
+      role: "system",
+      content: [
+        "Voce e o modulo de resposta final de visao do lbot.",
+        "Responda em portugues do Brasil.",
+        "Transforme a analise interna em uma resposta final clara e natural para o usuario.",
+        "Nao exponha raciocinio, checklist, notas internas, rascunho, passos ou thinking.",
+        "Nao invente nada alem do que aparece na analise.",
+      ].join("\n"),
+    },
+    {
+      role: "user",
+      content: [
+        `Pedido original do usuario: ${userText}`,
+        "",
+        "Analise interna da imagem:",
+        analysis,
+        "",
+        "Agora entregue somente a resposta final para o usuario, sem mostrar o raciocinio. /no_think",
+      ].join("\n"),
     },
   ];
 }
@@ -91,17 +165,43 @@ export function createVisionModule(config: VisionModuleConfig): VisionModule {
       }
 
       try {
-        const analysis = await client.generate(buildVisionMessages(command, frame.dataUrl));
-        const summary = analysis.trim();
+        const rawAnalysis = await client.generate(buildVisionAnalysisMessages(command, frame.dataUrl));
+        const analysis = normalizeModelOutput(rawAnalysis);
 
-        if (!summary) {
+        if (!analysis) {
           return createFailureResult({
-            summary: "O modelo de visao nao retornou texto.",
+            summary: "O modelo de visao nao retornou nenhuma analise interna.",
             errorCode: "VISION_MODEL_EMPTY",
-            error: "LM Studio returned an empty vision response.",
+            error: "LM Studio returned an empty internal vision analysis.",
             data: {
               capturedAt: frame.capturedAt,
               source: frame.source,
+            },
+          });
+        }
+
+        const rawFinalAnswer = await client.generate(buildVisionFinalAnswerMessages(command, analysis), {
+          jsonSchema: {
+            name: "vision_final_answer",
+            schema: visionFinalAnswerJsonSchema,
+            strict: true,
+          },
+        });
+
+        let summary: string;
+
+        try {
+          summary = parseVisionFinalAnswer(rawFinalAnswer);
+        } catch (error) {
+          return createFailureResult({
+            summary: "O modelo de visao nao conseguiu formatar a resposta final.",
+            errorCode: "VISION_MODEL_INVALID_RESPONSE",
+            error,
+            data: {
+              capturedAt: frame.capturedAt,
+              source: frame.source,
+              rawAnalysis: analysis,
+              rawFinalAnswer,
             },
           });
         }
@@ -114,6 +214,7 @@ export function createVisionModule(config: VisionModuleConfig): VisionModule {
             utteranceRaw: command,
             capturedAt: frame.capturedAt,
             source: frame.source,
+            rawAnalysis: analysis,
           },
         };
       } catch (error) {

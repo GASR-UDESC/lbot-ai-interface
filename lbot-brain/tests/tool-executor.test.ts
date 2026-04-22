@@ -69,7 +69,21 @@ describe("ToolExecutor", () => {
       robot: createStubToolRegistry().robot,
       vision: createVisionModule({
         client: {
-          generate: async () => "Vejo um objeto vermelho.",
+          generate: (() => {
+            let callCount = 0;
+
+            return async () => {
+              callCount += 1;
+
+              if (callCount === 1) {
+                return "1. Ha um objeto vermelho em destaque.";
+              }
+
+              return JSON.stringify({
+                answer: "Vejo um objeto vermelho.",
+              });
+            };
+          })(),
         } as never,
         frameSource: {
           captureFrame: async () => ({
