@@ -13,6 +13,10 @@ function formatToolErrorMessage(tool: string, summary: string, errorCode?: strin
   return `[erro] ${tool}${errorCode ? ` ${errorCode}` : ""}: ${summary}`;
 }
 
+function shouldPrintSuccessfulToolResult(tool: string): boolean {
+  return tool === "vision.describe";
+}
+
 export async function runCli(): Promise<void> {
   const config = loadAppConfig();
   const session = new Session();
@@ -61,6 +65,11 @@ export async function runCli(): Promise<void> {
               outcome.toolResult.errorCode,
             ),
           );
+        } else if (
+          outcome.toolResult &&
+          shouldPrintSuccessfulToolResult(outcome.toolResult.tool)
+        ) {
+          console.log(`lbot> ${outcome.toolResult.summary}`);
         }
       } catch (error) {
         console.log(

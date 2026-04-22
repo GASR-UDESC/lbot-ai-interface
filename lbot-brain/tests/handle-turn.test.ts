@@ -69,4 +69,45 @@ describe("handleTurn", () => {
       },
     });
   });
+
+  it("records successful vision results in the session history", async () => {
+    const planner: Planner = {
+      planTurn: vi.fn().mockResolvedValue({
+        kind: "tool",
+        assistantText: "Ja vou dar uma olhada.",
+        toolCall: {
+          tool: "vision.describe",
+          input: {
+            utteranceRaw: "texto reescrito",
+          },
+        },
+      }),
+    };
+    const executor: ToolCallExecutor = {
+      execute: vi.fn().mockResolvedValue({
+        tool: "vision.describe",
+        ok: true,
+        summary: "Vejo uma cadeira ao fundo.",
+      }),
+    };
+
+    const session = new Session();
+    const outcome = await handleTurn({
+      userText: "o que voce esta vendo?",
+      session,
+      planner,
+      executor,
+    });
+
+    expect(outcome.toolResult).toMatchObject({
+      tool: "vision.describe",
+      ok: true,
+      summary: "Vejo uma cadeira ao fundo.",
+    });
+    expect(session.snapshot().map((event) => event.type)).toEqual([
+      "user_message",
+      "turn_plan",
+      "tool_result",
+    ]);
+  });
 });

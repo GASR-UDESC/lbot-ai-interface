@@ -1,6 +1,21 @@
+export interface LlmTextContentPart {
+  type: "text";
+  text: string;
+}
+
+export interface LlmImageContentPart {
+  type: "image_url";
+  image_url: {
+    url: string;
+    detail?: "auto" | "low" | "high";
+  };
+}
+
+export type LlmContentPart = LlmTextContentPart | LlmImageContentPart;
+
 export interface LlmMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | LlmContentPart[];
 }
 
 export interface LmStudioClientConfig {
@@ -17,7 +32,12 @@ export interface JsonSchemaConfig {
   strict?: boolean;
 }
 
-function contentToString(content: string | null | Array<{ type?: string; text?: string }>): string {
+interface LlmResponseContentPart {
+  type?: string;
+  text?: string | { value?: string };
+}
+
+function contentToString(content: string | null | LlmResponseContentPart[]): string {
   if (typeof content === "string") {
     return content;
   }
@@ -27,9 +47,29 @@ function contentToString(content: string | null | Array<{ type?: string; text?: 
   }
 
   return content
-    .map((part) => (typeof part.text === "string" ? part.text : ""))
+    .map((part) => {
+      if (typeof part.text === "string") {
+        return part.text;
+      }
+
+      if (part.text && typeof part.text.value === "string") {
+        return part.text.value;
+      }
+
+      return "";
+    })
     .join("\n")
     .trim();
+}
+
+export class LmStudioHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "LmStudioHttpError";
+  }
 }
 
 export class LmStudioClient {
@@ -70,13 +110,16 @@ export class LmStudioClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`LM Studio request failed (${response.status}): ${errorText}`);
+      throw new LmStudioHttpError(
+        response.status,
+        `LM Studio request failed (${response.status}): ${errorText}`,
+      );
     }
 
     const payload = (await response.json()) as {
       choices?: Array<{
         message?: {
-          content?: string | null | Array<{ type?: string; text?: string }>;
+          content?: string | null | LlmResponseContentPart[];
         };
       }>;
     };
