@@ -19,13 +19,12 @@ export interface ToolCallExecutor {
   execute(toolCall: ToolCall): Promise<ToolExecutionResult>;
 }
 
-export async function handleTurn(input: {
+export async function prepareTurn(input: {
   userText: string;
   session: Session;
   planner: Planner;
-  executor: ToolCallExecutor;
-}): Promise<TurnOutcome> {
-  const { userText, session, planner, executor } = input;
+}): Promise<TurnPlan> {
+  const { userText, session, planner } = input;
 
   session.recordUserMessage(userText);
 
@@ -36,16 +35,37 @@ export async function handleTurn(input: {
 
   const plan = coerceTurnPlan(plannedTurn, userText);
   session.recordTurnPlan(plan);
+  return plan;
+}
+
+export async function executePlannedTool(input: {
+  plan: TurnPlan;
+  session: Session;
+  executor: ToolCallExecutor;
+}): Promise<ToolExecutionResult | null> {
+  const { plan, session, executor } = input;
 
   if (!plan.toolCall) {
-    return {
-      plan,
-      toolResult: null,
-    };
+    return null;
   }
 
   const toolResult = await executor.execute(plan.toolCall);
   session.recordToolResult(toolResult);
+  return toolResult;
+}
+
+export async function handleTurn(input: {
+  userText: string;
+  session: Session;
+  planner: Planner;
+  executor: ToolCallExecutor;
+}): Promise<TurnOutcome> {
+  const plan = await prepareTurn(input);
+  const toolResult = await executePlannedTool({
+    plan,
+    session: input.session,
+    executor: input.executor,
+  });
 
   return {
     plan,

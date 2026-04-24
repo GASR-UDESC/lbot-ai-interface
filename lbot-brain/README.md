@@ -181,10 +181,12 @@ npm run dev -- --voice
 ### Comportamento Atual do Modo Voz
 
 - o modo texto continua disponivel por flag
-- cada turno e sequencial: ouvir -> transcrever -> processar -> falar
+- cada turno e sequencial: ouvir -> transcrever -> anunciar -> processar -> falar resumo final
 - enquanto o TTS estiver falando, o microfone fica parado
 - `sair`, `exit` e `quit` encerram o loop
-- para respostas com `vision.describe`, a fala inclui o resumo final da ferramenta
+- quando houver tool, o preambulo do assistente e falado antes da execucao
+- durante a execucao de tool, a CLI mostra um loader e toca `assets/sounds/processing-loop.wav` em loop
+- para respostas com `vision.describe`, a fala inclui o resumo final da ferramenta apos o processamento
 - para falhas de tool, a fala inclui o resumo tecnico da falha
 
 ## Testes

@@ -1,6 +1,11 @@
-import { handleTurn, type Planner, type ToolCallExecutor } from "../core/handle-turn";
+import {
+  executePlannedTool,
+  prepareTurn,
+  type Planner,
+  type ToolCallExecutor,
+} from "../core/handle-turn";
 import type { Session } from "../core/session";
-import type { ToolExecutionResult, TurnOutcome } from "../core/types";
+import type { ToolCall, ToolExecutionResult, TurnOutcome, TurnPlan } from "../core/types";
 
 function formatToolErrorMessage(tool: string, summary: string, errorCode?: string): string {
   return `[erro] ${tool}${errorCode ? ` ${errorCode}` : ""}: ${summary}`;
@@ -26,35 +31,41 @@ function buildSpokenToolSummary(toolResult: ToolExecutionResult | null): string 
   return "";
 }
 
-function buildConsoleLines(outcome: TurnOutcome): string[] {
-  const lines = [`lbot> ${outcome.plan.assistantText}`];
-
-  if (outcome.toolResult && !outcome.toolResult.ok) {
-    lines.push(
-      formatToolErrorMessage(
-        outcome.toolResult.tool,
-        outcome.toolResult.summary,
-        outcome.toolResult.errorCode,
-      ),
-    );
-  } else if (
-    outcome.toolResult &&
-    shouldPrintSuccessfulToolResult(outcome.toolResult.tool)
-  ) {
-    lines.push(`lbot> ${outcome.toolResult.summary}`);
-  }
-
-  return lines;
+function buildInitialConsoleLines(plan: TurnPlan): string[] {
+  return [`lbot> ${plan.assistantText}`];
 }
 
-function buildSpokenText(outcome: TurnOutcome): string {
-  const toolSummary = buildSpokenToolSummary(outcome.toolResult);
-
-  if (!toolSummary) {
-    return outcome.plan.assistantText;
+function buildToolConsoleLines(toolResult: ToolExecutionResult | null): string[] {
+  if (!toolResult) {
+    return [];
   }
 
-  return `${outcome.plan.assistantText}\n${toolSummary}`;
+  if (!toolResult.ok) {
+    return [formatToolErrorMessage(toolResult.tool, toolResult.summary, toolResult.errorCode)];
+  }
+
+  if (shouldPrintSuccessfulToolResult(toolResult.tool)) {
+    return [`lbot> ${toolResult.summary}`];
+  }
+
+  return [];
+}
+
+function buildToolSpokenText(toolResult: ToolExecutionResult | null): string {
+  return buildSpokenToolSummary(toolResult);
+}
+
+export function describeToolProgress(toolCall: ToolCall | null): string | null {
+  if (!toolCall) {
+    return null;
+  }
+
+  switch (toolCall.tool) {
+    case "robot.execute":
+      return "enviando movimento...";
+    case "vision.describe":
+      return "processando visao...";
+  }
 }
 
 export interface ProcessCliTurnInput {
@@ -70,13 +81,63 @@ export interface ProcessedCliTurn {
   spokenText: string;
 }
 
-export async function processCliTurn(input: ProcessCliTurnInput): Promise<ProcessedCliTurn> {
-  const outcome = await handleTurn(input);
+export interface PreparedCliTurn {
+  plan: TurnPlan;
+  initialConsoleLines: string[];
+  initialSpokenText: string;
+  progressMessage: string | null;
+}
+
+export interface CompletedCliTurn {
+  outcome: TurnOutcome;
+  toolConsoleLines: string[];
+  toolSpokenText: string;
+}
+
+export async function prepareCliTurn(input: ProcessCliTurnInput): Promise<PreparedCliTurn> {
+  const plan = await prepareTurn(input);
+
+  return {
+    plan,
+    initialConsoleLines: buildInitialConsoleLines(plan),
+    initialSpokenText: plan.assistantText,
+    progressMessage: describeToolProgress(plan.toolCall),
+  };
+}
+
+export async function completeCliTurn(input: {
+  plan: TurnPlan;
+  session: Session;
+  executor: ToolCallExecutor;
+}): Promise<CompletedCliTurn> {
+  const toolResult = await executePlannedTool(input);
+  const outcome = {
+    plan: input.plan,
+    toolResult,
+  };
 
   return {
     outcome,
-    consoleLines: buildConsoleLines(outcome),
-    spokenText: buildSpokenText(outcome),
+    toolConsoleLines: buildToolConsoleLines(toolResult),
+    toolSpokenText: buildToolSpokenText(toolResult),
+  };
+}
+
+export async function processCliTurn(input: ProcessCliTurnInput): Promise<ProcessedCliTurn> {
+  const prepared = await prepareCliTurn(input);
+  const completed = await completeCliTurn({
+    plan: prepared.plan,
+    session: input.session,
+    executor: input.executor,
+  });
+  const spokenText = [prepared.initialSpokenText, completed.toolSpokenText]
+    .filter((part) => part.trim())
+    .join("\n");
+
+  return {
+    outcome: completed.outcome,
+    consoleLines: [...prepared.initialConsoleLines, ...completed.toolConsoleLines],
+    spokenText,
   };
 }
 

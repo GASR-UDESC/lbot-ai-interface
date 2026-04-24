@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { loadAppConfig } from "../src/config";
+import type { ProcessingFeedback } from "../src/cli/processing-feedback";
 import { Session } from "../src/core/session";
 import type { Planner, ToolCallExecutor } from "../src/core/handle-turn";
 import type { CliRuntime } from "../src/cli/runtime";
@@ -77,7 +78,11 @@ describe("runVoiceCli", () => {
     };
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
-    await runVoiceCli({ runtime, voiceClient });
+    const feedback: ProcessingFeedback = {
+      start: vi.fn(() => vi.fn()),
+    };
+
+    await runVoiceCli({ runtime, voiceClient, feedback });
 
     expect(events).toEqual([
       "listen:1",
@@ -91,9 +96,10 @@ describe("runVoiceCli", () => {
     expect(logSpy).toHaveBeenCalledWith("lbot> Cerebro online em modo voz. Diga 'sair' para encerrar.");
   });
 
-  it("speaks the tool summary after the assistant preamble", async () => {
+  it("speaks the assistant preamble before the tool and the summary after it", async () => {
+    const events: string[] = [];
     const planner: Planner = {
-      planTurn: vi.fn().mockResolvedValue({
+      planTurn: vi.fn().mockImplementation(async () => ({
         kind: "tool",
         assistantText: "Ja vou olhar.",
         toolCall: {
@@ -102,13 +108,16 @@ describe("runVoiceCli", () => {
             utteranceRaw: "texto reescrito",
           },
         },
-      }),
+      })),
     };
     const executor: ToolCallExecutor = {
-      execute: vi.fn().mockResolvedValue({
-        tool: "vision.describe",
-        ok: true,
-        summary: "Vejo uma caneca branca.",
+      execute: vi.fn().mockImplementation(async () => {
+        events.push("execute:vision.describe");
+        return {
+          tool: "vision.describe",
+          ok: true,
+          summary: "Vejo uma caneca branca.",
+        };
       }),
     };
     const runtime = createRuntimeStub({ planner, executor });
@@ -125,13 +134,23 @@ describe("runVoiceCli", () => {
           timedOut: false,
           heardSpeech: true,
         }),
-      speak: vi.fn(),
+      speak: vi.fn(async (text: string) => {
+        events.push(`speak:${text}`);
+      }),
       dispose: vi.fn(),
+    };
+    const feedback: ProcessingFeedback = {
+      start: vi.fn((message: string) => {
+        events.push(`feedback:start:${message}`);
+        return () => {
+          events.push("feedback:stop");
+        };
+      }),
     };
 
     vi.spyOn(console, "log").mockImplementation(() => undefined);
 
-    await runVoiceCli({ runtime, voiceClient });
+    await runVoiceCli({ runtime, voiceClient, feedback });
 
     expect(executor.execute).toHaveBeenCalledWith({
       tool: "vision.describe",
@@ -139,7 +158,13 @@ describe("runVoiceCli", () => {
         utteranceRaw: "o que voce esta vendo?",
       },
     });
-    expect(voiceClient.speak).toHaveBeenCalledWith("Ja vou olhar.\nVejo uma caneca branca.");
+    expect(events).toEqual([
+      "speak:Ja vou olhar.",
+      "feedback:start:processando visao...",
+      "execute:vision.describe",
+      "feedback:stop",
+      "speak:Vejo uma caneca branca.",
+    ]);
   });
 
   it("announces a generic spoken error when the planner fails", async () => {
@@ -168,7 +193,11 @@ describe("runVoiceCli", () => {
     };
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
-    await runVoiceCli({ runtime, voiceClient });
+    const feedback: ProcessingFeedback = {
+      start: vi.fn(() => vi.fn()),
+    };
+
+    await runVoiceCli({ runtime, voiceClient, feedback });
 
     expect(voiceClient.speak).toHaveBeenCalledWith(
       "Desculpe, tive um erro ao processar o seu pedido.",

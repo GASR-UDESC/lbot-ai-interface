@@ -1,9 +1,11 @@
 import type { AppConfig } from "../config";
 import { createCliRuntime, type CliRuntime } from "./runtime";
+import { createProcessingFeedback, type ProcessingFeedback } from "./processing-feedback";
 import {
+  completeCliTurn,
   formatPlannerError,
   isExitCommand,
-  processCliTurn,
+  prepareCliTurn,
   spokenPlannerError,
 } from "./turn";
 import { VoiceBridgeProcessClient } from "../voice/process-client";
@@ -45,9 +47,11 @@ function buildVoiceClient(config: AppConfig): VoiceClient {
 export async function runVoiceCli(input: {
   runtime?: CliRuntime;
   voiceClient?: VoiceClient;
+  feedback?: ProcessingFeedback;
 } = {}): Promise<void> {
   const runtime = input.runtime ?? createCliRuntime();
   const voiceClient = input.voiceClient ?? buildVoiceClient(runtime.config);
+  const feedback = input.feedback ?? createProcessingFeedback();
 
   console.log("lbot> Cerebro online em modo voz. Diga 'sair' para encerrar.");
 
@@ -76,18 +80,48 @@ export async function runVoiceCli(input: {
       }
 
       try {
-        const processed = await processCliTurn({
+        const prepared = await prepareCliTurn({
           userText,
           session: runtime.session,
           planner: runtime.planner,
           executor: runtime.executor,
         });
 
-        for (const line of processed.consoleLines) {
+        for (const line of prepared.initialConsoleLines) {
           console.log(line);
         }
 
-        await voiceClient.speak(processed.spokenText);
+        await voiceClient.speak(prepared.initialSpokenText);
+
+        let completed;
+
+        if (prepared.plan.toolCall) {
+          const stopFeedback = feedback.start(prepared.progressMessage ?? "processando...");
+
+          try {
+            completed = await completeCliTurn({
+              plan: prepared.plan,
+              session: runtime.session,
+              executor: runtime.executor,
+            });
+          } finally {
+            stopFeedback();
+          }
+        } else {
+          completed = await completeCliTurn({
+            plan: prepared.plan,
+            session: runtime.session,
+            executor: runtime.executor,
+          });
+        }
+
+        for (const line of completed.toolConsoleLines) {
+          console.log(line);
+        }
+
+        if (completed.toolSpokenText) {
+          await voiceClient.speak(completed.toolSpokenText);
+        }
       } catch (error) {
         console.log(formatPlannerError(error));
         await voiceClient.speak(spokenPlannerError());
