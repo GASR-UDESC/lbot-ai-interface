@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, NgZone, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, NgZone, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LucideAngularModule, Camera, Target } from 'lucide-angular';
 import { SimulatorBridgeService, SimulatorCommand } from '../../services/simulator-bridge.service';
@@ -8,6 +8,7 @@ import { RobotBuilderService } from '../../services/robot-builder.service';
 import { ArenaBuilderService, ObstacleData } from '../../services/arena-builder.service';
 import { CameraControllerService } from '../../services/camera-controller.service';
 import { LbmlParserService } from '../../services/lbml-parser.service';
+import { GameStateService } from '../../services/game-state.service';
 import { RobotState } from '../../models/robot-state.model';
 import { LevelConfig } from '../../models/level-config.model';
 import { ParsedCommand } from '../../models/lbml-command.model';
@@ -74,6 +75,13 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   /** When provided, renders the arena with this level's config instead of the default random layout. */
   @Input() levelConfig?: LevelConfig;
 
+  /**
+   * Emitted when the robot reaches the goal point (win condition met).
+   * The parent component (GamePage) should listen to this and call
+   * GameStateService.completeLevel() – the simulator itself does NOT mutate game state.
+   */
+  @Output() levelCompleted = new EventEmitter<void>();
+
   private sub?: Subscription;
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -127,6 +135,7 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     private arenaBuilder: ArenaBuilderService,
     public cameraController: CameraControllerService,
     private lbmlParser: LbmlParserService,
+    public gameState: GameStateService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
@@ -605,6 +614,9 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
         this.hasWon = true;
         this.score++;
         this.celebrateVictory();
+        // Notify the parent (GamePage) about level completion.
+        // The parent is responsible for calling GameStateService.completeLevel().
+        this.levelCompleted.emit();
       }
     }
   }

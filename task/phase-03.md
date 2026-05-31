@@ -1,6 +1,6 @@
 # Fase 03: Game State & Timer
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,14 +12,14 @@ Criar o GameStateService usando Angular Signals para gerenciar todo o estado do 
 
 ## Tarefas
 
-- [ ] Tarefa 1: Criar interfaces do game state
+- [x] Tarefa 1: Criar interfaces do game state
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/game-state.model.ts`
   - O que fazer: Definir interfaces:
     - `GamePhase = 'idle' | 'playing' | 'level-complete' | 'run-complete'`
     - `LevelProgress = { levelId: number, timeMs: number, completed: boolean }`
     - `RunState = { currentLevel: number, phase: GamePhase, levelTimes: number[], totalTimeMs: number, isRunActive: boolean }`
 
-- [ ] Tarefa 2: Criar GameStateService com Signals
+- [x] Tarefa 2: Criar GameStateService com Signals
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/services/game-state.service.ts`
   - O que fazer: Service com Angular Signals:
     - `phase = signal<GamePhase>('idle')` - fase atual do jogo
@@ -31,7 +31,7 @@ Criar o GameStateService usando Angular Signals para gerenciar todo o estado do 
     - `totalElapsed = computed(() => ...)` - soma dos tempos
     - Metodos: `startRun()`, `startLevel()`, `completeLevel()`, `nextLevel()`, `resetRun()`, `getFormattedTime(ms): string`
 
-- [ ] Tarefa 3: Implementar logica de timer
+- [x] Tarefa 3: Implementar logica de timer
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/services/game-state.service.ts` (mesmo arquivo)
   - O que fazer:
     - Timer baseado em `Date.now()` (nao setInterval, para evitar drift)
@@ -41,7 +41,7 @@ Criar o GameStateService usando Angular Signals para gerenciar todo o estado do 
     - `formatTime(ms: number): string`: converte ms para formato "MM:SS"
     - Timer NAO pausa em nenhum momento (nem retry, nem entre comandos)
 
-- [ ] Tarefa 4: Implementar progressao de niveis
+- [x] Tarefa 4: Implementar progressao de niveis
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/services/game-state.service.ts` (mesmo arquivo)
   - O que fazer:
     - `startRun()`: reseta tudo, set currentLevel=1, phase='playing', isRunActive=true, chama startLevel()
@@ -50,7 +50,7 @@ Criar o GameStateService usando Angular Signals para gerenciar todo o estado do 
     - `resetRun()`: zera tudo, phase='idle', isRunActive=false
     - `isLastLevel = computed(() => currentLevel() === 5)`
 
-- [ ] Tarefa 5: Integrar win condition com GameState
+- [x] Tarefa 5: Integrar win condition com GameState
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
   - O que fazer:
     - Injetar GameStateService
@@ -67,17 +67,17 @@ Criar o GameStateService usando Angular Signals para gerenciar todo o estado do 
 
 ## Criterios de Aceite
 
-- [ ] CA01: Timer inicia quando nivel comeca
+- [x] CA01: Timer inicia quando nivel comeca
   - Cenario: Given startRun() chamado / When nivel 1 inicia / Then currentLevelStartTime registrado e getElapsedMs() retorna valor crescente
-- [ ] CA02: Timer para quando nivel completado
+- [x] CA02: Timer para quando nivel completado
   - Cenario: Given timer rodando / When completeLevel() chamado / Then tempo e registrado em levelTimes e timer para
-- [ ] CA03: Timer nao pausa no retry
+- [x] CA03: Timer nao pausa no retry
   - Cenario: Given timer em 30s / When resetRobot() chamado / Then timer continua rodando (nao reseta)
-- [ ] CA04: Progressao 1->5 funciona
+- [x] CA04: Progressao 1->5 funciona
   - Cenario: Given nivel 1 completo / When nextLevel() chamado / Then currentLevel=2 e novo timer inicia
-- [ ] CA05: Run completo apos nivel 5
+- [x] CA05: Run completo apos nivel 5
   - Cenario: Given nivel 5 completo / When completeLevel() chamado / Then phase='run-complete' e levelTimes tem 5 tempos
-- [ ] CA06: Formato MM:SS correto
+- [x] CA06: Formato MM:SS correto
   - Cenario: Given tempo 92000ms / When formatTime() chamado / Then retorna "01:32"
 
 ## Testes Esperados
@@ -91,9 +91,12 @@ Criar o GameStateService usando Angular Signals para gerenciar todo o estado do 
 
 ## Registro de Execucao
 
-- Data:
+- Data: 2026-05-31
 - Arquivos criados:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/models/game-state.model.ts` (GamePhase, LevelProgress, RunState)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/services/game-state.service.ts` (GameStateService com Signals, timer, progressao)
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts` (injecao de GameStateService, @Output levelCompleted, emissao do evento em checkWinCondition)
+- Testes executados: ng build (producao) - sucesso sem erros TypeScript. Apenas warnings pre-existentes de CSS budget.
+- Resultado: BUILD SUCCESS - todos os lazy chunks gerados corretamente.
+- Pendencias: Nenhuma. GameStateService pronto para ser consumido pelo GamePage na Fase 04.
