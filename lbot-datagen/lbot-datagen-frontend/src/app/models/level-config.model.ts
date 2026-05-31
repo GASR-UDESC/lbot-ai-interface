@@ -1,6 +1,3 @@
-/** Shape variant of the arena boundary. */
-export type ArenaShape = 'square' | 'rectangle' | 'circle';
-
 /**
  * Visual theme configuration for a game level.
  */
@@ -56,11 +53,14 @@ export interface LevelConfig {
   startPoint: { x: number; z: number };
   /** Goal (point B) position */
   goalPoint: { x: number; z: number };
-  /** Shape of the arena boundary. Defaults to 'square' when omitted. */
-  arenaShape?: ArenaShape;
-  /** Arena dimensions in world units. Defaults to { width: 400, height: 400 } when omitted. */
-  arenaSize?: { width: number; height: number };
 }
+
+// ---------------------------------------------------------------------------
+// Fixed start and goal points used across ALL levels.
+// A = (-150, -150) | B = (150, 150) | distance ≈ 424 units
+// ---------------------------------------------------------------------------
+const START_POINT = { x: -150, z: -150 };
+const GOAL_POINT = { x: 150, z: 150 };
 
 /**
  * Definitions for all 5 game levels.
@@ -85,8 +85,8 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#D2691E',
       skyColor:    '#87CEEB'
     },
-    startPoint: { x: -150, z: -150 },
-    goalPoint:  { x: 150, z: 150 },
+    startPoint: START_POINT,
+    goalPoint:  GOAL_POINT,
     obstacles: [
       // Loose diagonal cluster blocking the center. Player must skirt left or right.
       { x:   0, z:   0, width: 15, height: 15, depth: 15, type: 'crate' },
@@ -109,8 +109,8 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#A0A0A0',
       skyColor:    '#B0C4DE'
     },
-    startPoint: { x: -150, z: -150 },
-    goalPoint:  { x: 150, z: 150 },
+    startPoint: START_POINT,
+    goalPoint:  GOAL_POINT,
     obstacles: [
       // Two horizontal desk rows blocking center
       { x: -50, z:  10, width: 70, height:  8, depth: 10, type: 'wall' },
@@ -138,8 +138,8 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#555555',
       skyColor:    '#708090'
     },
-    startPoint: { x: -150, z: -150 },
-    goalPoint:  { x: 150, z: 150 },
+    startPoint: START_POINT,
+    goalPoint:  GOAL_POINT,
     obstacles: [
       // Tall "building" walls on left and right halves
       { x: -80, z:  15, width:  8, height: 30, depth: 130, type: 'wall' },
@@ -165,8 +165,8 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#006400',
       skyColor:    '#87CEEB'
     },
-    startPoint: { x: -150, z: -150 },
-    goalPoint:  { x: 150, z: 150 },
+    startPoint: START_POINT,
+    goalPoint:  GOAL_POINT,
     obstacles: [
       // "Trees" — tall narrow crates arranged in a sinuous pattern
       { x:  -90, z:  -50, width: 12, height: 25, depth: 12, type: 'crate' },
@@ -193,8 +193,8 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#3D3D3D',
       skyColor:    '#404040'
     },
-    startPoint: { x: -150, z: -150 },
-    goalPoint:  { x: 150, z: 150 },
+    startPoint: START_POINT,
+    goalPoint:  GOAL_POINT,
     obstacles: [
       // Long industrial walls forming a partial maze
       { x: -60, z:  -45, width:  8, height: 18, depth:  90, type: 'wall' },

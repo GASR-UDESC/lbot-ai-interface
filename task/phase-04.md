@@ -1,6 +1,6 @@
 # Fase 04: LevelConfig + Arena Shapes Variaveis
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
@@ -87,30 +87,9 @@ cd lbot-datagen/lbot-datagen-frontend && ng build
 
 ## Registro de Execucao
 
-- Data: 2026-05-31
-- Arquivos criados: nenhum
+- Data:
+- Arquivos criados:
 - Arquivos alterados:
-  - `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
-    - Adicionado tipo `ArenaShape = 'square' | 'rectangle' | 'circle'`
-    - Adicionados campos opcionais `arenaShape?` e `arenaSize?` em `LevelConfig`
-    - Removidas constantes `START_POINT` e `GOAL_POINT`; valores inlined em cada nivel
-  - `lbot-datagen/lbot-datagen-frontend/src/app/services/arena-builder.service.ts`
-    - Importado `ArenaShape` do model
-    - `createArenaWalls()` parametrizado com `arenaWidth = 400, arenaHeight = 400`
-    - `createThemedWalls()` expandido com params `arenaShape` e `arenaSize`: suporta square/rectangle via wallDefs e circle via novo metodo
-    - Novo metodo privado `createCircularWallMeshes(material, radius)`: gera N=32 segmentos Box tangenciais ao circulo com `rotation.y = PI/2 + angle`
-  - `lbot-datagen/lbot-datagen-frontend/src/app/services/physics.service.ts`
-    - Importado `ArenaShape` do model
-    - Adicionados campos privados: `currentArenaShape`, `currentArenaWidth`, `currentArenaHeight`, `arenaWallBodies[]`
-    - `createStaticBodies()` aceita params opcionais `arenaShape` e `arenaSize`; armazena config e chama `createArenaWallsBodies()`
-    - Novo metodo publico `updateArenaWalls(world, shape, size)`: remove corpos antigos, atualiza config, recria corpos
-    - `createArenaWallsBodies()` refatorado: usa estado interno; suporte a circular (N=32 CANNON.Box com quaternion tangencial) e retangular/quadrado (4 paredes com width/height corretos)
-    - `isValidPosition()` shape-aware: circular usa distancia radial (`sqrt(x²+z²) > radius - 10`), retangular/quadrado usa halfWidth/halfHeight com margem de 10
-  - `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
-    - Importado `ArenaShape` do model
-    - Adicionado campo `arenaWallMeshes: THREE.Mesh[]`
-    - `initializeSimulator()`: extrai `arenaShape`/`arenaSize` do levelConfig; usa `createThemedWalls()` quando levelConfig presente; armazena em `arenaWallMeshes`; passa config para `createStaticBodies()`
-    - `loadLevel()` expandido: remove meshes antigos das paredes (com dispose de geometry/material), recria via `createThemedWalls()`, chama `physics.updateArenaWalls()`, log inclui forma e tamanho da arena
-- Testes executados: `ng build` — BUILD SUCESSO. Sem erros TypeScript. 2 warnings pre-existentes de budget CSS ignorados.
-- Resultado: SUCESSO
-- Pendencias: nenhuma
+- Testes executados:
+- Resultado:
+- Pendencias:
