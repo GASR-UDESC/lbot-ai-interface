@@ -74,9 +74,25 @@ Introduzir Angular Router com lazy loading no projeto e criar a estrutura de pag
 
 ## Registro de Execucao
 
-- Data:
+- Data: 2026-05-31
 - Arquivos criados:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/menu/menu.page.ts`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/menu/menu.page.html`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/menu/menu.page.css`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.ts`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.html`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.css`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.ts`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.html`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.css`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/controls/controls.page.ts`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/controls/controls.page.html`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/controls/controls.page.css`
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.routes.ts` (rotas lazy-loaded configuradas)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.ts` (simplificado para RouterOutlet)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.html` (apenas <router-outlet>)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.css` (variaveis CSS globais)
+- Testes executados: ng build (sucesso, sem erros de compilacao)
+- Resultado: BUILD SUCCESS - 4 lazy chunks gerados (menu-page, game-page, leaderboard-page, controls-page)
+- Pendencias: Nenhuma. Warnings de CSS budget sao pre-existentes dos componentes originais.
