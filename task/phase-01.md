@@ -1,6 +1,6 @@
 # Fase 01: Parser LBML + Types para comando A
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Expandir o sistema de tipos e o parser LBML do datagen-frontend para reconhecer,
 
 ## Tarefas
 
-- [ ] Tarefa 1: Expandir tipos em lbml-command.model.ts
+- [x] Tarefa 1: Expandir tipos em lbml-command.model.ts
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/lbml-command.model.ts`
   - O que fazer:
     - Adicionar `'A'` ao tipo `LbmlCommandType` (fica `'D' | 'R' | 'A'`)
@@ -21,7 +21,7 @@ Expandir o sistema de tipos e o parser LBML do datagen-frontend para reconhecer,
     - Criar tipo union `ParsedLbmlCommand = ParsedCommand | ParsedArcCommand` para ser usado no fluxo de execucao
     - Manter `ParsedCommand` existente intacto para retrocompatibilidade
 
-- [ ] Tarefa 2: Expandir o LBML parser service
+- [x] Tarefa 2: Expandir o LBML parser service
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/services/lbml-parser.service.ts`
   - O que fazer:
     - Adicionar regex para comando A: `private static readonly ARC_COMMAND_REGEX = /^A(\d+)([LR])(\d+);$/;`
@@ -32,7 +32,7 @@ Expandir o sistema de tipos e o parser LBML do datagen-frontend para reconhecer,
     - Atualizar `formatCommand()` para formatar ParsedArcCommand como `A<radius><direction><angle>`
     - Atualizar `isValidCommand()` para reconhecer comandos A
 
-- [ ] Tarefa 3: Atualizar imports no robo-simulator
+- [x] Tarefa 3: Atualizar imports no robo-simulator
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
   - O que fazer:
     - Atualizar import de `ParsedCommand` para incluir `ParsedLbmlCommand` e `ParsedArcCommand`
