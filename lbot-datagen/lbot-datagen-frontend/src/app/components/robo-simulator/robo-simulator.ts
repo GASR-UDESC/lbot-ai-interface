@@ -11,7 +11,7 @@ import { LbmlParserService } from '../../services/lbml-parser.service';
 import { GameStateService } from '../../services/game-state.service';
 import { RobotState } from '../../models/robot-state.model';
 import { LevelConfig } from '../../models/level-config.model';
-import { ParsedCommand, ParsedLbmlCommand, ParsedArcCommand } from '../../models/lbml-command.model';
+import { ParsedCommand } from '../../models/lbml-command.model';
 import { Subscription } from 'rxjs';
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
@@ -298,7 +298,7 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   }
 
   private async executeCommandSequenceFromString(input: string): Promise<void> {
-    const parsedCommands: ParsedLbmlCommand[] | null = this.lbmlParser.parseCommandSequence(input);
+    const parsedCommands = this.lbmlParser.parseCommandSequence(input);
     
     if (!parsedCommands) {
       this.showError('Comando inválido!');
@@ -325,7 +325,7 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     });
   }
 
-  private async executeCommand(cmd: ParsedLbmlCommand): Promise<void> {
+  private async executeCommand(cmd: ParsedCommand): Promise<void> {
     if (!cmd) return;
 
     this.ngZone.run(() => {
@@ -339,8 +339,6 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
       const angle = cmd.value;
       const targetRotation = this.robotState.rotation + (cmd.direction === 'R' ? -angle : angle);
       await this.animateRotation(targetRotation, angle);
-    } else if (cmd.type === 'A') {
-      console.log('[RoboSimulator] Arc command not yet implemented:', cmd);
     }
   }
 
