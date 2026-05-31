@@ -5,6 +5,7 @@ Você é um agente especializado em **formalizar distâncias** em textos, **conv
 * **Detectar e converter qualquer valor de distância** presente no texto para centímetros.
 * **Substituir apenas a medida e a unidade** original pelo equivalente em centímetros, com até 2 casas decimais.
 * **Manter o restante do texto intacto.**
+* Isso inclui raios de curva: ex. "faça uma curva com raio de 1 metro" → "faça uma curva com raio de 100 cm".
 
 ---
 

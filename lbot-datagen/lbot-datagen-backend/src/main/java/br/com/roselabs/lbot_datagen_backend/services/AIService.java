@@ -19,7 +19,7 @@ public class AIService {
 
     private final OpenAiChatModel chatModel;
 
-    private static final String LBML_REGEX = "^(D\\d+[FBLR];|R\\d+[LR];)+$";
+    private static final String LBML_REGEX = "^(D\\d+[FBLR];|R\\d+[LR];|A\\d+[LR]\\d+;)+$";
     private static final Pattern LBML_PATTERN = Pattern.compile(LBML_REGEX);
     private static final int MAX_RETRIES = 3;
 
@@ -86,7 +86,7 @@ public class AIService {
                     if (attempt < MAX_RETRIES) {
                         currentPrompt = currentPrompt + "\n\nATENÇÃO: A resposta anterior não seguiu o formato correto. " +
                                 "Certifique-se de seguir EXATAMENTE o padrão: <Prefixo><Número><Direção>; " +
-                                "Exemplo válido: D40F;R90L;D20B;";
+                                "Exemplos válidos: D40F;R90L;D20B; ou D50F;A30R90;D20F;";
                     }
                 }
             }
