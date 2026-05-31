@@ -245,56 +245,6 @@ export class PhysicsService {
   }
 
   /**
-   * Finds the maximum valid angular position along a circular arc path.
-   *
-   * Samples the arc trajectory discretely (stepSize = 5 units) and returns
-   * the last valid position before a collision is detected.
-   *
-   * @param centerX   X coordinate of the arc center
-   * @param centerZ   Z coordinate of the arc center
-   * @param radius    Radius of the arc
-   * @param startAngle  Starting angle on the circle (radians)
-   * @param endAngle    Ending angle on the circle (radians, signed)
-   * @param obstacles   List of obstacles to check against
-   * @returns { angle, x, z, blocked } where angle is the last valid angular
-   *          position (radians) and blocked indicates whether a collision was found
-   */
-  getMaxValidArcPosition(
-    centerX: number,
-    centerZ: number,
-    radius: number,
-    startAngle: number,
-    endAngle: number,
-    obstacles: ObstacleData[]
-  ): { angle: number; x: number; z: number; blocked: boolean } {
-    const arcSpan = endAngle - startAngle; // signed (negative = clockwise)
-    const arcLength = radius * Math.abs(arcSpan);
-    const stepSize = 5;
-    const steps = Math.max(1, Math.floor(arcLength / stepSize));
-
-    // Iterate from step 1 (step 0 = robot's current position, always valid)
-    for (let i = 1; i <= steps; i++) {
-      const theta = startAngle + arcSpan * (i / steps);
-      const x = centerX + radius * Math.sin(theta);
-      const z = centerZ + radius * Math.cos(theta);
-
-      if (!this.isValidPosition(x, z, obstacles)) {
-        // Return the last valid position (step i-1)
-        const prevTheta = startAngle + arcSpan * ((i - 1) / steps);
-        const prevX = centerX + radius * Math.sin(prevTheta);
-        const prevZ = centerZ + radius * Math.cos(prevTheta);
-        console.log(`Colisão em arco! Step ${i}/${steps}, ângulo válido: ${prevTheta.toFixed(3)} rad`);
-        return { angle: prevTheta, x: prevX, z: prevZ, blocked: true };
-      }
-    }
-
-    // No collision: return the final endpoint
-    const finalX = centerX + radius * Math.sin(endAngle);
-    const finalZ = centerZ + radius * Math.cos(endAngle);
-    return { angle: endAngle, x: finalX, z: finalZ, blocked: false };
-  }
-
-  /**
    * Resets robot body to initial position
    */
   resetRobotBody(robotBody: CANNON.Body): void {
