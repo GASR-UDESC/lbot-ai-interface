@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { TimelineCommand } from './command-builder.service';
+import { environment } from '../../environments/environment';
 
 /**
  * DTO for a single virtual control command.
@@ -49,7 +50,7 @@ export interface CreateVirtualControlSessionRequest {
   providedIn: 'root'
 })
 export class VirtualControlService {
-  private readonly baseUrl = 'https://lbot-ai-interface-production.up.railway.app';
+  private readonly baseUrl = environment.apiBaseUrl;
   private readonly defaultHeaders = new HttpHeaders({
     'Content-Type': 'application/json'
   });
