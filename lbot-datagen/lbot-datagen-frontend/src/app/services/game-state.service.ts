@@ -5,7 +5,7 @@ import { GamePhase } from '../models/game-state.model';
  * Manages all game-run state using Angular Signals.
  *
  * Responsibilities:
- * - Track the current level (1-5), game phase, per-level times, and full run time.
+ * - Track the current level (1-5), game phase, and per-level times.
  * - Provide a wall-clock timer based on Date.now() (no drift).
  * - Expose reactive signals / computed values for UI consumption.
  *
@@ -30,9 +30,6 @@ export class GameStateService {
 
   /** Timestamp (Date.now()) when the current level started. */
   readonly currentLevelStartTime = signal<number>(0);
-
-  /** Timestamp (Date.now()) when the current run started. */
-  readonly runStartTime = signal<number>(0);
 
   /** Whether a run is currently active. */
   readonly isRunActive = signal<boolean>(false);
@@ -65,7 +62,6 @@ export class GameStateService {
     this.currentLevel.set(1);
     this.isRunActive.set(true);
     this.phase.set('playing');
-    this.runStartTime.set(Date.now());
     this.startLevel();
   }
 
@@ -84,10 +80,7 @@ export class GameStateService {
    * - Sets phase to 'level-complete' (or 'run-complete' for the last level).
    */
   completeLevel(): void {
-    const elapsed = this.isLastLevel()
-      ? this.getGlobalElapsedMs() - this.levelTimes().reduce((acc, t) => acc + t, 0)
-      : Date.now() - this.currentLevelStartTime();
-
+    const elapsed = Date.now() - this.currentLevelStartTime();
     this.levelTimes.update(times => [...times, elapsed]);
 
     if (this.isLastLevel()) {
@@ -118,7 +111,6 @@ export class GameStateService {
     this.currentLevel.set(1);
     this.levelTimes.set([]);
     this.currentLevelStartTime.set(0);
-    this.runStartTime.set(0);
     this.isRunActive.set(false);
   }
 
@@ -133,13 +125,6 @@ export class GameStateService {
    */
   getElapsedMs(): number {
     const start = this.currentLevelStartTime();
-    if (start === 0) return 0;
-    return Date.now() - start;
-  }
-
-  /** Returns the milliseconds elapsed since the current run started. */
-  getGlobalElapsedMs(): number {
-    const start = this.runStartTime();
     if (start === 0) return 0;
     return Date.now() - start;
   }
