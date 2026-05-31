@@ -31,7 +31,7 @@ import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-mo
  *  - Show LevelTransition overlay when phase === 'level-complete'
  *  - Show VictoryScreen overlay when phase === 'run-complete'
  *  - Show ConfirmModal when the user tries to navigate away mid-run
- *  - Update HUD timer every second via setInterval
+ *  - Update the global HUD timer every second via setInterval
  *  - Intercept browser back/close while a run is active
  */
 @Component({
@@ -167,8 +167,6 @@ export class GamePage implements OnInit, OnDestroy {
   /** "Próximo Nível" button in LevelTransition overlay. */
   onNextLevel(): void {
     this.gameState.nextLevel();
-    // Restart the per-level timer display.
-    this.startTimer();
     // Give Angular one tick to update currentLevel before the simulator
     // reacts via the effect above.
   }
@@ -274,10 +272,12 @@ export class GamePage implements OnInit, OnDestroy {
 
   private startTimer(): void {
     this.stopTimer();
-    this.timerDisplay.set('00:00');
+    this.timerDisplay.set(
+      this.gameState.formatTime(this.gameState.getGlobalElapsedMs())
+    );
     this.timerInterval = setInterval(() => {
       this.timerDisplay.set(
-        this.gameState.formatTime(this.gameState.getElapsedMs())
+        this.gameState.formatTime(this.gameState.getGlobalElapsedMs())
       );
     }, 1000);
   }
