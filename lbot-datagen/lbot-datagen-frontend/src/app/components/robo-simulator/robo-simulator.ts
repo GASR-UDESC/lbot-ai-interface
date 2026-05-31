@@ -9,6 +9,7 @@ import { ArenaBuilderService, ObstacleData } from '../../services/arena-builder.
 import { CameraControllerService } from '../../services/camera-controller.service';
 import { LbmlParserService } from '../../services/lbml-parser.service';
 import { RobotState } from '../../models/robot-state.model';
+import { LevelConfig } from '../../models/level-config.model';
 import { ParsedCommand } from '../../models/lbml-command.model';
 import { Subscription } from 'rxjs';
 import * as THREE from 'three';
@@ -70,6 +71,8 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef<HTMLDivElement>;
 
   @Input() showGoals = true;
+  /** When provided, renders the arena with this level's config instead of the default random layout. */
+  @Input() levelConfig?: LevelConfig;
 
   private sub?: Subscription;
   private scene!: THREE.Scene;
@@ -77,6 +80,8 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   private renderer!: THREE.WebGLRenderer;
   private robotGroup!: THREE.Group;
   private animationId?: number;
+  /** Reference to the current ground mesh so it can be swapped on level load. */
+  private groundMesh?: THREE.Mesh;
 
   // Physics
   private world!: CANNON.World;
@@ -166,6 +171,11 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
         this.generateNewLevel();
       }
     }
+
+    // React to levelConfig changes AFTER the scene has been initialised (AfterViewInit).
+    if (changes['levelConfig'] && changes['levelConfig'].currentValue && this.scene) {
+      this.loadLevel(changes['levelConfig'].currentValue as LevelConfig);
+    }
   }
 
   private initializeSimulator(): void {
@@ -175,9 +185,13 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.camera = sceneSetup.camera;
     this.renderer = sceneSetup.renderer;
 
-    // Create ground and arena
-    this.scene.add(this.arenaBuilder.createGround());
+    // Create ground — use themed ground when a levelConfig is present
+    this.groundMesh = this.levelConfig
+      ? this.arenaBuilder.createThemedGround(this.levelConfig.theme)
+      : this.arenaBuilder.createGround();
+    this.scene.add(this.groundMesh);
     this.scene.add(this.arenaBuilder.createGridHelper());
+
     const walls = this.arenaBuilder.createArenaWalls(this.scene);
     walls.forEach(wall => this.scene.add(wall));
 
@@ -190,15 +204,26 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.physics.createStaticBodies(this.world);
     this.robotBody = this.physics.createRobotBody(this.world);
 
-    // Create obstacles
-    this.obstacles = this.arenaBuilder.createObstacles(this.scene, this.world);
-    
-    // Create game markers
+    // Create obstacles — use level config when available, otherwise default hardcoded layout
+    if (this.levelConfig) {
+      this.startPoint = { ...this.levelConfig.startPoint };
+      this.goalPoint  = { ...this.levelConfig.goalPoint };
+      this.obstacles  = this.arenaBuilder.createObstaclesFromConfig(this.scene, this.world, this.levelConfig);
+    } else {
+      this.obstacles = this.arenaBuilder.createObstacles(this.scene, this.world);
+    }
+
+    // Create game markers (positioned at current startPoint / goalPoint)
     this.createGameMarkers();
     this.updateMarkersVisibility();
-    
-    // Generate initial level positions and place robot at start point A
-    this.generateNewLevel();
+
+    if (this.levelConfig) {
+      // Level config mode: robot starts at the fixed start point; no random generation
+      this.resetRobot();
+    } else {
+      // Default mode: generate random A/B positions
+      this.generateNewLevel();
+    }
 
     // Setup camera controls
     this.cameraController.setupEventListeners(
@@ -429,6 +454,55 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
       this.hasWon = false;
       this.cdr.detectChanges();
     });
+  }
+
+  /**
+   * Loads a level from configuration: swaps ground, clears old obstacles,
+   * spawns new obstacles, repositions markers and resets the robot.
+   * Safe to call only after the scene is initialised (AfterViewInit).
+   */
+  loadLevel(config: LevelConfig): void {
+    // 1. Remove old obstacles from scene and physics world
+    for (const obs of this.obstacles) {
+      this.scene.remove(obs.mesh);
+      obs.mesh.geometry.dispose();
+      if (obs.mesh.material instanceof THREE.Material) {
+        obs.mesh.material.dispose();
+      }
+      this.world.removeBody(obs.body);
+    }
+    this.obstacles = [];
+
+    // 2. Swap ground with themed ground
+    if (this.groundMesh) {
+      this.scene.remove(this.groundMesh);
+      this.groundMesh.geometry.dispose();
+      if (this.groundMesh.material instanceof THREE.Material) {
+        this.groundMesh.material.dispose();
+      }
+    }
+    this.groundMesh = this.arenaBuilder.createThemedGround(config.theme);
+    this.scene.add(this.groundMesh);
+
+    // 3. Create new obstacles from config
+    this.obstacles = this.arenaBuilder.createObstaclesFromConfig(this.scene, this.world, config);
+
+    // 4. Update start and goal points
+    this.startPoint = { ...config.startPoint };
+    this.goalPoint  = { ...config.goalPoint };
+
+    // 5. Reposition markers
+    this.startMarker.position.set(this.startPoint.x, 0.1, this.startPoint.z);
+    this.goalMarker.position.set(this.goalPoint.x,  0.1, this.goalPoint.z);
+    this.startTextSprite.position.set(this.startPoint.x, 10, this.startPoint.z);
+    this.goalTextSprite.position.set(this.goalPoint.x,  10, this.goalPoint.z);
+
+    // 6. Reset robot to new start point
+    this.hasWon = false;
+    this.resetRobot();
+
+    this.cdr.detectChanges();
+    console.log(`[RoboSimulator] Level "${config.name}" carregado`);
   }
 
   toggleCameraMode(): void {

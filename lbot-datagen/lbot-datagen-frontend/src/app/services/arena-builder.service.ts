@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { LevelConfig, ThemeConfig } from '../models/level-config.model';
 
 export interface ObstacleData {
   mesh: THREE.Mesh;
@@ -263,5 +264,124 @@ export class ArenaBuilderService {
       wallHeight: 15,
       wallThickness: 8
     };
+  }
+
+  // ─── Themed / Level-aware methods ───────────────────────────────────────
+
+  /**
+   * Creates obstacles based on a LevelConfig, applying the level's theme color.
+   * Use this method instead of createObstacles() when running a gamified level.
+   */
+  createObstaclesFromConfig(
+    scene: THREE.Scene,
+    world: CANNON.World,
+    config: LevelConfig
+  ): ObstacleData[] {
+    const obstacles: ObstacleData[] = [];
+
+    const colorHex = parseInt(config.theme.obstacleColor.replace('#', ''), 16);
+    const material = new THREE.MeshStandardMaterial({
+      color: colorHex,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+
+    for (const obsCfg of config.obstacles) {
+      const geometry = new THREE.BoxGeometry(obsCfg.width, obsCfg.height, obsCfg.depth);
+      const mesh = new THREE.Mesh(geometry, material);
+
+      const rampAngle = obsCfg.rampAngle ?? 0;
+      const yOffset = obsCfg.type === 'ramp'
+        ? Math.sin(rampAngle) * obsCfg.depth / 4
+        : 0;
+
+      mesh.position.set(obsCfg.x, obsCfg.height / 2 + yOffset, obsCfg.z);
+      if (obsCfg.type === 'ramp') {
+        mesh.rotation.x = rampAngle;
+      }
+      if (obsCfg.rotationY !== undefined) {
+        mesh.rotation.y = obsCfg.rotationY * Math.PI / 180;
+      }
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      // Physics body
+      const shape = new CANNON.Box(
+        new CANNON.Vec3(obsCfg.width / 2, obsCfg.height / 2, obsCfg.depth / 2)
+      );
+      const body = new CANNON.Body({ mass: 0 });
+      body.addShape(shape);
+      body.position.set(obsCfg.x, obsCfg.height / 2 + yOffset, obsCfg.z);
+
+      if (obsCfg.type === 'ramp' || obsCfg.rotationY !== undefined) {
+        const rotY = (obsCfg.rotationY ?? 0) * Math.PI / 180;
+        body.quaternion.setFromEuler(rampAngle, rotY, 0);
+      }
+
+      world.addBody(body);
+      obstacles.push({ mesh, body });
+    }
+
+    console.log(`[ArenaBuilder] Level "${config.name}" criado com ${obstacles.length} obstáculos`);
+    return obstacles;
+  }
+
+  /**
+   * Creates a solid-color ground plane using the level theme's groundColor.
+   * Returns the mesh; caller must add it to the scene.
+   */
+  createThemedGround(theme: ThemeConfig): THREE.Mesh {
+    const colorHex = parseInt(theme.groundColor.replace('#', ''), 16);
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(800, 800),
+      new THREE.MeshLambertMaterial({ color: colorHex })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    return ground;
+  }
+
+  /**
+   * Creates arena boundary walls using the level theme's wallColor.
+   * Returns the meshes; caller must add them to the scene.
+   * (scene param reserved for potential sub-element additions in future themes.)
+   */
+  createThemedWalls(scene: THREE.Scene, theme: ThemeConfig): THREE.Mesh[] {
+    // scene param intentionally kept for API consistency with createArenaWalls
+    void scene;
+
+    const colorHex = parseInt(theme.wallColor.replace('#', ''), 16);
+    const material = new THREE.MeshStandardMaterial({
+      color: colorHex,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+
+    const wallHeight = 15;
+    const wallThickness = 8;
+    const arenaSize = 400;
+
+    const wallDefs = [
+      // North
+      { w: arenaSize + wallThickness, h: wallHeight, d: wallThickness, x: 0, y: wallHeight / 2, z: arenaSize / 2 + wallThickness / 2 },
+      // South
+      { w: arenaSize + wallThickness, h: wallHeight, d: wallThickness, x: 0, y: wallHeight / 2, z: -arenaSize / 2 - wallThickness / 2 },
+      // East
+      { w: wallThickness, h: wallHeight, d: arenaSize, x: arenaSize / 2 + wallThickness / 2, y: wallHeight / 2, z: 0 },
+      // West
+      { w: wallThickness, h: wallHeight, d: arenaSize, x: -arenaSize / 2 - wallThickness / 2, y: wallHeight / 2, z: 0 },
+    ];
+
+    return wallDefs.map(def => {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(def.w, def.h, def.d),
+        material
+      );
+      mesh.position.set(def.x, def.y, def.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    });
   }
 }
