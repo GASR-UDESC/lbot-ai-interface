@@ -55,22 +55,88 @@ export interface LevelConfig {
   goalPoint: { x: number; z: number };
 }
 
-// ---------------------------------------------------------------------------
-// Fixed start and goal points used across ALL levels.
-// A = (-150, -150) | B = (150, 150) | distance ≈ 424 units
-// ---------------------------------------------------------------------------
-const START_POINT = { x: -150, z: -150 };
-const GOAL_POINT = { x: 150, z: 150 };
+const PLAYABLE_EDGE = 185;
+
+function createHorizontalGapWalls(
+  z: number,
+  gapCenter: number,
+  gapWidth: number,
+  height = 18,
+  depth = 12
+): ObstacleConfig[] {
+  const gapStart = gapCenter - gapWidth / 2;
+  const gapEnd = gapCenter + gapWidth / 2;
+  const walls: ObstacleConfig[] = [];
+
+  if (gapStart > -PLAYABLE_EDGE) {
+    walls.push({
+      x: (-PLAYABLE_EDGE + gapStart) / 2,
+      z,
+      width: gapStart + PLAYABLE_EDGE,
+      height,
+      depth,
+      type: 'wall'
+    });
+  }
+
+  if (gapEnd < PLAYABLE_EDGE) {
+    walls.push({
+      x: (gapEnd + PLAYABLE_EDGE) / 2,
+      z,
+      width: PLAYABLE_EDGE - gapEnd,
+      height,
+      depth,
+      type: 'wall'
+    });
+  }
+
+  return walls;
+}
+
+function createVerticalGapWalls(
+  x: number,
+  gapCenter: number,
+  gapWidth: number,
+  height = 18,
+  width = 12
+): ObstacleConfig[] {
+  const gapStart = gapCenter - gapWidth / 2;
+  const gapEnd = gapCenter + gapWidth / 2;
+  const walls: ObstacleConfig[] = [];
+
+  if (gapStart > -PLAYABLE_EDGE) {
+    walls.push({
+      x,
+      z: (-PLAYABLE_EDGE + gapStart) / 2,
+      width,
+      height,
+      depth: gapStart + PLAYABLE_EDGE,
+      type: 'wall'
+    });
+  }
+
+  if (gapEnd < PLAYABLE_EDGE) {
+    walls.push({
+      x,
+      z: (gapEnd + PLAYABLE_EDGE) / 2,
+      width,
+      height,
+      depth: PLAYABLE_EDGE - gapEnd,
+      type: 'wall'
+    });
+  }
+
+  return walls;
+}
 
 /**
  * Definitions for all 5 game levels.
  *
  * Level design philosophy:
- *  - Level 1 (Armazem)  : 5 crates in a loose diagonal cluster. Easy to go around.
- *  - Level 2 (Escritorio): 7 rectangular obstacles (desks/shelves). More blocked paths.
- *  - Level 3 (Cidade)   : 6 tall walls creating narrow corridors and forced detours.
- *  - Level 4 (Floresta) : 9 tall "tree" crates placed in a sinuous pattern.
- *  - Level 5 (Fabrica)  : 9 mixed obstacles (walls + crates + ramps). Most complex.
+ *  - Level 1-2: horizontal barriers with alternating gaps forcing S-shaped detours.
+ *  - Level 3: corridor route with narrow transitions and mandatory turns.
+ *  - Level 4: denser maze with longer route options and more decision points.
+ *  - Level 5: industrial maze that funnels the robot into a ramp-only final passage.
  */
 export const LEVEL_CONFIGS: LevelConfig[] = [
   // ─────────────────────────────────────────────
@@ -85,15 +151,12 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#D2691E',
       skyColor:    '#87CEEB'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -150, z: -150 },
+    goalPoint:  { x: 150, z: 150 },
     obstacles: [
-      // Loose diagonal cluster blocking the center. Player must skirt left or right.
-      { x:   0, z:   0, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x: -25, z:  25, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x:  25, z: -25, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x: -60, z:  60, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x:  60, z: -60, width: 15, height: 15, depth: 15, type: 'crate' },
+      ...createHorizontalGapWalls(-85, -135, 60, 16, 12),
+      ...createHorizontalGapWalls(10, 125, 60, 16, 12),
+      ...createHorizontalGapWalls(105, -25, 70, 16, 12),
     ]
   },
 
@@ -109,20 +172,15 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#A0A0A0',
       skyColor:    '#B0C4DE'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -155, z: -155 },
+    goalPoint:  { x: 155, z: 145 },
     obstacles: [
-      // Two horizontal desk rows blocking center
-      { x: -50, z:  10, width: 70, height:  8, depth: 10, type: 'wall' },
-      { x:  50, z: -10, width: 70, height:  8, depth: 10, type: 'wall' },
-      // Vertical walls (shelving units) on sides
-      { x:   0, z: -70, width: 10, height:  8, depth: 70, type: 'wall' },
-      { x:   0, z:  70, width: 10, height:  8, depth: 70, type: 'wall' },
-      // Crate obstacles in corners of the main corridor
-      { x: -100, z: -50, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x:  100, z:  50, width: 15, height: 15, depth: 15, type: 'crate' },
-      // Extra wall forcing a detour on the upper route
-      { x: -30, z: 100, width: 50, height: 8, depth: 10, type: 'wall' },
+      ...createHorizontalGapWalls(-110, 130, 55, 18, 12),
+      { x: 92, z: -82, width: 18, height: 18, depth: 18, type: 'crate' },
+      ...createHorizontalGapWalls(-35, -120, 55, 18, 12),
+      { x: -75, z: -8, width: 18, height: 18, depth: 18, type: 'crate' },
+      ...createHorizontalGapWalls(40, 0, 60, 18, 12),
+      ...createHorizontalGapWalls(120, 135, 55, 18, 12),
     ]
   },
 
@@ -138,18 +196,14 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#555555',
       skyColor:    '#708090'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -150, z: -150 },
+    goalPoint:  { x: 150, z: 150 },
     obstacles: [
-      // Tall "building" walls on left and right halves
-      { x: -80, z:  15, width:  8, height: 30, depth: 130, type: 'wall' },
-      { x:  80, z: -15, width:  8, height: 30, depth: 130, type: 'wall' },
-      // Cross-walls blocking centre passage — leave gaps at the ends
-      { x:  10, z: -55, width: 100, height: 30, depth: 8, type: 'wall' },
-      { x: -10, z:  55, width: 100, height: 30, depth: 8, type: 'wall' },
-      // Extra narrow alleys
-      { x: -35, z: -110, width: 8, height: 30, depth: 60, type: 'wall' },
-      { x:  35, z:  110, width: 8, height: 30, depth: 60, type: 'wall' },
+      ...createVerticalGapWalls(-65, -145, 45, 22, 12),
+      ...createHorizontalGapWalls(-60, -10, 45, 22, 12),
+      ...createVerticalGapWalls(35, -10, 45, 22, 12),
+      ...createHorizontalGapWalls(70, 115, 45, 22, 12),
+      ...createVerticalGapWalls(125, 115, 45, 22, 12),
     ]
   },
 
@@ -165,19 +219,19 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#006400',
       skyColor:    '#87CEEB'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -170, z: -170 },
+    goalPoint:  { x: 170, z: 170 },
     obstacles: [
-      // "Trees" — tall narrow crates arranged in a sinuous pattern
-      { x:  -90, z:  -50, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:  -40, z: -100, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:   15, z:  -55, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:  -70, z:   25, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:  -20, z:   55, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:   45, z:   10, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:   85, z:  -35, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:   25, z:  100, width: 12, height: 25, depth: 12, type: 'crate' },
-      { x:  100, z:   70, width: 12, height: 25, depth: 12, type: 'crate' },
+      ...createVerticalGapWalls(-125, -150, 45, 24, 12),
+      ...createHorizontalGapWalls(-120, -55, 45, 24, 12),
+      ...createVerticalGapWalls(-35, -30, 45, 24, 12),
+      ...createHorizontalGapWalls(-25, 120, 50, 24, 12),
+      ...createVerticalGapWalls(55, 95, 45, 24, 12),
+      ...createHorizontalGapWalls(65, 110, 50, 24, 12),
+      ...createVerticalGapWalls(145, 145, 45, 24, 12),
+      { x: -85, z: 20, width: 90, height: 24, depth: 12, type: 'wall' },
+      { x: 105, z: -85, width: 12, height: 24, depth: 100, type: 'wall' },
+      { x: 25, z: 125, width: 90, height: 24, depth: 12, type: 'wall' },
     ]
   },
 
@@ -193,21 +247,18 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
       obstacleColor: '#3D3D3D',
       skyColor:    '#404040'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -170, z: -170 },
+    goalPoint:  { x: 160, z: 160 },
     obstacles: [
-      // Long industrial walls forming a partial maze
-      { x: -60, z:  -45, width:  8, height: 18, depth:  90, type: 'wall' },
-      { x:  60, z:   45, width:  8, height: 18, depth:  90, type: 'wall' },
-      { x:   0, z:    0, width: 90, height: 18, depth:   8, type: 'wall' },
-      // Crate obstacles blocking secondary routes
-      { x: -100, z:  35, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x:  100, z: -35, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x:   35, z: -100, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x:  -35, z:  100, width: 15, height: 15, depth: 15, type: 'crate' },
-      // Ramps — industrial conveyor belt aesthetic
-      { x:  -50, z:  70, width: 40, height: 3, depth: 50, type: 'ramp', rampAngle: 0.3927 },
-      { x:   50, z: -70, width: 40, height: 3, depth: 50, type: 'ramp', rampAngle: 0.3927 },
+      ...createHorizontalGapWalls(-115, -130, 50, 24, 12),
+      ...createVerticalGapWalls(-70, -45, 45, 24, 12),
+      ...createHorizontalGapWalls(-20, 120, 50, 24, 12),
+      { x: 78, z: 60, width: 12, height: 24, depth: 180, type: 'wall' },
+      { x: 162, z: 60, width: 12, height: 24, depth: 180, type: 'wall' },
+      { x: 120, z: 60, width: 72, height: 20, depth: 14, type: 'wall' },
+      { x: 120, z: 22, width: 34, height: 6, depth: 54, type: 'ramp', rampAngle: 0.42 },
+      { x: 120, z: 98, width: 34, height: 6, depth: 54, type: 'ramp', rotationY: 180, rampAngle: 0.42 },
+      ...createHorizontalGapWalls(135, 120, 50, 24, 12),
     ]
   },
 ];
