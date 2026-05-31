@@ -1,5 +1,8 @@
 package br.com.roselabs.lbot_datagen_backend.dtos;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +16,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EvaluateMessageDto {
 
+    @NotNull
     private UUID messageId;
+
+    @NotNull
+    @Min(1)
+    @Max(5)
     private Integer grade;
 }

@@ -42,14 +42,6 @@ export interface EvaluateRequest {
 }
 
 /**
- * Response from message evaluation endpoint.
- */
-export interface EvaluateResponse {
-  success: boolean;
-  message?: string;
-}
-
-/**
  * Service responsible for managing chat messages and communication with the backend API.
  * Handles chat initialization, message sending, and message evaluation.
  */
@@ -90,12 +82,12 @@ export class MessagesService {
   /**
    * Submits an evaluation/rating for a specific message.
    * @param request - The evaluation request with message ID and grade
-   * @returns Observable with the evaluation response
+   * @returns Observable with the updated message response
    */
-  public evaluateMessage(request: EvaluateRequest): Observable<EvaluateResponse> {
-    return this.http.post<EvaluateResponse>(
-      `${this.baseUrl}/messages/evaluate`,
-      request,
+  public evaluateMessage(request: EvaluateRequest): Observable<MessageDto> {
+    return this.http.put<MessageDto>(
+      `${this.baseUrl}/messages/${request.messageId}/evaluation`,
+      { grade: request.grade },
       { headers: this.defaultHeaders }
     );
   }

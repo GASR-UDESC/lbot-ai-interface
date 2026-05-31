@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChatDto, EvaluateResponse, MessageDto, MessagesService } from '../../services/messages-service';
+import { ChatDto, MessageDto, MessagesService } from '../../services/messages-service';
 import { SimulatorBridgeService } from '../../services/simulator-bridge.service';
 import { LucideAngularModule, Bot, Star } from 'lucide-angular';
 
@@ -21,6 +21,11 @@ interface ChatMessage {
   output?: string;
   rated?: boolean;
   rating?: number;
+}
+
+interface PendingReevaluation {
+  messageId: string;
+  rating: number;
 }
 
 /**
@@ -44,6 +49,8 @@ interface StarRating {
   styleUrls: ['./lbot-chat.css']
 })
 export class LbotChat implements OnInit, OnDestroy {
+  public readonly stars = [1, 2, 3, 4, 5];
+
   private static readonly INITIAL_MESSAGE: ChatMessage = {
     text: 'Olá! Digite um comando em português e eu traduzo para LBML.',
     type: 'bot'
@@ -66,14 +73,16 @@ export class LbotChat implements OnInit, OnDestroy {
   public isLoading = false;
   public showObservation = false;
   public observation = '';
+  public showReevaluationPopup = false;
   
   // Icons
   public readonly BotIcon = Bot;
   public readonly StarIcon = Star;
 
   // Private state
-  private ratings: number[] = [];
+  private readonly ratings = new Map<string, number>();
   private chatId = '';
+  private pendingReevaluation: PendingReevaluation | null = null;
 
   constructor(
     private readonly messagesService: MessagesService,
@@ -152,6 +161,51 @@ export class LbotChat implements OnInit, OnDestroy {
   public quickRate(messageId: string, rating: number, event?: MouseEvent | TouchEvent): void {
     event?.stopPropagation();
 
+    const message = this.messages.find(m => m.messageId === messageId);
+
+    if (!message) {
+      return;
+    }
+
+    if (message.rating === rating) {
+      return;
+    }
+
+    if (message.rated) {
+      this.pendingReevaluation = { messageId, rating };
+      this.showReevaluationPopup = true;
+      return;
+    }
+
+    this.updateMessageRating(messageId, rating);
+    this.submitRatingToBackend(messageId, rating);
+  }
+
+  /**
+   * Returns whether a star should be shown as selected.
+   */
+  public isStarFilled(message: ChatMessage, star: number): boolean {
+    return (message.rating ?? 0) >= star;
+  }
+
+  /**
+   * Closes the reevaluation popup without changing the current rating.
+   */
+  public closeReevaluationPopup(): void {
+    this.showReevaluationPopup = false;
+    this.pendingReevaluation = null;
+  }
+
+  /**
+   * Confirms and submits a reevaluation.
+   */
+  public confirmReevaluation(): void {
+    if (!this.pendingReevaluation) {
+      return;
+    }
+
+    const { messageId, rating } = this.pendingReevaluation;
+    this.closeReevaluationPopup();
     this.updateMessageRating(messageId, rating);
     this.submitRatingToBackend(messageId, rating);
   }
@@ -222,7 +276,9 @@ export class LbotChat implements OnInit, OnDestroy {
       type: 'bot',
       messageId: response.id,
       normalizedPrompt: response.normalizedPrompt,
-      output: response.output
+      output: response.output,
+      rated: response.grade !== null,
+      rating: response.grade ?? undefined
     };
 
     this.messages.push(botMessage);
@@ -254,6 +310,8 @@ export class LbotChat implements OnInit, OnDestroy {
       message.rated = true;
       message.rating = rating;
     }
+
+    this.ratings.set(messageId, rating);
   }
 
   /**
@@ -264,14 +322,12 @@ export class LbotChat implements OnInit, OnDestroy {
       messageId,
       grade: rating
     }).subscribe({
-      next: (response: EvaluateResponse) => {
+      next: (response: MessageDto) => {
         console.log('[LbotChat] Rating submitted:', { messageId, rating, response });
-        this.ratings.push(rating);
+        this.updateMessageRating(messageId, response.grade ?? rating);
       },
       error: (error: unknown) => {
         console.error('[LbotChat] Failed to submit rating:', error);
-        // Store locally even on error
-        this.ratings.push(rating);
       }
     });
   }
@@ -296,9 +352,9 @@ export class LbotChat implements OnInit, OnDestroy {
 
     return {
       chatId: this.chatId,
-      individualRatings: this.ratings,
+      individualRatings: Array.from(this.ratings.values()),
       averageRating,
-      totalMessages: this.ratings.length,
+      totalMessages: this.ratings.size,
       observation: this.observation.trim()
     };
   }
@@ -307,12 +363,13 @@ export class LbotChat implements OnInit, OnDestroy {
    * Calculates the average rating from all submitted ratings.
    */
   private calculateAverageRating(): string {
-    if (this.ratings.length === 0) {
+    if (this.ratings.size === 0) {
       return 'N/A';
     }
 
-    const sum = this.ratings.reduce((acc, rating) => acc + rating, 0);
-    const average = sum / this.ratings.length;
+    const ratings = Array.from(this.ratings.values());
+    const sum = ratings.reduce((acc, rating) => acc + rating, 0);
+    const average = sum / ratings.length;
     return average.toFixed(1);
   }
 
@@ -322,10 +379,10 @@ export class LbotChat implements OnInit, OnDestroy {
   private buildThankYouMessage(averageRating: string): string {
     let message = 'Obrigado pelo feedback! ';
 
-    if (this.ratings.length > 0) {
-      const pluralMessages = this.ratings.length > 1 ? 's' : '';
-      const pluralEvaluated = this.ratings.length > 1 ? 's' : '';
-      message += `Média das avaliações: ${averageRating} estrelas (${this.ratings.length} mensagem${pluralMessages} avaliada${pluralEvaluated}). `;
+    if (this.ratings.size > 0) {
+      const pluralMessages = this.ratings.size > 1 ? 's' : '';
+      const pluralEvaluated = this.ratings.size > 1 ? 's' : '';
+      message += `Média das avaliações: ${averageRating} estrelas (${this.ratings.size} mensagem${pluralMessages} avaliada${pluralEvaluated}). `;
     }
 
     if (this.observation.trim()) {
@@ -361,7 +418,8 @@ export class LbotChat implements OnInit, OnDestroy {
     this.isLoading = false;
     this.showObservation = false;
     this.observation = '';
-    this.ratings = [];
+    this.closeReevaluationPopup();
+    this.ratings.clear();
     this.chatId = '';
 
     this.initializeChat();

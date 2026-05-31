@@ -397,6 +397,7 @@
   line-height: 1;
   filter: grayscale(0.6) brightness(0.9);
   opacity: 0.7;
+  color: #8c8c8c;
 }
 
 .star-btn:hover {
@@ -405,43 +406,22 @@
   opacity: 1;
 }
 
+.star-btn.selected {
+  filter: none;
+  opacity: 1;
+  color: #f4b400;
+}
+
+.star-btn.selected ::ng-deep svg {
+  fill: currentColor;
+}
+
 .star-btn:active {
   transform: scale(1.1);
 }
 
-/* Avaliação selecionada */
-.selected-rating {
-  display: flex;
-  align-items: center;
-  gap: clamp(4px, 1vw, 6px);
-  margin-top: clamp(6px, 1.5vw, 8px);
-  padding-top: clamp(4px, 1vw, 6px);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  font-size: clamp(10px, 2vw, 11px);
-  color: #666;
-}
-
-.rating-stars {
-  display: flex;
-  gap: clamp(1px, 0.25vw, 2px);
-}
-
-.star-display {
-  font-size: clamp(10px, 2.5vw, 12px);
-  line-height: 1;
-  filter: grayscale(0.8) brightness(0.8);
-  opacity: 0.4;
-}
-
-.star-display.filled {
-  filter: grayscale(0) brightness(1);
-  opacity: 1;
-}
-
-.rating-text {
-  font-size: clamp(10px, 2.5vw, 11px);
-  font-style: italic;
-  color: #666;
+.confirmation-popup {
+  max-width: min(360px, 90vw);
 }
 
 /* Responsivo para avaliações */
@@ -453,13 +433,5 @@
   
   .star-btn {
     font-size: clamp(11px, 2.5vw, 13px);
-  }
-  
-  .star-display {
-    font-size: clamp(9px, 2vw, 11px);
-  }
-  
-  .selected-rating {
-    justify-content: center;
   }
 }

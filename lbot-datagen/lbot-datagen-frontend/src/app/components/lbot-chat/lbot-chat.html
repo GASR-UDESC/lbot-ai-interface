@@ -21,24 +21,14 @@
           {{ message.text }}
         </div>
         
-        <!-- Estrelas de avaliação (sempre visíveis se não foi avaliado) -->
-        <div *ngIf="message.messageId && !message.rated" class="star-rating">
+        <div *ngIf="message.messageId" class="star-rating">
           <button class="star-btn" 
-                  *ngFor="let star of [1, 2, 3, 4, 5]" 
+                  *ngFor="let star of stars" 
                   (click)="quickRate(message.messageId!, star, $event)"
+                  [class.selected]="isStarFilled(message, star)"
                   [title]="getStarTitle(star)">
             <lucide-icon [img]="StarIcon" [size]="18"></lucide-icon>
           </button>
-        </div>
-        
-        <!-- Mostrar avaliação selecionada -->
-        <div *ngIf="message.messageId && message.rated" class="selected-rating">
-          <span class="rating-stars">
-            <span *ngFor="let star of [1, 2, 3, 4, 5]" class="star-display" [class.filled]="star <= message.rating!">
-              <lucide-icon [img]="StarIcon" [size]="18"></lucide-icon>
-            </span>
-          </span>
-          <span class="rating-text">Avaliado ({{ message.rating }}/5)</span>
         </div>
       </div>
     </div>
@@ -81,6 +71,18 @@
       <button class="submit-btn" (click)="submitObservation()">
         Finalizar Chat
       </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showReevaluationPopup" class="rating-overlay" (click)="closeReevaluationPopup()">
+  <div class="rating-popup confirmation-popup" (click)="$event.stopPropagation()">
+    <h3>Alterar avaliacao</h3>
+    <p>Deseja confirmar a nova nota para esta resposta?</p>
+
+    <div class="rating-buttons">
+      <button class="cancel-btn" (click)="closeReevaluationPopup()">Cancelar</button>
+      <button class="submit-btn" (click)="confirmReevaluation()">Confirmar</button>
     </div>
   </div>
 </div>
