@@ -1,0 +1,123 @@
+.transition-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.transition-card {
+  background: #1a1f1a;
+  border: 1px solid rgba(110, 186, 114, 0.3);
+  border-radius: 20px;
+  padding: 48px 56px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 440px;
+  width: calc(100% - 48px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.level-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #6aba72;
+  background: rgba(110, 186, 114, 0.12);
+  border: 1px solid rgba(110, 186, 114, 0.3);
+  border-radius: 99px;
+  padding: 4px 14px;
+  text-transform: uppercase;
+}
+
+.level-complete-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #e8f5e8;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.time-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6a8f6a;
+}
+
+.time-value {
+  font-size: 2.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #6aba72;
+  letter-spacing: 0.05em;
+}
+
+.next-level-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.next-label {
+  font-size: 0.8rem;
+  color: #6a8f6a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.next-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #c8e6c9;
+}
+
+.next-btn {
+  margin-top: 8px;
+  padding: 14px 36px;
+  background: #2d7a3a;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.next-btn:hover {
+  background: #38a046;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(45, 122, 58, 0.4);
+}
+
+.next-btn:active {
+  transform: translateY(0);
+}

@@ -1,8 +1,68 @@
-<div class="skeleton-page">
-  <div class="skeleton-card">
-    <div class="skeleton-icon">🎮</div>
-    <h1 class="skeleton-title">Modo Jogo</h1>
-    <p class="skeleton-desc">Em construcao — disponivel na Fase 04</p>
-    <a routerLink="/menu" class="back-btn">← Voltar ao Menu</a>
+<!-- ============================================================
+     Game Page layout: 3-D simulator (left) + chat panel (right)
+     ============================================================ -->
+<div class="game-layout">
+
+  <!-- ── Simulator panel ── -->
+  <div class="simulator-panel">
+    <app-robo-simulator
+      [showGoals]="true"
+      [levelConfig]="currentLevelConfig()"
+      (levelCompleted)="onLevelCompleted()"
+    ></app-robo-simulator>
+
+    <!-- HUD overlay -->
+    <div class="hud" *ngIf="gameState.phase() === 'playing'">
+      <div class="hud-level">
+        <span class="hud-label">NÍVEL {{ gameState.currentLevel() }}</span>
+        <span class="hud-level-name">{{ currentLevelConfig()?.name }}</span>
+      </div>
+      <div class="hud-timer">{{ timerDisplay() }}</div>
+      <button class="hud-reset-btn" (click)="onResetRobot()">
+        ↺ Reiniciar Posição
+      </button>
+    </div>
+
+    <!-- Navigation links with guard -->
+    <div class="hud-nav">
+      <button class="nav-link-btn" (click)="tryNavigate('/menu')">← Menu</button>
+      <button class="nav-link-btn" (click)="tryNavigate('/leaderboard')">Ranking</button>
+    </div>
   </div>
+
+  <!-- ── Chat panel ── -->
+  <div class="chat-panel">
+    <app-lbot-chat></app-lbot-chat>
+  </div>
+
 </div>
+
+<!-- ── Level transition overlay ── -->
+<app-level-transition
+  *ngIf="gameState.phase() === 'level-complete'"
+  [levelNumber]="completedLevelNumber()"
+  [levelName]="completedLevelName()"
+  [levelTime]="lastLevelTimeFormatted()"
+  [nextLevelName]="nextLevelName()"
+  (nextLevel)="onNextLevel()"
+></app-level-transition>
+
+<!-- ── Victory screen overlay ── -->
+<app-victory-screen
+  *ngIf="gameState.phase() === 'run-complete'"
+  [levelTimes]="gameState.levelTimes()"
+  [levelNames]="levelNames()"
+  (save)="onSaveLeaderboard($event)"
+  (playAgain)="onPlayAgain()"
+></app-victory-screen>
+
+<!-- ── Confirm exit modal ── -->
+<app-confirm-modal
+  *ngIf="showConfirmModal()"
+  title="Sair do jogo?"
+  message="Você vai perder todo o progresso do jogo. Tem certeza?"
+  confirmText="Sim, sair"
+  cancelText="Cancelar"
+  (confirm)="onConfirmExit()"
+  (cancel)="onCancelExit()"
+></app-confirm-modal>

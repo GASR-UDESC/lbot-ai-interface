@@ -1,0 +1,50 @@
+<div class="victory-overlay">
+  <div class="victory-card">
+    <div class="trophy-icon">🏆</div>
+    <h1 class="victory-title">PARABÉNS!</h1>
+    <p class="victory-subtitle">Todos os níveis completos!</p>
+
+    <!-- Per-level times table -->
+    <div class="times-table">
+      <div class="times-row times-header">
+        <span>Nível</span>
+        <span>Nome</span>
+        <span>Tempo</span>
+      </div>
+      <div class="times-row" *ngFor="let time of levelTimes; let i = index">
+        <span class="level-num">{{ i + 1 }}</span>
+        <span class="level-name-cell">{{ levelNames[i] || ('Nível ' + (i + 1)) }}</span>
+        <span class="level-time">{{ formatTime(time) }}</span>
+      </div>
+      <div class="times-row total-row">
+        <span class="total-label" colspan="2">Total</span>
+        <span class="total-time">{{ formatTime(totalTime) }}</span>
+      </div>
+    </div>
+
+    <!-- Nickname input -->
+    <div class="nickname-section">
+      <label class="nickname-label" for="nickname-input">Seu nome no Leaderboard</label>
+      <input
+        id="nickname-input"
+        class="nickname-input"
+        type="text"
+        placeholder="Digite seu apelido..."
+        maxlength="30"
+        [(ngModel)]="nickname"
+      />
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-buttons">
+      <button class="play-again-btn" (click)="onPlayAgain()">Jogar Novamente</button>
+      <button
+        class="save-btn"
+        [disabled]="!nickname.trim()"
+        (click)="onSave()"
+      >
+        Salvar no Leaderboard
+      </button>
+    </div>
+  </div>
+</div>
