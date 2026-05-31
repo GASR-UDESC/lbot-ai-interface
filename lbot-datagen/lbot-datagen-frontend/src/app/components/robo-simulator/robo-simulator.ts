@@ -359,11 +359,31 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
         break;
     }
 
-    await this.animateMovement(targetX, targetZ, distance);
+    const validTarget = this.physics.getMaxValidPosition(
+      this.robotState.x,
+      this.robotState.z,
+      targetX,
+      targetZ,
+      this.obstacles
+    );
+
+    const travelDistance = Math.sqrt(
+      Math.pow(validTarget.x - this.robotState.x, 2) +
+      Math.pow(validTarget.z - this.robotState.z, 2)
+    );
+
+    await this.animateMovement(validTarget.x, validTarget.z, travelDistance);
   }
 
   private animateMovement(targetX: number, targetZ: number, distance: number): Promise<void> {
     return new Promise(resolve => {
+      if (!Number.isFinite(distance) || distance <= 0) {
+        this.robotBody.velocity.x = 0;
+        this.robotBody.velocity.z = 0;
+        resolve();
+        return;
+      }
+
       const startTime = Date.now();
       const duration = (distance / this.ROBOT_SPEED) * 1000;
       const startPos = this.robotBody.position.clone();
