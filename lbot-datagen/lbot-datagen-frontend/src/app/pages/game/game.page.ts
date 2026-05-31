@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GameStateService } from '../../services/game-state.service';
 import { LevelConfigService } from '../../services/level-config.service';
+import { LeaderboardService } from '../../services/leaderboard.service';
 import { LevelConfig } from '../../models/level-config.model';
 import { RoboSimulatorComponent } from '../../components/robo-simulator/robo-simulator';
 import { LbotChat } from '../../components/lbot-chat/lbot-chat';
@@ -63,6 +64,15 @@ export class GamePage implements OnInit, OnDestroy {
   /** Pending navigation URL — set before showing the confirm modal. */
   private pendingNavUrl: string | null = null;
 
+  /** True while the leaderboard save HTTP request is in flight. */
+  isSaving = signal<boolean>(false);
+
+  /** Set when the leaderboard save fails. */
+  saveError = signal<boolean>(false);
+
+  /** Cached payload for retry after a failed save. */
+  private pendingSavePayload: VictorySavePayload | null = null;
+
   // ── derived ─────────────────────────────────────────────────────────────
   /** Names of all completed levels (for VictoryScreen). */
   levelNames = computed<string[]>(() =>
@@ -95,6 +105,7 @@ export class GamePage implements OnInit, OnDestroy {
   constructor(
     public readonly gameState: GameStateService,
     private readonly levelConfig: LevelConfigService,
+    private readonly leaderboardService: LeaderboardService,
     private readonly router: Router
   ) {
     // Keep currentLevelConfig in sync with currentLevel signal.
@@ -158,10 +169,42 @@ export class GamePage implements OnInit, OnDestroy {
     this.startTimer();
   }
 
-  /** "Salvar no Leaderboard" in VictoryScreen. Leaderboard integration in Phase 06. */
+  /** "Salvar no Leaderboard" in VictoryScreen — wired to backend. */
   onSaveLeaderboard(payload: VictorySavePayload): void {
-    // Phase 06 will wire this up to the backend.
-    console.log('[GamePage] Save leaderboard (Phase 06):', payload);
+    this.pendingSavePayload = payload;
+    this.doSave(payload);
+  }
+
+  /** Retry after a failed save (called from the template). */
+  onRetrySave(): void {
+    if (this.pendingSavePayload) {
+      this.doSave(this.pendingSavePayload);
+    }
+  }
+
+  private doSave(payload: VictorySavePayload): void {
+    this.isSaving.set(true);
+    this.saveError.set(false);
+
+    const [t1, t2, t3, t4, t5] = payload.levelTimes;
+    this.leaderboardService.saveGameRun({
+      nickname: payload.nickname,
+      level1TimeMs: t1 ?? 0,
+      level2TimeMs: t2 ?? 0,
+      level3TimeMs: t3 ?? 0,
+      level4TimeMs: t4 ?? 0,
+      level5TimeMs: t5 ?? 0
+    }).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.pendingSavePayload = null;
+        this.router.navigateByUrl('/leaderboard');
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.saveError.set(true);
+      }
+    });
   }
 
   /** "Reiniciar Posição" HUD button — resets robot, timer keeps running. */

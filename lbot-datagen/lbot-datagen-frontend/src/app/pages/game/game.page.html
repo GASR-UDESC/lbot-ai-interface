@@ -52,7 +52,10 @@
   *ngIf="gameState.phase() === 'run-complete'"
   [levelTimes]="gameState.levelTimes()"
   [levelNames]="levelNames()"
+  [isSaving]="isSaving()"
+  [saveError]="saveError()"
   (save)="onSaveLeaderboard($event)"
+  (retrySave)="onRetrySave()"
   (playAgain)="onPlayAgain()"
 ></app-victory-screen>
 

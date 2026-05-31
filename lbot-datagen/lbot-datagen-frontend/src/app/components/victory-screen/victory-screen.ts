@@ -27,8 +27,17 @@ export class VictoryScreenComponent {
   /** Display names for each level, in order (index 0 = level 1). */
   @Input() levelNames: string[] = [];
 
+  /** True while the parent is saving to the backend. */
+  @Input() isSaving = false;
+
+  /** True when the last save attempt failed. */
+  @Input() saveError = false;
+
   /** Emitted when the player clicks "Salvar no Leaderboard". */
   @Output() save = new EventEmitter<VictorySavePayload>();
+
+  /** Emitted when the player clicks "Tentar novamente" after a failed save. */
+  @Output() retrySave = new EventEmitter<void>();
 
   /** Emitted when the player clicks "Jogar Novamente". */
   @Output() playAgain = new EventEmitter<void>();
@@ -54,6 +63,10 @@ export class VictoryScreenComponent {
       levelTimes: this.levelTimes,
       totalTime: this.totalTime
     });
+  }
+
+  onRetrySave(): void {
+    this.retrySave.emit();
   }
 
   onPlayAgain(): void {

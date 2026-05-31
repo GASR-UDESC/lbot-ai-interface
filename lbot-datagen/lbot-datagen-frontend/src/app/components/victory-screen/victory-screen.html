@@ -37,14 +37,21 @@
 
     <!-- Action buttons -->
     <div class="action-buttons">
-      <button class="play-again-btn" (click)="onPlayAgain()">Jogar Novamente</button>
+      <button class="play-again-btn" [disabled]="isSaving" (click)="onPlayAgain()">Jogar Novamente</button>
       <button
         class="save-btn"
-        [disabled]="!nickname.trim()"
+        [disabled]="!nickname.trim() || isSaving"
         (click)="onSave()"
       >
-        Salvar no Leaderboard
+        <span *ngIf="!isSaving">Salvar no Leaderboard</span>
+        <span *ngIf="isSaving">Salvando...</span>
       </button>
+    </div>
+
+    <!-- Save error feedback -->
+    <div class="save-error" *ngIf="saveError">
+      <p class="save-error-msg">Erro ao salvar. Tente novamente.</p>
+      <button class="save-retry-btn" (click)="onRetrySave()">Tentar novamente</button>
     </div>
   </div>
 </div>

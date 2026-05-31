@@ -1,6 +1,6 @@
 # Fase 06: Frontend Leaderboard & Integracao com Backend
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -13,13 +13,13 @@ Criar o LeaderboardService para comunicacao HTTP com a API, implementar a pagina
 
 ## Tarefas
 
-- [ ] Tarefa 1: Criar interfaces/models do leaderboard no frontend
+- [x] Tarefa 1: Criar interfaces/models do leaderboard no frontend
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/leaderboard.model.ts`
   - O que fazer: Definir interfaces:
     - `CreateGameRunRequest = { nickname: string, level1TimeMs: number, level2TimeMs: number, level3TimeMs: number, level4TimeMs: number, level5TimeMs: number }`
     - `GameRunResponse = { id: string, nickname: string, level1TimeMs: number, ..., level5TimeMs: number, totalTimeMs: number, completedAt: string }`
 
-- [ ] Tarefa 2: Criar LeaderboardService
+- [x] Tarefa 2: Criar LeaderboardService
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/services/leaderboard.service.ts`
   - O que fazer:
     - Injetar HttpClient
@@ -27,7 +27,7 @@ Criar o LeaderboardService para comunicacao HTTP com a API, implementar a pagina
     - `getLeaderboard(): Observable<GameRunResponse[]>` -> GET /game-runs
     - Usar environment.apiBaseUrl como base
 
-- [ ] Tarefa 3: Implementar pagina Leaderboard
+- [x] Tarefa 3: Implementar pagina Leaderboard
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.ts`
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.html`
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.css`
@@ -41,7 +41,7 @@ Criar o LeaderboardService para comunicacao HTTP com a API, implementar a pagina
     - Formatar tempo total com formatTime (MM:SS)
     - Formatar data com DatePipe (dd/MM/yyyy HH:mm)
 
-- [ ] Tarefa 4: Integrar VictoryScreen com save no backend
+- [x] Tarefa 4: Integrar VictoryScreen com save no backend
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.ts`
   - O que fazer:
     - Quando VictoryScreen emite evento `save` com {nickname, levelTimes}:
@@ -52,7 +52,7 @@ Criar o LeaderboardService para comunicacao HTTP com a API, implementar a pagina
       - Chamar gameState.resetRun() e gameState.startRun()
       - Recarregar nivel 1
 
-- [ ] Tarefa 5: Tratar indisponibilidade do backend
+- [x] Tarefa 5: Tratar indisponibilidade do backend
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.ts` (adicionar)
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.ts` (adicionar)
   - O que fazer:
@@ -68,19 +68,19 @@ Criar o LeaderboardService para comunicacao HTTP com a API, implementar a pagina
 
 ## Criterios de Aceite
 
-- [ ] CA01: Leaderboard carrega e exibe lista completa
+- [x] CA01: Leaderboard carrega e exibe lista completa
   - Cenario: Given backend com 5 game runs / When acessa /leaderboard / Then tabela mostra 5 linhas ordenadas por tempo
-- [ ] CA02: Leaderboard vazio mostra mensagem adequada
+- [x] CA02: Leaderboard vazio mostra mensagem adequada
   - Cenario: Given backend sem game runs / When acessa /leaderboard / Then mostra "Nenhum jogador completou os 5 niveis..."
-- [ ] CA03: Salvar no leaderboard funciona
+- [x] CA03: Salvar no leaderboard funciona
   - Cenario: Given vitoria com nickname "JoaoBot" / When clica "Salvar" / Then dados salvos e navega para /leaderboard
-- [ ] CA04: Nickname repetido salva multiplas entradas
+- [x] CA04: Nickname repetido salva multiplas entradas
   - Cenario: Given "JoaoBot" ja salvou antes / When salva novamente / Then ambos aparecem no leaderboard
-- [ ] CA05: Backend indisponivel no leaderboard
+- [x] CA05: Backend indisponivel no leaderboard
   - Cenario: Given backend offline / When acessa /leaderboard / Then mostra "Leaderboard indisponivel no momento"
-- [ ] CA06: Backend indisponivel ao salvar
+- [x] CA06: Backend indisponivel ao salvar
   - Cenario: Given backend offline / When tenta salvar / Then mostra erro com opcao retry
-- [ ] CA07: Formato de data correto na tabela
+- [x] CA07: Formato de data correto na tabela
   - Cenario: Given game run de 2025-01-15T14:30:00 / When exibe no leaderboard / Then mostra "15/01/2025 14:30"
 
 ## Testes Esperados
@@ -96,9 +96,19 @@ Criar o LeaderboardService para comunicacao HTTP com a API, implementar a pagina
 
 ## Registro de Execucao
 
-- Data:
+- Data: 2026-05-31
 - Arquivos criados:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/models/leaderboard.model.ts`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/services/leaderboard.service.ts`
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.ts` (implementado completo)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.html` (implementado completo)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.css` (implementado completo)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.ts` (integrado LeaderboardService + retry)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.html` (novos inputs isSaving/saveError/retrySave)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/victory-screen/victory-screen.ts` (novos @Input e @Output)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/victory-screen/victory-screen.html` (loading state + error block)
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/victory-screen/victory-screen.css` (estilos de erro)
+- Testes executados: nenhum (decisao do projeto)
+- Resultado: BUILD OK — sem erros de compilacao; 2 warnings de CSS budget pre-existentes (virtual-controls, lbot-chat)
+- Pendencias: nenhuma

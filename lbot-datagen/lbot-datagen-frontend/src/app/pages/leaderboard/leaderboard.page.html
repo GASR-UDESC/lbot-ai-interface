@@ -1,8 +1,67 @@
-<div class="skeleton-page">
-  <div class="skeleton-card">
-    <div class="skeleton-icon">🏆</div>
-    <h1 class="skeleton-title">Leaderboard</h1>
-    <p class="skeleton-desc">Em construcao — disponivel na Fase 06</p>
-    <a routerLink="/menu" class="back-btn">← Voltar ao Menu</a>
+<div class="lb-page">
+  <div class="lb-container">
+
+    <!-- Header -->
+    <div class="lb-header">
+      <div class="lb-trophy">🏆</div>
+      <h1 class="lb-title">Leaderboard Global</h1>
+      <p class="lb-subtitle">Os melhores tempos de todos os tempos</p>
+    </div>
+
+    <!-- Loading state -->
+    <div class="lb-state" *ngIf="isLoading()">
+      <div class="lb-spinner"></div>
+      <p class="lb-state-text">Carregando ranking...</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="lb-state lb-state--error" *ngIf="!isLoading() && hasError()">
+      <div class="lb-state-icon">⚠️</div>
+      <p class="lb-state-text">Leaderboard indisponivel no momento</p>
+      <button class="lb-retry-btn" (click)="loadLeaderboard()">Tentar novamente</button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="lb-state lb-state--empty" *ngIf="!isLoading() && !hasError() && entries().length === 0">
+      <div class="lb-state-icon">🎮</div>
+      <p class="lb-state-text">Nenhum jogador completou os 5 niveis ainda. Seja o primeiro!</p>
+    </div>
+
+    <!-- Leaderboard table -->
+    <div class="lb-table-wrapper" *ngIf="!isLoading() && !hasError() && entries().length > 0">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-nickname">Nickname</th>
+            <th class="col-time">Tempo Total</th>
+            <th class="col-date">Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of entries(); let i = index"
+              [class.lb-row--top3]="i < 3"
+              [class.lb-row--gold]="i === 0"
+              [class.lb-row--silver]="i === 1"
+              [class.lb-row--bronze]="i === 2">
+            <td class="col-rank">
+              <span class="rank-badge" *ngIf="i === 0">🥇</span>
+              <span class="rank-badge" *ngIf="i === 1">🥈</span>
+              <span class="rank-badge" *ngIf="i === 2">🥉</span>
+              <span class="rank-num" *ngIf="i >= 3">{{ i + 1 }}</span>
+            </td>
+            <td class="col-nickname">{{ entry.nickname }}</td>
+            <td class="col-time">{{ formatTime(entry.totalTimeMs) }}</td>
+            <td class="col-date">{{ entry.completedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Back button -->
+    <div class="lb-footer">
+      <a routerLink="/menu" class="lb-back-btn">← Voltar ao Menu</a>
+    </div>
+
   </div>
 </div>
