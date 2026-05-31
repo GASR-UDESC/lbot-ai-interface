@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, Input, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatDto, MessageDto, MessagesService } from '../../services/messages-service';
@@ -8,7 +8,7 @@ import { LucideAngularModule, Bot, Star } from 'lucide-angular';
 /**
  * Message types supported by the chat interface.
  */
-type MessageType = 'user' | 'bot' | 'error';
+type MessageType = 'user' | 'bot' | 'error' | 'system';
 
 /**
  * Represents a chat message in the interface.
@@ -48,8 +48,16 @@ interface StarRating {
   templateUrl: './lbot-chat.html',
   styleUrls: ['./lbot-chat.css']
 })
-export class LbotChat implements OnInit, OnDestroy {
+export class LbotChat implements OnInit, OnDestroy, OnChanges {
   public readonly stars = [1, 2, 3, 4, 5];
+
+  // ── Inputs para modo gamificado ──────────────────────────────────────────
+  /** Se fornecido, o chat usa este chatId (nao cria um novo via startChat). */
+  @Input() externalChatId?: string;
+  /** Se true, esconde o botao "Encerrar" (modo jogo: o ciclo de vida e gerenciado pelo GamePage). */
+  @Input() gameMode: boolean = false;
+  /** Nome do nivel atual (modo jogo). Quando muda, insere um banner de sistema no chat. */
+  @Input() currentLevelName?: string;
 
   private static readonly INITIAL_MESSAGE: ChatMessage = {
     text: 'Olá! Digite um comando em português e eu traduzo para LBML.',
@@ -89,6 +97,16 @@ export class LbotChat implements OnInit, OnDestroy {
     private readonly simulatorBridge: SimulatorBridgeService
   ) { }
 
+  public ngOnChanges(changes: SimpleChanges): void {
+    // Insere banner de nivel quando currentLevelName muda (nao na primeira renderizacao)
+    if (changes['currentLevelName'] && !changes['currentLevelName'].isFirstChange()) {
+      const levelName = changes['currentLevelName'].currentValue as string | undefined;
+      if (levelName) {
+        this.addSystemMessage(`— Nível: ${levelName} —`);
+      }
+    }
+  }
+
   public ngOnInit(): void {
     this.initializeChat();
   }
@@ -99,8 +117,16 @@ export class LbotChat implements OnInit, OnDestroy {
 
   /**
    * Initializes a new chat session with the backend.
+   * In game mode, uses the externalChatId provided by the parent component.
    */
   private initializeChat(): void {
+    if (this.externalChatId) {
+      // Modo gamificado: usar chatId externo fornecido pelo GamePage
+      this.chatId = this.externalChatId;
+      console.log('[LbotChat] Using external chat ID:', this.chatId);
+      return;
+    }
+
     this.messagesService.startChat().subscribe({
       next: (response: ChatDto) => {
         this.chatId = response.id;
@@ -424,6 +450,14 @@ export class LbotChat implements OnInit, OnDestroy {
 
     this.initializeChat();
     console.log('[LbotChat] Chat cleared and reinitialized');
+  }
+
+  /**
+   * Adds a system/informational message to the chat (not sent to backend).
+   */
+  private addSystemMessage(text: string): void {
+    this.messages.push({ text, type: 'system' });
+    this.scrollToBottom();
   }
 
   /**

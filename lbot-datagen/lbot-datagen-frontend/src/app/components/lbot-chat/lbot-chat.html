@@ -2,7 +2,7 @@
 <div class="chat-wrapper">
   <div class="chat-header">
     <h2><lucide-icon [img]="BotIcon" [size]="24" style="vertical-align: middle; margin-right: 8px;"></lucide-icon>LBot Translator</h2>
-    <button class="end-chat-btn" (click)="showObservationPopup()" title="Finalizar Chat">
+    <button *ngIf="!gameMode" class="end-chat-btn" (click)="showObservationPopup()" title="Finalizar Chat">
       ✕
     </button>
   </div>
@@ -10,8 +10,13 @@
   <div class="chat-container">
   <div class="chat-messages">
     <div *ngFor="let message of messages" class="message" [ngClass]="message.type">
+      <!-- Mensagem de sistema (banner de nivel) -->
+      <div *ngIf="message.type === 'system'" class="system-message-content">
+        {{ message.text }}
+      </div>
+
       <!-- Mensagem do usuário ou erro -->
-      <div *ngIf="message.type !== 'bot'" class="message-content">
+      <div *ngIf="message.type !== 'bot' && message.type !== 'system'" class="message-content">
         {{ message.text }}
       </div>
       

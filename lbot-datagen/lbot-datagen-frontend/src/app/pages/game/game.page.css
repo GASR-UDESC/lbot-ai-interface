@@ -139,6 +139,17 @@
   overflow: hidden;
 }
 
+/* Estado de loading enquanto o chatId nao esta disponivel */
+.chat-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
 /* Responsive: stack vertically on small screens */
 @media (max-width: 768px) {
   .game-layout {

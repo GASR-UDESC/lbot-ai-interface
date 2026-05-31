@@ -13,6 +13,7 @@ import { Router } from '@angular/router';
 import { GameStateService } from '../../services/game-state.service';
 import { LevelConfigService } from '../../services/level-config.service';
 import { LeaderboardService } from '../../services/leaderboard.service';
+import { MessagesService } from '../../services/messages-service';
 import { LevelConfig } from '../../models/level-config.model';
 import { RoboSimulatorComponent } from '../../components/robo-simulator/robo-simulator';
 import { LbotChat } from '../../components/lbot-chat/lbot-chat';
@@ -73,6 +74,13 @@ export class GamePage implements OnInit, OnDestroy {
   /** Cached payload for retry after a failed save. */
   private pendingSavePayload: VictorySavePayload | null = null;
 
+  /**
+   * ChatId do run atual (null enquanto aguarda resposta do backend).
+   * Usado para renderizar o LbotChat somente quando o chatId estiver disponivel
+   * e garantir que um unico chatId e usado por run inteiro (todos os 5 niveis).
+   */
+  currentChatId = signal<string | null>(null);
+
   // ── derived ─────────────────────────────────────────────────────────────
   /** Names of all completed levels (for VictoryScreen). */
   levelNames = computed<string[]>(() =>
@@ -106,6 +114,7 @@ export class GamePage implements OnInit, OnDestroy {
     public readonly gameState: GameStateService,
     private readonly levelConfig: LevelConfigService,
     private readonly leaderboardService: LeaderboardService,
+    private readonly messagesService: MessagesService,
     private readonly router: Router
   ) {
     // Keep currentLevelConfig in sync with currentLevel signal.
@@ -122,6 +131,7 @@ export class GamePage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.gameState.startRun();
     this.startTimer();
+    this.startNewChatSession();
   }
 
   ngOnDestroy(): void {
@@ -165,8 +175,12 @@ export class GamePage implements OnInit, OnDestroy {
 
   /** "Jogar Novamente" in VictoryScreen. */
   onPlayAgain(): void {
+    // Destroi o LbotChat (currentChatId = null) para limpar o historico
+    this.currentChatId.set(null);
     this.gameState.startRun();
     this.startTimer();
+    // Cria novo chatId para o novo run
+    this.startNewChatSession();
   }
 
   /** "Salvar no Leaderboard" in VictoryScreen — wired to backend. */
@@ -235,6 +249,25 @@ export class GamePage implements OnInit, OnDestroy {
   onCancelExit(): void {
     this.showConfirmModal.set(false);
     this.pendingNavUrl = null;
+  }
+
+  // ── chat session ─────────────────────────────────────────────────────────
+
+  /**
+   * Inicia uma nova sessao de chat no backend e armazena o chatId.
+   * O LbotChat so e renderizado no template quando currentChatId nao for null.
+   */
+  private startNewChatSession(): void {
+    this.messagesService.startChat().subscribe({
+      next: (chat) => {
+        this.currentChatId.set(chat.id);
+        console.log('[GamePage] Chat session started:', chat.id);
+      },
+      error: (err) => {
+        console.warn('[GamePage] Failed to start chat session. Chat will be unavailable.', err);
+        // Mesmo sem chat, o jogo continua funcionando
+      }
+    });
   }
 
   // ── timer ────────────────────────────────────────────────────────────────

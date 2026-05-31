@@ -32,7 +32,15 @@
 
   <!-- ── Chat panel ── -->
   <div class="chat-panel">
-    <app-lbot-chat></app-lbot-chat>
+    <app-lbot-chat
+      *ngIf="currentChatId()"
+      [externalChatId]="currentChatId()!"
+      [gameMode]="true"
+      [currentLevelName]="currentLevelConfig()?.name"
+    ></app-lbot-chat>
+    <div *ngIf="!currentChatId()" class="chat-loading">
+      <span>Carregando chat...</span>
+    </div>
   </div>
 
 </div>

@@ -104,6 +104,22 @@
   align-self: flex-start;
 }
 
+/* Mensagem de sistema (banner de nivel) */
+.message.system {
+  background: transparent;
+  padding: 4px 0;
+  max-width: 100%;
+  align-self: center;
+  text-align: center;
+}
+
+.system-message-content {
+  font-size: clamp(11px, 2.5vw, 12px);
+  color: #999;
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
 .typing {
   background: #e9ecef;
   color: #666;
