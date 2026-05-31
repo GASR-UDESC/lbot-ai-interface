@@ -12,8 +12,6 @@ export interface ObstacleData {
   providedIn: 'root'
 })
 export class ArenaBuilderService {
-  private readonly ARENA_WALL_HEIGHT = 30;
-
 
   /**
    * Creates the ground plane
@@ -69,7 +67,7 @@ export class ArenaBuilderService {
       roughness: 0.85,
       metalness: 0.1
     });
-    const wallHeight = this.ARENA_WALL_HEIGHT;
+    const wallHeight = 15;
     const wallThickness = 8;
     const arenaSize = 400;
     const walls: THREE.Mesh[] = [];
@@ -261,9 +259,9 @@ export class ArenaBuilderService {
    */
   getArenaBoundaries() {
     return {
-      limit: 185,
+      limit: 190,
       size: 400,
-      wallHeight: this.ARENA_WALL_HEIGHT,
+      wallHeight: 15,
       wallThickness: 8
     };
   }
@@ -360,7 +358,7 @@ export class ArenaBuilderService {
       metalness: 0.1
     });
 
-    const wallHeight = this.ARENA_WALL_HEIGHT;
+    const wallHeight = 15;
     const wallThickness = 8;
     const arenaSize = 400;
 

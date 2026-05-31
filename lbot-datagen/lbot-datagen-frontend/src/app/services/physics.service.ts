@@ -12,12 +12,7 @@ export interface PhysicsSetup {
   providedIn: 'root'
 })
 export class PhysicsService {
-  private readonly ROBOT_HALF_WIDTH = 10;
-  private readonly ROBOT_HALF_DEPTH = 15;
-  private readonly ARENA_HALF_SIZE = 200;
-  private readonly WALL_HEIGHT = 30;
-  private readonly WALL_THICKNESS = 5;
-  private readonly ARENA_LIMIT = this.ARENA_HALF_SIZE - Math.max(this.ROBOT_HALF_WIDTH, this.ROBOT_HALF_DEPTH);
+  private readonly ARENA_LIMIT = 190;
 
   /**
    * Initializes the physics world
@@ -85,40 +80,22 @@ export class PhysicsService {
    * Creates physics bodies for arena boundary walls
    */
   private createArenaWallsBodies(world: CANNON.World): void {
+    const wallThickness = 5;
     const arenaSize = 400;
+    const wallHeight = 15;
 
     const walls = [
-      {
-        x: 0,
-        z: arenaSize / 2 + this.WALL_THICKNESS / 2,
-        w: (arenaSize + this.WALL_THICKNESS) / 2,
-        d: this.WALL_THICKNESS / 2,
-      },
-      {
-        x: 0,
-        z: -arenaSize / 2 - this.WALL_THICKNESS / 2,
-        w: (arenaSize + this.WALL_THICKNESS) / 2,
-        d: this.WALL_THICKNESS / 2,
-      },
-      {
-        x: arenaSize / 2 + this.WALL_THICKNESS / 2,
-        z: 0,
-        w: this.WALL_THICKNESS / 2,
-        d: arenaSize / 2,
-      },
-      {
-        x: -arenaSize / 2 - this.WALL_THICKNESS / 2,
-        z: 0,
-        w: this.WALL_THICKNESS / 2,
-        d: arenaSize / 2,
-      },
+      { x: 0, z: arenaSize / 2 + wallThickness / 2, w: (arenaSize + wallThickness) / 2, d: wallThickness / 2 },
+      { x: 0, z: -arenaSize / 2 - wallThickness / 2, w: (arenaSize + wallThickness) / 2, d: wallThickness / 2 },
+      { x: arenaSize / 2 + wallThickness / 2, z: 0, w: wallThickness / 2, d: arenaSize / 2 },
+      { x: -arenaSize / 2 - wallThickness / 2, z: 0, w: wallThickness / 2, d: arenaSize / 2 },
     ];
 
     walls.forEach(wall => {
-      const shape = new CANNON.Box(new CANNON.Vec3(wall.w, this.WALL_HEIGHT / 2, wall.d));
+      const shape = new CANNON.Box(new CANNON.Vec3(wall.w, wallHeight / 2, wall.d));
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(shape);
-      body.position.set(wall.x, this.WALL_HEIGHT / 2, wall.z);
+      body.position.set(wall.x, wallHeight / 2, wall.z);
       world.addBody(body);
     });
   }
@@ -127,7 +104,7 @@ export class PhysicsService {
    * Creates the robot physics body
    */
   createRobotBody(world: CANNON.World): CANNON.Body {
-    const robotShape = new CANNON.Box(new CANNON.Vec3(this.ROBOT_HALF_WIDTH, 6, this.ROBOT_HALF_DEPTH));
+    const robotShape = new CANNON.Box(new CANNON.Vec3(10, 6, 15));
     const robotBody = new CANNON.Body({ mass: 100 });
     robotBody.addShape(robotShape);
     robotBody.position.set(0, 6, 0);
@@ -136,8 +113,6 @@ export class PhysicsService {
     robotBody.angularDamping = 0.99;
 
     robotBody.addEventListener('collide', (e: any) => {
-      robotBody.velocity.set(0, 0, 0);
-      robotBody.angularVelocity.set(0, 0, 0);
       console.log('Robô colidiu!');
     });
 
@@ -198,18 +173,15 @@ export class PhysicsService {
    */
   isValidPosition(x: number, z: number, obstacles: ObstacleData[]): boolean {
     // Check arena boundaries
-    if (
-      x < -this.ARENA_LIMIT ||
-      x > this.ARENA_LIMIT ||
-      z < -this.ARENA_LIMIT ||
-      z > this.ARENA_LIMIT
-    ) {
+    if (x < -this.ARENA_LIMIT || x > this.ARENA_LIMIT || 
+        z < -this.ARENA_LIMIT || z > this.ARENA_LIMIT) {
       return false;
     }
 
     // Check collision with obstacles
     const testPosition = new CANNON.Vec3(x, 0, z);
-    const robotRadius = Math.max(this.ROBOT_HALF_WIDTH, this.ROBOT_HALF_DEPTH);
+    const robotHalfWidth = 10;
+    const robotHalfDepth = 15;
 
     for (const obstacle of obstacles) {
       const obstaclePos = new CANNON.Vec3(obstacle.body.position.x, 0, obstacle.body.position.z);
@@ -220,10 +192,10 @@ export class PhysicsService {
       if (obstacle.body.shapes[0] instanceof CANNON.Box) {
         const boxShape = obstacle.body.shapes[0] as CANNON.Box;
         const obstacleRadius = Math.max(boxShape.halfExtents.x, boxShape.halfExtents.z);
-        minDistance = robotRadius + obstacleRadius + 5;
+        minDistance = robotHalfWidth + obstacleRadius + 5;
       } else if (obstacle.body.shapes[0] instanceof CANNON.Cylinder) {
         const cylinderShape = obstacle.body.shapes[0] as CANNON.Cylinder;
-        minDistance = robotRadius + cylinderShape.radiusTop + 5;
+        minDistance = robotHalfWidth + cylinderShape.radiusTop + 5;
       }
 
       if (distance < minDistance) {
@@ -251,7 +223,7 @@ export class PhysicsService {
 
     console.log(`Movimento bloqueado de (${startX.toFixed(1)}, ${startZ.toFixed(1)}) para (${targetX.toFixed(1)}, ${targetZ.toFixed(1)})`);
 
-    const stepSize = 2;
+    const stepSize = 5;
     const totalDistance = Math.sqrt(Math.pow(targetX - startX, 2) + Math.pow(targetZ - startZ, 2));
     const steps = Math.floor(totalDistance / stepSize);
 
