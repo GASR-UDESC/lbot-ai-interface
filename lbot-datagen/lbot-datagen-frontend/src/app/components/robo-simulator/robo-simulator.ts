@@ -458,6 +458,48 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   }
 
   /**
+   * Calculates the geometry of a circular arc based on the robot's current
+   * position and rotation. The result is consistent with the geometry used
+   * inside animateArc() so it can be used for pre-collision checks.
+   *
+   * Coordinate conventions:
+   *   forward vector = (sin(rot), cos(rot)) in (X, Z)
+   *   right  vector  = (-cos(rot),  sin(rot))
+   *   left   vector  = ( cos(rot), -sin(rot))
+   */
+  private calculateArcGeometry(
+    radius: number,
+    direction: 'L' | 'R',
+    angle: number
+  ): { centerX: number; centerZ: number; startAngle: number; endAngle: number } {
+    const startRotRad = this.robotState.rotation * Math.PI / 180;
+    const arcAngleRad = angle * Math.PI / 180;
+    const robotX = this.robotBody.position.x;
+    const robotZ = this.robotBody.position.z;
+
+    let cx: number, cz: number, alpha0: number, alphaSign: number;
+
+    if (direction === 'R') {
+      cx = robotX - radius * Math.cos(startRotRad);
+      cz = robotZ + radius * Math.sin(startRotRad);
+      alpha0 = Math.PI / 2 + startRotRad;
+      alphaSign = -1; // clockwise
+    } else {
+      cx = robotX + radius * Math.cos(startRotRad);
+      cz = robotZ - radius * Math.sin(startRotRad);
+      alpha0 = startRotRad - Math.PI / 2;
+      alphaSign = 1; // counter-clockwise
+    }
+
+    return {
+      centerX: cx,
+      centerZ: cz,
+      startAngle: alpha0,
+      endAngle: alpha0 + alphaSign * arcAngleRad,
+    };
+  }
+
+  /**
    * Animates the robot along a circular arc.
    *
    * Geometry derivation (coordinate conventions in this engine):
@@ -559,7 +601,33 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
 
   private async executeArcCommand(cmd: ParsedArcCommand): Promise<void> {
     const { radius, direction, angle } = cmd;
-    await this.animateArc(radius, direction, angle);
+
+    // Special cases: no movement or in-place rotation — handled by animateArc directly
+    if (angle === 0 || radius === 0) {
+      await this.animateArc(radius, direction, angle);
+      return;
+    }
+
+    // Pre-calculate collision along the arc trajectory
+    const geom = this.calculateArcGeometry(radius, direction, angle);
+    const collision = this.physics.getMaxValidArcPosition(
+      geom.centerX, geom.centerZ,
+      radius,
+      geom.startAngle, geom.endAngle,
+      this.obstacles
+    );
+
+    if (collision.blocked) {
+      // Compute the partial angle (degrees) traversed before the collision point.
+      // animateArc() with this partial angle will:
+      //   - stop the robot at the last valid position
+      //   - set robotState.rotation to the tangent direction at that point
+      const angularDist = Math.abs(collision.angle - geom.startAngle);
+      const partialAngleDeg = angularDist * 180 / Math.PI;
+      await this.animateArc(radius, direction, partialAngleDeg);
+    } else {
+      await this.animateArc(radius, direction, angle);
+    }
   }
 
   resetRobot(): void {

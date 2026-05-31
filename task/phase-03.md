@@ -1,6 +1,6 @@
 # Fase 03: Colisao em Arco + Integracao Completa
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Implementar deteccao de colisao durante movimentos em arco. Criar metodo `getMax
 
 ## Tarefas
 
-- [ ] Tarefa 1: Criar getMaxValidArcPosition() no physics.service
+- [x] Tarefa 1: Criar getMaxValidArcPosition() no physics.service
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/services/physics.service.ts`
   - O que fazer:
     - Criar metodo:
@@ -37,7 +37,7 @@ Implementar deteccao de colisao durante movimentos em arco. Criar metodo `getMax
          - Se invalido, retornar posicao do step anterior como maximo valido (blocked = true)
       4. Se todos validos, retornar posicao final (blocked = false)
 
-- [ ] Tarefa 2: Integrar colisao no executeArcCommand()
+- [x] Tarefa 2: Integrar colisao no executeArcCommand()
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
   - O que fazer:
     - Em `executeArcCommand()`, ANTES de chamar `animateArc()`:
@@ -50,7 +50,7 @@ Implementar deteccao de colisao durante movimentos em arco. Criar metodo `getMax
          - Chamar `animateArc()` com o angulo completo
     - Apos animacao (parcial ou completa), atualizar `robotState.rotation` corretamente
 
-- [ ] Tarefa 3: Extrair calculo de centro/angulos do arco em metodo auxiliar
+- [x] Tarefa 3: Extrair calculo de centro/angulos do arco em metodo auxiliar
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
   - O que fazer:
     - Criar metodo privado `calculateArcGeometry(radius, direction, angle)`:
@@ -63,7 +63,7 @@ Implementar deteccao de colisao durante movimentos em arco. Criar metodo `getMax
     - Reutilizar esta logica tanto no pre-calculo de colisao quanto no animateArc()
     - Garantir consistencia entre colisao e animacao
 
-- [ ] Tarefa 4: Atualizar robotState.rotation corretamente apos arco parcial
+- [x] Tarefa 4: Atualizar robotState.rotation corretamente apos arco parcial
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
   - O que fazer:
     - Quando arco eh interrompido por colisao, a rotacao final do robo deve corresponder ao angulo percorrido (tangente ao arco no ponto de parada)
@@ -94,9 +94,14 @@ cd lbot-datagen/lbot-datagen-frontend && ng build
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-05-31
+- Arquivos criados: nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/services/physics.service.ts`
+    - Novo metodo `getMaxValidArcPosition(centerX, centerZ, radius, startAngle, endAngle, obstacles)`: faz sampling discreto (stepSize=5) ao longo da trajetoria do arco e retorna `{ angle, x, z, blocked }` — o angulo (rad) e posicao do ultimo step valido antes de colisao, ou o endpoint se sem colisao
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
+    - Novo metodo privado `calculateArcGeometry(radius, direction, angle)`: extrai o calculo de centro (cx, cz), startAngle e endAngle do arco com base no estado atual do robo — geometria identica a usada em `animateArc()`, garantindo consistencia entre pre-calculo de colisao e animacao
+    - `executeArcCommand()` expandido: antes de chamar `animateArc()`, chama `calculateArcGeometry()` e `getMaxValidArcPosition()`; se colisao detectada, calcula angulo parcial em graus e passa para `animateArc()`, que por design ja atualiza corretamente `robotState.rotation` para a tangente no ponto de parada
+- Testes executados: ng build (sem erros TypeScript; 2 warnings pre-existentes de budget CSS ignorados)
+- Resultado: BUILD SUCESSO
+- Pendencias: nenhuma
