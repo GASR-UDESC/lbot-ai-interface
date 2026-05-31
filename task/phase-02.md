@@ -1,6 +1,6 @@
 # Fase 02: Colisao Linear + animateArc()
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
@@ -87,15 +87,9 @@ cd lbot-datagen/lbot-datagen-frontend && ng build
 
 ## Registro de Execucao
 
-- Data: 2026-05-31
-- Arquivos criados: nenhum
+- Data:
+- Arquivos criados:
 - Arquivos alterados:
-  - `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
-    - executeDistanceCommand(): adiciona pre-calculo de colisao via getMaxValidPosition() antes de animateMovement()
-    - Novo metodo animateArc(): parametrizacao angular com centro perpendicular ao robo, easing suave, atualizacao de posicao e quaternion a cada frame
-    - Novo metodo executeArcCommand(): extrai radius/direction/angle do ParsedArcCommand e delega para animateArc()
-    - executeCommand(): removido stub de log, agora chama executeArcCommand() para tipo 'A'
-    - Casos especiais cobertos: angle===0 (resolve imediato) e radius===0 (rotacao in-place)
-- Testes executados: ng build (sem erros de TypeScript; 2 warnings pre-existentes de budget CSS ignorados)
-- Resultado: BUILD SUCESSO
-- Pendencias: nenhuma
+- Testes executados:
+- Resultado:
+- Pendencias:
