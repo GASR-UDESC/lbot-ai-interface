@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { ObstacleData } from './arena-builder.service';
+import { ArenaShape } from '../models/level-config.model';
 
 export interface PhysicsSetup {
   world: CANNON.World;
@@ -13,6 +14,16 @@ export interface PhysicsSetup {
 })
 export class PhysicsService {
   private readonly ARENA_LIMIT = 190;
+
+  // ─── Arena configuration ────────────────────────────────────────────────
+  /** Current shape of the arena boundary. */
+  private currentArenaShape: ArenaShape = 'square';
+  /** Width of the current arena in world units (diameter for circles). */
+  private currentArenaWidth = 400;
+  /** Height of the current arena in world units (same as width for circles). */
+  private currentArenaHeight = 400;
+  /** Physics bodies representing the arena boundary walls. Tracked for removal on config change. */
+  private arenaWallBodies: CANNON.Body[] = [];
 
   /**
    * Initializes the physics world
@@ -61,9 +72,18 @@ export class PhysicsService {
   }
 
   /**
-   * Creates physics bodies for static objects (ground, walls)
+   * Creates physics bodies for static objects (ground, walls).
+   * Accepts an optional arena configuration; defaults to a 400×400 square arena.
    */
-  createStaticBodies(world: CANNON.World): void {
+  createStaticBodies(
+    world: CANNON.World,
+    arenaShape: ArenaShape = 'square',
+    arenaSize: { width: number; height: number } = { width: 400, height: 400 }
+  ): void {
+    this.currentArenaShape = arenaShape;
+    this.currentArenaWidth = arenaSize.width;
+    this.currentArenaHeight = arenaSize.height;
+
     // Ground
     const groundShape = new CANNON.Plane();
     const groundBody = new CANNON.Body({ mass: 0 });
@@ -73,31 +93,88 @@ export class PhysicsService {
     world.addBody(groundBody);
 
     // Arena walls
+    this.arenaWallBodies = [];
     this.createArenaWallsBodies(world);
   }
 
   /**
-   * Creates physics bodies for arena boundary walls
+   * Removes existing arena wall bodies and recreates them with the new configuration.
+   * Call this when a level with a different arena shape/size is loaded.
+   */
+  updateArenaWalls(
+    world: CANNON.World,
+    arenaShape: ArenaShape,
+    arenaSize: { width: number; height: number }
+  ): void {
+    // Remove old arena wall bodies from the physics world
+    for (const body of this.arenaWallBodies) {
+      world.removeBody(body);
+    }
+    this.arenaWallBodies = [];
+
+    // Apply new config
+    this.currentArenaShape = arenaShape;
+    this.currentArenaWidth = arenaSize.width;
+    this.currentArenaHeight = arenaSize.height;
+
+    // Create new wall bodies
+    this.createArenaWallsBodies(world);
+  }
+
+  /**
+   * Creates physics bodies for arena boundary walls using the current internal config.
+   * Bodies are tracked in arenaWallBodies for later removal.
    */
   private createArenaWallsBodies(world: CANNON.World): void {
-    const wallThickness = 5;
-    const arenaSize = 400;
-    const wallHeight = 15;
+    if (this.currentArenaShape === 'circle') {
+      // Circular arena: N=32 Box segments arranged in a polygon approximation
+      const N = 32;
+      const radius = this.currentArenaWidth / 2;
+      const wallHeight = 15;
+      const wallThickness = 5;
+      const segmentLength = 2 * radius * Math.sin(Math.PI / N);
 
-    const walls = [
-      { x: 0, z: arenaSize / 2 + wallThickness / 2, w: (arenaSize + wallThickness) / 2, d: wallThickness / 2 },
-      { x: 0, z: -arenaSize / 2 - wallThickness / 2, w: (arenaSize + wallThickness) / 2, d: wallThickness / 2 },
-      { x: arenaSize / 2 + wallThickness / 2, z: 0, w: wallThickness / 2, d: arenaSize / 2 },
-      { x: -arenaSize / 2 - wallThickness / 2, z: 0, w: wallThickness / 2, d: arenaSize / 2 },
-    ];
+      for (let i = 0; i < N; i++) {
+        const angle = (2 * Math.PI * i) / N;
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
 
-    walls.forEach(wall => {
-      const shape = new CANNON.Box(new CANNON.Vec3(wall.w, wallHeight / 2, wall.d));
-      const body = new CANNON.Body({ mass: 0 });
-      body.addShape(shape);
-      body.position.set(wall.x, wallHeight / 2, wall.z);
-      world.addBody(body);
-    });
+        const shape = new CANNON.Box(new CANNON.Vec3(segmentLength / 2, wallHeight / 2, wallThickness / 2));
+        const body = new CANNON.Body({ mass: 0 });
+        body.addShape(shape);
+        body.position.set(x, wallHeight / 2, z);
+        // Align segment with tangent at this circle position (same convention as visual mesh)
+        body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 + angle);
+        world.addBody(body);
+        this.arenaWallBodies.push(body);
+      }
+    } else {
+      // Square or rectangle arena: 4 box walls
+      const wallThickness = 5;
+      const arenaWidth = this.currentArenaWidth;
+      const arenaHeight = this.currentArenaHeight;
+      const wallHeight = 15;
+
+      const walls = [
+        // North
+        { x: 0, z:  arenaHeight / 2 + wallThickness / 2, w: (arenaWidth + wallThickness) / 2, d: wallThickness / 2 },
+        // South
+        { x: 0, z: -arenaHeight / 2 - wallThickness / 2, w: (arenaWidth + wallThickness) / 2, d: wallThickness / 2 },
+        // East
+        { x:  arenaWidth / 2 + wallThickness / 2, z: 0, w: wallThickness / 2, d: arenaHeight / 2 },
+        // West
+        { x: -arenaWidth / 2 - wallThickness / 2, z: 0, w: wallThickness / 2, d: arenaHeight / 2 },
+      ];
+
+      walls.forEach(wall => {
+        const shape = new CANNON.Box(new CANNON.Vec3(wall.w, wallHeight / 2, wall.d));
+        const body = new CANNON.Body({ mass: 0 });
+        body.addShape(shape);
+        body.position.set(wall.x, wallHeight / 2, wall.z);
+        world.addBody(body);
+        this.arenaWallBodies.push(body);
+      });
+    }
   }
 
   /**
@@ -169,13 +246,30 @@ export class PhysicsService {
   }
 
   /**
-   * Checks if a position is valid (no collisions, within boundaries)
+   * Checks if a position is valid (no collisions, within arena boundaries).
+   *
+   * Boundary check is shape-aware:
+   *  - square/rectangle: axis-aligned box test using currentArenaWidth/Height
+   *  - circle: radial distance test using currentArenaWidth / 2 as radius
+   *
+   * A 10-unit safety margin is subtracted from each boundary to account for
+   * the robot's physical half-width (robotHalfWidth = 10).
    */
   isValidPosition(x: number, z: number, obstacles: ObstacleData[]): boolean {
     // Check arena boundaries
-    if (x < -this.ARENA_LIMIT || x > this.ARENA_LIMIT || 
-        z < -this.ARENA_LIMIT || z > this.ARENA_LIMIT) {
-      return false;
+    if (this.currentArenaShape === 'circle') {
+      const radius = this.currentArenaWidth / 2 - 10;
+      const distFromCenter = Math.sqrt(x * x + z * z);
+      if (distFromCenter > radius) {
+        return false;
+      }
+    } else {
+      // square or rectangle
+      const halfWidth  = this.currentArenaWidth  / 2 - 10;
+      const halfHeight = this.currentArenaHeight / 2 - 10;
+      if (x < -halfWidth || x > halfWidth || z < -halfHeight || z > halfHeight) {
+        return false;
+      }
     }
 
     // Check collision with obstacles

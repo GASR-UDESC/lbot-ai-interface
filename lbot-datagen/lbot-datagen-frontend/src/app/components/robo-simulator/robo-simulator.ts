@@ -10,7 +10,7 @@ import { CameraControllerService } from '../../services/camera-controller.servic
 import { LbmlParserService } from '../../services/lbml-parser.service';
 import { GameStateService } from '../../services/game-state.service';
 import { RobotState } from '../../models/robot-state.model';
-import { LevelConfig } from '../../models/level-config.model';
+import { LevelConfig, ArenaShape } from '../../models/level-config.model';
 import { ParsedCommand, ParsedLbmlCommand, ParsedArcCommand } from '../../models/lbml-command.model';
 import { Subscription } from 'rxjs';
 import * as THREE from 'three';
@@ -90,6 +90,8 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   private animationId?: number;
   /** Reference to the current ground mesh so it can be swapped on level load. */
   private groundMesh?: THREE.Mesh;
+  /** Reference to the current arena wall meshes so they can be swapped on level load. */
+  private arenaWallMeshes: THREE.Mesh[] = [];
 
   // Physics
   private world!: CANNON.World;
@@ -201,8 +203,15 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.scene.add(this.groundMesh);
     this.scene.add(this.arenaBuilder.createGridHelper());
 
-    const walls = this.arenaBuilder.createArenaWalls(this.scene);
-    walls.forEach(wall => this.scene.add(wall));
+    // Determine arena shape/size from levelConfig (or use defaults)
+    const arenaShape: ArenaShape = this.levelConfig?.arenaShape ?? 'square';
+    const arenaSize = this.levelConfig?.arenaSize ?? { width: 400, height: 400 };
+
+    // Create arena walls — use themed walls when a levelConfig is present
+    this.arenaWallMeshes = this.levelConfig
+      ? this.arenaBuilder.createThemedWalls(this.scene, this.levelConfig.theme, arenaShape, arenaSize)
+      : this.arenaBuilder.createArenaWalls(this.scene);
+    this.arenaWallMeshes.forEach(wall => this.scene.add(wall));
 
     // Create robot
     this.robotGroup = this.robotBuilder.createRobot();
@@ -210,7 +219,7 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
 
     // Initialize physics
     this.world = this.physics.initWorld();
-    this.physics.createStaticBodies(this.world);
+    this.physics.createStaticBodies(this.world, arenaShape, arenaSize);
     this.robotBody = this.physics.createRobotBody(this.world);
 
     // Create obstacles — use level config when available, otherwise default hardcoded layout
@@ -649,7 +658,7 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   }
 
   /**
-   * Loads a level from configuration: swaps ground, clears old obstacles,
+   * Loads a level from configuration: swaps ground, walls, clears old obstacles,
    * spawns new obstacles, repositions markers and resets the robot.
    * Safe to call only after the scene is initialised (AfterViewInit).
    */
@@ -665,7 +674,17 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     }
     this.obstacles = [];
 
-    // 2. Swap ground with themed ground
+    // 2. Remove old arena walls from scene and dispose resources
+    for (const wall of this.arenaWallMeshes) {
+      this.scene.remove(wall);
+      wall.geometry.dispose();
+      if (wall.material instanceof THREE.Material) {
+        wall.material.dispose();
+      }
+    }
+    this.arenaWallMeshes = [];
+
+    // 3. Swap ground with themed ground
     if (this.groundMesh) {
       this.scene.remove(this.groundMesh);
       this.groundMesh.geometry.dispose();
@@ -676,25 +695,34 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.groundMesh = this.arenaBuilder.createThemedGround(config.theme);
     this.scene.add(this.groundMesh);
 
-    // 3. Create new obstacles from config
+    // 4. Create new arena walls for this level's arena shape/size
+    const arenaShape: ArenaShape = config.arenaShape ?? 'square';
+    const arenaSize = config.arenaSize ?? { width: 400, height: 400 };
+    this.arenaWallMeshes = this.arenaBuilder.createThemedWalls(this.scene, config.theme, arenaShape, arenaSize);
+    this.arenaWallMeshes.forEach(wall => this.scene.add(wall));
+
+    // 5. Update physics arena walls to match new shape/size
+    this.physics.updateArenaWalls(this.world, arenaShape, arenaSize);
+
+    // 6. Create new obstacles from config
     this.obstacles = this.arenaBuilder.createObstaclesFromConfig(this.scene, this.world, config);
 
-    // 4. Update start and goal points
+    // 7. Update start and goal points
     this.startPoint = { ...config.startPoint };
     this.goalPoint  = { ...config.goalPoint };
 
-    // 5. Reposition markers
+    // 8. Reposition markers
     this.startMarker.position.set(this.startPoint.x, 0.1, this.startPoint.z);
     this.goalMarker.position.set(this.goalPoint.x,  0.1, this.goalPoint.z);
     this.startTextSprite.position.set(this.startPoint.x, 10, this.startPoint.z);
     this.goalTextSprite.position.set(this.goalPoint.x,  10, this.goalPoint.z);
 
-    // 6. Reset robot to new start point
+    // 9. Reset robot to new start point
     this.hasWon = false;
     this.resetRobot();
 
     this.cdr.detectChanges();
-    console.log(`[RoboSimulator] Level "${config.name}" carregado`);
+    console.log(`[RoboSimulator] Level "${config.name}" carregado (arena: ${arenaShape} ${arenaSize.width}x${arenaSize.height})`);
   }
 
   toggleCameraMode(): void {

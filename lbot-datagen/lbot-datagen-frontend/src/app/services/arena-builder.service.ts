@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { LevelConfig, ThemeConfig } from '../models/level-config.model';
+import { LevelConfig, ThemeConfig, ArenaShape } from '../models/level-config.model';
 
 export interface ObstacleData {
   mesh: THREE.Mesh;
@@ -61,7 +61,7 @@ export class ArenaBuilderService {
   /**
    * Creates arena boundary walls
    */
-  createArenaWalls(scene: THREE.Scene): THREE.Mesh[] {
+  createArenaWalls(scene: THREE.Scene, arenaWidth = 400, arenaHeight = 400): THREE.Mesh[] {
     const woodMaterial = new THREE.MeshStandardMaterial({
       color: 0x8B4513,
       roughness: 0.85,
@@ -69,7 +69,6 @@ export class ArenaBuilderService {
     });
     const wallHeight = 15;
     const wallThickness = 8;
-    const arenaSize = 400;
     const walls: THREE.Mesh[] = [];
 
     const createWoodenWall = (
@@ -107,26 +106,26 @@ export class ArenaBuilderService {
 
     // North wall
     walls.push(createWoodenWall(
-      arenaSize + wallThickness, wallHeight, wallThickness,
-      0, wallHeight / 2, arenaSize / 2 + wallThickness / 2
+      arenaWidth + wallThickness, wallHeight, wallThickness,
+      0, wallHeight / 2, arenaHeight / 2 + wallThickness / 2
     ));
 
     // South wall
     walls.push(createWoodenWall(
-      arenaSize + wallThickness, wallHeight, wallThickness,
-      0, wallHeight / 2, -arenaSize / 2 - wallThickness / 2
+      arenaWidth + wallThickness, wallHeight, wallThickness,
+      0, wallHeight / 2, -arenaHeight / 2 - wallThickness / 2
     ));
 
     // East wall
     walls.push(createWoodenWall(
-      wallThickness, wallHeight, arenaSize,
-      arenaSize / 2 + wallThickness / 2, wallHeight / 2, 0
+      wallThickness, wallHeight, arenaHeight,
+      arenaWidth / 2 + wallThickness / 2, wallHeight / 2, 0
     ));
 
     // West wall
     walls.push(createWoodenWall(
-      wallThickness, wallHeight, arenaSize,
-      -arenaSize / 2 - wallThickness / 2, wallHeight / 2, 0
+      wallThickness, wallHeight, arenaHeight,
+      -arenaWidth / 2 - wallThickness / 2, wallHeight / 2, 0
     ));
 
     return walls;
@@ -344,10 +343,15 @@ export class ArenaBuilderService {
 
   /**
    * Creates arena boundary walls using the level theme's wallColor.
+   * Supports square, rectangle, and circular arena shapes.
    * Returns the meshes; caller must add them to the scene.
-   * (scene param reserved for potential sub-element additions in future themes.)
    */
-  createThemedWalls(scene: THREE.Scene, theme: ThemeConfig): THREE.Mesh[] {
+  createThemedWalls(
+    scene: THREE.Scene,
+    theme: ThemeConfig,
+    arenaShape: ArenaShape = 'square',
+    arenaSize: { width: number; height: number } = { width: 400, height: 400 }
+  ): THREE.Mesh[] {
     // scene param intentionally kept for API consistency with createArenaWalls
     void scene;
 
@@ -358,19 +362,25 @@ export class ArenaBuilderService {
       metalness: 0.1
     });
 
+    if (arenaShape === 'circle') {
+      const radius = arenaSize.width / 2;
+      return this.createCircularWallMeshes(material, radius);
+    }
+
+    // square or rectangle
+    const { width, height } = arenaSize;
     const wallHeight = 15;
     const wallThickness = 8;
-    const arenaSize = 400;
 
     const wallDefs = [
       // North
-      { w: arenaSize + wallThickness, h: wallHeight, d: wallThickness, x: 0, y: wallHeight / 2, z: arenaSize / 2 + wallThickness / 2 },
+      { w: width + wallThickness, h: wallHeight, d: wallThickness, x: 0, y: wallHeight / 2, z: height / 2 + wallThickness / 2 },
       // South
-      { w: arenaSize + wallThickness, h: wallHeight, d: wallThickness, x: 0, y: wallHeight / 2, z: -arenaSize / 2 - wallThickness / 2 },
+      { w: width + wallThickness, h: wallHeight, d: wallThickness, x: 0, y: wallHeight / 2, z: -height / 2 - wallThickness / 2 },
       // East
-      { w: wallThickness, h: wallHeight, d: arenaSize, x: arenaSize / 2 + wallThickness / 2, y: wallHeight / 2, z: 0 },
+      { w: wallThickness, h: wallHeight, d: height, x: width / 2 + wallThickness / 2, y: wallHeight / 2, z: 0 },
       // West
-      { w: wallThickness, h: wallHeight, d: arenaSize, x: -arenaSize / 2 - wallThickness / 2, y: wallHeight / 2, z: 0 },
+      { w: wallThickness, h: wallHeight, d: height, x: -width / 2 - wallThickness / 2, y: wallHeight / 2, z: 0 },
     ];
 
     return wallDefs.map(def => {
@@ -383,5 +393,47 @@ export class ArenaBuilderService {
       mesh.receiveShadow = true;
       return mesh;
     });
+  }
+
+  /**
+   * Creates N=32 wall segments arranged in a circle (polygon approximation).
+   *
+   * Each segment is a BoxGeometry oriented tangentially to the circle, so
+   * collectively they form a visually seamless circular boundary.
+   *
+   * Rotation derivation (xz-plane, THREE.js coordinate system):
+   *   At circle angle θ the tangent direction is (-sinθ, cosθ) in (x,z).
+   *   BoxGeometry default X-axis after rotation.y = α maps to (cosα, sinα) in (x,z).
+   *   Setting α = π/2 + θ gives cosα = -sinθ, sinα = cosθ → correct tangent alignment.
+   *
+   * @param material  Material to apply to each segment mesh
+   * @param radius    Radius of the circular arena in world units
+   */
+  private createCircularWallMeshes(material: THREE.Material, radius: number): THREE.Mesh[] {
+    const N = 32;
+    const wallHeight = 15;
+    const wallThickness = 8;
+    // Length of each straight segment to tile seamlessly around the circle
+    const segmentLength = 2 * radius * Math.sin(Math.PI / N);
+    const meshes: THREE.Mesh[] = [];
+
+    for (let i = 0; i < N; i++) {
+      const angle = (2 * Math.PI * i) / N;
+      const x = radius * Math.cos(angle);
+      const z = radius * Math.sin(angle);
+
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(segmentLength, wallHeight, wallThickness),
+        material
+      );
+      mesh.position.set(x, wallHeight / 2, z);
+      // Align segment length (X-axis) with the tangent at this circle position
+      mesh.rotation.y = Math.PI / 2 + angle;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      meshes.push(mesh);
+    }
+
+    return meshes;
   }
 }
