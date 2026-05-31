@@ -340,7 +340,7 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
       const targetRotation = this.robotState.rotation + (cmd.direction === 'R' ? -angle : angle);
       await this.animateRotation(targetRotation, angle);
     } else if (cmd.type === 'A') {
-      console.log('[RoboSimulator] Arc command not yet implemented:', cmd);
+      await this.executeArcCommand(cmd as ParsedArcCommand);
     }
   }
 
@@ -373,7 +373,15 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
         break;
     }
 
-    await this.animateMovement(targetX, targetZ, distance);
+    // Pre-calculate collision: find maximum valid position along path before animating
+    const startX = this.robotBody.position.x;
+    const startZ = this.robotBody.position.z;
+    const collisionResult = this.physics.getMaxValidPosition(startX, startZ, targetX, targetZ, this.obstacles);
+    const finalX = collisionResult.x;
+    const finalZ = collisionResult.z;
+    const actualDistance = Math.sqrt(Math.pow(finalX - startX, 2) + Math.pow(finalZ - startZ, 2));
+
+    await this.animateMovement(finalX, finalZ, actualDistance);
   }
 
   private animateMovement(targetX: number, targetZ: number, distance: number): Promise<void> {
@@ -447,6 +455,111 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
 
       applyRotation();
     });
+  }
+
+  /**
+   * Animates the robot along a circular arc.
+   *
+   * Geometry derivation (coordinate conventions in this engine):
+   *   forward vector = (sin(rot), cos(rot)) in (X, Z)
+   *   right  vector  = (-cos(rot), sin(rot))  (right means decreasing rotation)
+   *   left   vector  = ( cos(rot), -sin(rot))
+   *
+   * For a RIGHT arc the center is displaced to the right of the robot:
+   *   cx = robotX - radius * cos(rot),  cz = robotZ + radius * sin(rot)
+   *   α₀ = π/2 + rot_rad  (α decreases as robot moves → clockwise)
+   *
+   * For a LEFT arc the center is displaced to the left:
+   *   cx = robotX + radius * cos(rot),  cz = robotZ - radius * sin(rot)
+   *   α₀ = rot_rad - π/2  (α increases as robot moves → counter-clockwise)
+   *
+   * Position on circle: x = cx + radius * sin(α),  z = cz + radius * cos(α)
+   */
+  private animateArc(radius: number, direction: 'L' | 'R', angle: number): Promise<void> {
+    // Special case: no movement
+    if (angle === 0) {
+      return Promise.resolve();
+    }
+
+    // Special case: radius === 0 → treat as in-place rotation
+    if (radius === 0) {
+      const targetRotation = this.robotState.rotation + (direction === 'R' ? -angle : angle);
+      return this.animateRotation(targetRotation, angle);
+    }
+
+    return new Promise(resolve => {
+      const arcAngleRad = angle * Math.PI / 180;
+      const arcLength = radius * arcAngleRad;
+      const duration = (arcLength / this.ROBOT_SPEED) * 1000;
+      const startTime = Date.now();
+
+      const startRot = this.robotState.rotation;
+      const startRotRad = startRot * Math.PI / 180;
+      const robotX = this.robotBody.position.x;
+      const robotZ = this.robotBody.position.z;
+
+      let cx: number, cz: number, alpha0: number, alphaSign: number;
+
+      if (direction === 'R') {
+        // Center to the right of the robot
+        cx = robotX - radius * Math.cos(startRotRad);
+        cz = robotZ + radius * Math.sin(startRotRad);
+        alpha0 = Math.PI / 2 + startRotRad;
+        alphaSign = -1; // α decreases (clockwise)
+      } else {
+        // Center to the left of the robot
+        cx = robotX + radius * Math.cos(startRotRad);
+        cz = robotZ - radius * Math.sin(startRotRad);
+        alpha0 = startRotRad - Math.PI / 2;
+        alphaSign = 1; // α increases (counter-clockwise)
+      }
+
+      const rotationSign = direction === 'R' ? -1 : 1;
+
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        // Compute arc position using angular parameterization
+        const alpha = alpha0 + alphaSign * arcAngleRad * easeProgress;
+        const x = cx + radius * Math.sin(alpha);
+        const z = cz + radius * Math.cos(alpha);
+
+        this.robotBody.position.x = x;
+        this.robotBody.position.z = z;
+
+        // Compute robot heading: tangent to the arc (same easing keeps position and heading in sync)
+        const currentRot = startRot + rotationSign * angle * easeProgress;
+        const quaternion = new CANNON.Quaternion();
+        quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRot * Math.PI / 180);
+        this.robotBody.quaternion.copy(quaternion);
+
+        // Dampen physics velocities to prevent drift
+        this.robotBody.velocity.x *= 0.8;
+        this.robotBody.velocity.z *= 0.8;
+        this.robotBody.angularVelocity.x *= 0.5;
+        this.robotBody.angularVelocity.z *= 0.5;
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          this.robotBody.velocity.x = 0;
+          this.robotBody.velocity.z = 0;
+          this.robotState.rotation = startRot + rotationSign * angle;
+          resolve();
+        }
+      };
+
+      animate();
+    });
+  }
+
+  private async executeArcCommand(cmd: ParsedArcCommand): Promise<void> {
+    const { radius, direction, angle } = cmd;
+    await this.animateArc(radius, direction, angle);
   }
 
   resetRobot(): void {
