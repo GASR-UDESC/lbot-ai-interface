@@ -21,11 +21,7 @@ import * as CANNON from 'cannon-es';
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <div
-      class="simulator-container"
-      #canvasContainer
-      [style.--level-color]="getLevelColor()"
-    >
+    <div class="simulator-container" #canvasContainer>
       <div class="status">
         <div class="status-item">
           <span class="status-label">Posição X:</span>
@@ -147,10 +143,6 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     const dx = this.goalPoint.x - this.robotState.x;
     const dz = this.goalPoint.z - this.robotState.z;
     return Math.sqrt(dx * dx + dz * dz);
-  }
-
-  getLevelColor(): string {
-    return this.levelConfig?.theme.obstacleColor || '#4CAF50';
   }
 
   ngOnInit(): void {
