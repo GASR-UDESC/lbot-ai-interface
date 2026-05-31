@@ -1,6 +1,6 @@
 # Fase 06: Prompt LLM + Regex Backend
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Reescrever completamente o prompt de conversao linguagem natural -> LBML no back
 
 ## Tarefas
 
-- [x] Tarefa 1: Atualizar regex LBML no AIService.java
+- [ ] Tarefa 1: Atualizar regex LBML no AIService.java
   - Arquivo: `lbot-datagen/lbot-datagen-backend/src/main/java/br/com/roselabs/lbot_datagen_backend/services/AIService.java`
   - O que fazer:
     - Alterar `LBML_REGEX` de:
@@ -25,7 +25,7 @@ Reescrever completamente o prompt de conversao linguagem natural -> LBML no back
       ```
     - Garantir que a validacao aceita sequencias mistas como `D50F;A30R90;D20F;`
 
-- [x] Tarefa 2: Reescrever o prompt convert-to-lml.txt
+- [ ] Tarefa 2: Reescrever o prompt convert-to-lml.txt
   - Arquivo: `lbot-datagen/lbot-datagen-backend/src/main/resources/static/prompts/convert-to-lml.txt`
   - O que fazer:
     - Reescrever completamente o prompt (o atual eh desorganizado com secoes duplicadas)
@@ -53,14 +53,14 @@ Reescrever completamente o prompt de conversao linguagem natural -> LBML no back
     - Tom: claro, organizado, sem secoes duplicadas
     - Manter regra: "vire" = R, "curve" = A
 
-- [x] Tarefa 3: Atualizar prompt normalize-prompts-in-cm.txt (se necessario)
+- [ ] Tarefa 3: Atualizar prompt normalize-prompts-in-cm.txt (se necessario)
   - Arquivo: `lbot-datagen/lbot-datagen-backend/src/main/resources/static/prompts/normalize-prompts-in-cm.txt`
   - O que fazer:
     - Verificar se o prompt de normalizacao precisa entender raio de curva
     - Se usuario disser "faca uma curva com raio de 1 metro", o normalizador deve converter "1 metro" para "100 cm"
     - Adicionar instrucao ao prompt de normalizacao para tratar raio de curvas se necessario
 
-- [x] Tarefa 4: Validar integracao end-to-end
+- [ ] Tarefa 4: Validar integracao end-to-end
   - Arquivo: Nenhum arquivo alterado nesta tarefa (validacao manual)
   - O que fazer:
     - Levantar o backend (`mvn spring-boot:run` ou via IDE)
@@ -98,20 +98,9 @@ cd lbot-datagen/lbot-datagen-backend && ./mvnw compile
 
 ## Registro de Execucao
 
-- Data: 2026-05-31
-- Arquivos criados: nenhum
+- Data:
+- Arquivos criados:
 - Arquivos alterados:
-  - `lbot-datagen/lbot-datagen-backend/src/main/java/br/com/roselabs/lbot_datagen_backend/services/AIService.java`
-    - `LBML_REGEX` atualizado para incluir `A\\d+[LR]\\d+;` — aceita sequencias mistas como `D50F;A30R90;D20F;`
-    - Mensagem de erro de retentativa atualizada para incluir exemplo com comando A (`D50F;A30R90;D20F;`)
-  - `lbot-datagen/lbot-datagen-backend/src/main/resources/static/prompts/convert-to-lml.txt`
-    - Reescrito completamente: estrutura limpa e organizada, sem duplicacoes
-    - Documentacao completa dos 3 comandos: D (deslocamento), R (rotacao in-place), A (arco)
-    - Secao dedicada ao comando A com raios de referencia e angulos padrao
-    - Regras de distincao explicitas entre R (virar no proprio eixo) e A (curva em movimento)
-    - Exemplos completos cobrindo todos os CA da business-spec (CA12-CA15)
-  - `lbot-datagen/lbot-datagen-backend/src/main/resources/static/prompts/normalize-prompts-in-cm.txt`
-    - Adicionada nota explicita: raio de curva tambem deve ser normalizado para cm
-- Testes executados: `./mvnw compile` — BUILD SUCESSO (sem erros, sem warnings)
-- Resultado: SUCESSO
-- Pendencias: Validacao end-to-end via API pendente (requer backend rodando com chave de API OpenAI configurada)
+- Testes executados:
+- Resultado:
+- Pendencias:
