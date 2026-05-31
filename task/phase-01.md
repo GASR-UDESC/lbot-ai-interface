@@ -65,9 +65,12 @@ cd lbot-datagen/lbot-datagen-frontend && ng build
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-05-31
+- Arquivos criados: nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/models/lbml-command.model.ts` - adicionado `'A'` ao `LbmlCommandType`, criado `ArcDirection`, `ParsedArcCommand`, `ParsedLbmlCommand`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/services/lbml-parser.service.ts` - adicionado `ARC_COMMAND_REGEX`, `parseArcCommand()`, atualizado `parseCommand()`, `parseCommandSequence()`, `formatCommand()` para suportar tipo A
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts` - atualizado imports, tipagem e adicionado stub para `cmd.type === 'A'`
+- Testes executados: nenhum automatizado (decisao do usuario). Build ng build executado com sucesso.
+- Resultado: SUCESSO - build compila sem erros. Apenas warnings pre-existentes de budget de CSS (nao relacionados as mudancas).
+- Pendencias: Nota tecnica - `LbmlCommandType` agora inclui `'A'`, o que faz `ParsedCommand.type` aceitar `'A'` tambem. O narrowing de tipos foi resolvido com `'radius' in cmd` como discriminante em `formatCommand`. Funciona corretamente em runtime.
