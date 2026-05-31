@@ -1,139 +1,25 @@
-:root { 
-  --gap-desktop: 24px; 
+:root {
+  --gap-desktop: 24px;
   --gap-mobile: 16px;
-  --page-pad-desktop: 24px; 
+  --page-pad-desktop: 24px;
   --page-pad-mobile: 12px;
-  --phone-bg: #0f0f12; 
+  --phone-bg: #0f0f12;
+  --color-primary: #2d7a3a;
+  --color-primary-dark: #1e5c2a;
+  --color-bg-dark: #101114;
+  --color-bg-darker: #0a0a0d;
+  --color-text-light: #e8e8e8;
+  --color-text-muted: #888;
+  --color-border: rgba(255, 255, 255, 0.1);
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: var(--gap-desktop);
-  height: 100dvh;
-  padding: var(--page-pad-desktop);
-  background: linear-gradient(180deg, #f5faf5, #eef6ee);
-  align-items: stretch;
+* {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.phone-container {
-  width: 100%;
-  max-width: 380px;
+html, body {
   height: 100%;
-  background: #101114;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-  display: flex;
-  flex-direction: column;
-  justify-self: center;
-  align-self: stretch;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
-
-.mode-toggle {
-  display: flex;
-  gap: 0;
-  padding: 8px;
-  background: #1a1a1e;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
-  background: transparent;
-  color: #888;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-}
-
-.mode-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #aaa;
-}
-
-.content-wrapper {
-  flex: 1;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.simulator-container {
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #eef2ee;
-  border: 1px solid rgba(0,0,0,0.06);
-  justify-self: stretch;
-  align-self: stretch;
-}
-
-/* Breakpoint para telas grandes */
-@media (min-width: 1400px) {
-  .layout { 
-    grid-template-columns: 1fr 400px;
-    gap: 32px;
-    padding: 32px;
-  }
-  .phone-container {
-    max-width: 400px;
-  }
-}
-
-/* Breakpoint para tablets */
-@media (max-width: 1024px) {
-  .layout {
-    grid-template-columns: 1.5fr 1fr;
-    gap: var(--gap-mobile);
-    padding: var(--page-pad-mobile);
-  }
-  .phone-container {
-    max-width: 340px;
-  }
-}
-
-/* Breakpoint para mobile - empilhamento vertical */
-@media (max-width: 768px) {
-  .layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: var(--gap-mobile);
-    padding: var(--page-pad-mobile);
-  }
-  
-  .phone-container {
-    max-width: 100%;
-    height: 100%;
-    order: 2;
-  }
-  
-  .simulator-container {
-    height: 100%;
-    order: 1;
-  }
-}
-
-/* Breakpoint para telas muito pequenas */
-@media (max-width: 480px) {
-  .layout {
-    gap: 8px;
-    padding: 8px;
-  }
-  
-  .phone-container {
-    border-radius: 16px;
-  }
-  
-  .simulator-container {
-    border-radius: 12px;
-  }
-}
-

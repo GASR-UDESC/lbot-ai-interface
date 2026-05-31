@@ -1,0 +1,137 @@
+.menu-wrapper {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0e0a 0%, #0f1a0f 50%, #0a0e0a 100%);
+  padding: 24px;
+}
+
+.menu-card {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-items: center;
+}
+
+/* Logo area */
+.logo-area {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 4rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 20px rgba(45, 122, 58, 0.6));
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #e8f5e8;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 40px rgba(45, 122, 58, 0.4);
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #6a8f6a;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* Navigation buttons */
+.menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.menu-btn:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  font-size: 1.8rem;
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.btn-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: block;
+  line-height: 1.2;
+}
+
+.btn-desc {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  display: block;
+  margin-top: 2px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1e5c2a, #2d7a3a);
+  color: #e8f5e8;
+  border-color: rgba(45, 122, 58, 0.5);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2d7a3a, #3d9a4a);
+  border-color: rgba(61, 154, 74, 0.7);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #1a1a2e, #252545);
+  color: #c8c8e8;
+  border-color: rgba(100, 100, 200, 0.3);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #252545, #303065);
+  border-color: rgba(100, 100, 200, 0.5);
+}
+
+.btn-tertiary {
+  background: linear-gradient(135deg, #1a1a1a, #252525);
+  color: #c8c8c8;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-tertiary:hover {
+  background: linear-gradient(135deg, #252525, #303030);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Footer */
+.menu-footer {
+  text-align: center;
+  color: #3a5a3a;
+  font-size: 0.75rem;
+}

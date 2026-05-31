@@ -1,0 +1,18 @@
+<div class="controls-page">
+  <header class="controls-header">
+    <a routerLink="/menu" class="back-btn">
+      ← Voltar ao Menu
+    </a>
+    <h1 class="controls-title">🕹️ Modo Controle</h1>
+    <span class="controls-subtitle">Geracao de dados de treino via controle manual</span>
+  </header>
+
+  <div class="controls-layout">
+    <div class="simulator-container">
+      <app-robo-simulator [showGoals]="false"></app-robo-simulator>
+    </div>
+    <div class="controls-panel">
+      <app-virtual-controls></app-virtual-controls>
+    </div>
+  </div>
+</div>
