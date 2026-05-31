@@ -1,6 +1,6 @@
 # Fase 05: Redesign dos 5 Niveis
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ Redesenhar completamente os 5 niveis do jogo com progressao logica de dificuldad
 
 ## Tarefas
 
-- [ ] Tarefa 1: Redesenhar Nivel 1 - "Armazem" (Iniciante)
+- [x] Tarefa 1: Redesenhar Nivel 1 - "Armazem" (Iniciante)
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer:
     - Arena: quadrada, 400x400 (padrao)
@@ -23,7 +23,7 @@ Redesenhar completamente os 5 niveis do jogo com progressao logica de dificuldad
     - Start e goal em posicoes que criam um caminho obrigatorio com pelo menos 2 desvios
     - Start: canto inferior esquerdo, Goal: canto superior direito (ou similar)
 
-- [ ] Tarefa 2: Redesenhar Nivel 2 - "Escritorio" (Iniciante+)
+- [x] Tarefa 2: Redesenhar Nivel 2 - "Escritorio" (Iniciante+)
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer:
     - Arena: retangular (ex: 500x300) para variar visualmente
@@ -32,7 +32,7 @@ Redesenhar completamente os 5 niveis do jogo com progressao logica de dificuldad
     - Forcam 3+ giros para navegar
     - Start em uma extremidade do retangulo, goal na outra
 
-- [ ] Tarefa 3: Redesenhar Nivel 3 - "Cidade" (Intermediario)
+- [x] Tarefa 3: Redesenhar Nivel 3 - "Cidade" (Intermediario)
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer:
     - Arena: quadrada 450x450 (levemente maior)
@@ -42,7 +42,7 @@ Redesenhar completamente os 5 niveis do jogo com progressao logica de dificuldad
     - Paredes internas posicionadas de forma que caminhos retilineos com D/R nao resolvem
     - Start e goal em diagonais com caminho obrigatorio passando por curvas
 
-- [ ] Tarefa 4: Redesenhar Nivel 4 - "Floresta" (Intermediario+)
+- [x] Tarefa 4: Redesenhar Nivel 4 - "Floresta" (Intermediario+)
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer:
     - Arena: circular (raio ~200)
@@ -52,7 +52,7 @@ Redesenhar completamente os 5 niveis do jogo com progressao logica de dificuldad
     - Start e goal em posicoes que forcam navegacao circular
     - Caminho retilineo bloqueado por obstaculos centrais
 
-- [ ] Tarefa 5: Redesenhar Nivel 5 - "Fabrica" (Avancado)
+- [x] Tarefa 5: Redesenhar Nivel 5 - "Fabrica" (Avancado)
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer:
     - Arena: retangular grande (600x400)
@@ -63,7 +63,7 @@ Redesenhar completamente os 5 niveis do jogo com progressao logica de dificuldad
     - Curvas necessarias para alinhar com a rampa
     - Start em um "dock" de carga, goal na area elevada ou alem da ponte
 
-- [ ] Tarefa 6: Validar progressao e impossibilidade
+- [x] Tarefa 6: Validar progressao e impossibilidade
   - Arquivo: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer:
     - Verificar manualmente (no papel/mentalmente) que:
@@ -100,9 +100,14 @@ cd lbot-datagen/lbot-datagen-frontend && ng build && ng serve
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
-- Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+- Data: 2026-05-31
+- Arquivos criados: nenhum
+- Arquivos alterados: `lbot-datagen/lbot-datagen-frontend/src/app/models/level-config.model.ts`
+- Testes executados: `ng build` (compilacao TypeScript completa)
+- Resultado: Build OK (apenas CSS budget warnings). Todos os 5 niveis redesenhados com:
+  - Nivel 1: Arena quadrada 400x400, Z-path com walls e gaps alternados, start (-170,-170) goal (170,170), soluvel com D+R
+  - Nivel 2: Arena retangular 500x300, snake pattern com 3 barreiras verticais e gaps alternados, start (-210,-110) goal (210,110), soluvel com D+R
+  - Nivel 3: Arena quadrada 450x450, chicane com 4 rows de walls staggered + side walls, start (-180,-180) goal (180,180), encoraja arcos (A)
+  - Nivel 4: Arena circular 400 diametro, 13 tree crates em 3 aneis (central, mid, outer), start (-120,-120) goal (120,120), encoraja arcos
+  - Nivel 5: Arena retangular 600x400, barreira densa de 9 wall segments + 2 ramps como ponte, start (-250,-150) goal (250,150), requer rampa
+- Pendencias: Validacao visual in-game pendente (requer `ng serve` e teste manual)
