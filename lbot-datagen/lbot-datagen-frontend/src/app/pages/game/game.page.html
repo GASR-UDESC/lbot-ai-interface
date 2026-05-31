@@ -1,15 +1,17 @@
 <!-- ============================================================
      Game Page layout: 3-D simulator (left) + chat panel (right)
      ============================================================ -->
-<div class="game-layout">
+<div class="game-layout" [style.--level-color]="currentLevelConfig()?.theme?.obstacleColor || '#4CAF50'">
 
   <!-- ── Simulator panel ── -->
   <div class="simulator-panel">
-    <app-robo-simulator
-      [showGoals]="true"
-      [levelConfig]="currentLevelConfig()"
-      (levelCompleted)="onLevelCompleted()"
-    ></app-robo-simulator>
+    <div class="simulator-frame">
+      <app-robo-simulator
+        [showGoals]="true"
+        [levelConfig]="currentLevelConfig()"
+        (levelCompleted)="onLevelCompleted()"
+      ></app-robo-simulator>
+    </div>
 
     <!-- HUD overlay -->
     <div class="hud" *ngIf="gameState.phase() === 'playing'">
@@ -22,24 +24,31 @@
         ↺ Reiniciar Posição
       </button>
     </div>
-
-    <!-- Navigation links with guard -->
-    <div class="hud-nav">
-      <button class="nav-link-btn" (click)="tryNavigate('/menu')">← Menu</button>
-      <button class="nav-link-btn" (click)="tryNavigate('/leaderboard')">Ranking</button>
-    </div>
   </div>
 
   <!-- ── Chat panel ── -->
   <div class="chat-panel">
-    <app-lbot-chat
-      *ngIf="currentChatId()"
-      [externalChatId]="currentChatId()!"
-      [gameMode]="true"
-      [currentLevelName]="currentLevelConfig()?.name"
-    ></app-lbot-chat>
-    <div *ngIf="!currentChatId()" class="chat-loading">
-      <span>Carregando chat...</span>
+    <div class="chat-panel-header">
+      <div class="chat-panel-copy">
+        <span class="chat-panel-eyebrow">Assistente LBML</span>
+        <span class="chat-panel-title">Canal da Missao</span>
+      </div>
+      <div class="hud-nav">
+        <button class="nav-link-btn" (click)="tryNavigate('/menu')">← Menu</button>
+        <button class="nav-link-btn" (click)="tryNavigate('/leaderboard')">Ranking</button>
+      </div>
+    </div>
+
+    <div class="chat-panel-body">
+      <app-lbot-chat
+        *ngIf="currentChatId()"
+        [externalChatId]="currentChatId()!"
+        [gameMode]="true"
+        [currentLevelName]="currentLevelConfig()?.name"
+      ></app-lbot-chat>
+      <div *ngIf="!currentChatId()" class="chat-loading">
+        <span>Carregando chat...</span>
+      </div>
     </div>
   </div>
 
