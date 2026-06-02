@@ -1,0 +1,3 @@
+[console_scripts]
+lbot-harness = harness.cli:main
+lbot-mcp-server = mcp_server.server:main
