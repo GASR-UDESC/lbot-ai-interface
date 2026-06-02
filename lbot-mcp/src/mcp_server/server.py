@@ -26,6 +26,18 @@ def create_backend(name: str | None = None) -> LBotBackend:
 def main():
     backend_name = os.environ.get("LBOT_BACKEND", "simulator")
     logger.info("Iniciando LBot MCP Server com backend '%s'", backend_name)
+
+    backend = create_backend(backend_name)
+
+    import mcp_server.context as ctx
+
+    ctx.backend = backend
+
+    import mcp_server.tools.camera  # noqa: F401
+    import mcp_server.tools.proximity  # noqa: F401
+    import mcp_server.tools.movement  # noqa: F401
+
+    logger.info("Tools registradas: camera, proximity, move")
     mcp.run()
 
 
