@@ -70,3 +70,23 @@ export interface ClientStateUpdate {
   clientId: string;
   state: SimulatorStateSnapshot;
 }
+
+export interface ProximityReadings {
+  frente: number;
+  tras: number;
+}
+
+export interface SensorsResponse {
+  connected: boolean;
+  readings: ProximityReadings | null;
+  error?: string;
+}
+
+export interface CameraResponse {
+  connected: boolean;
+  image: string | null;
+  format: 'png';
+  encoding: 'base64';
+  error?: string;
+  robotPosition?: { x: number; z: number; rotation: number };
+}

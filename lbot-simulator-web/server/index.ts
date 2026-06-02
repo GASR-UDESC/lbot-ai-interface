@@ -1,16 +1,29 @@
+import { createRequire } from 'node:module';
 import cors from 'cors';
 import express, { type Request, type Response } from 'express';
 import {
+  type CameraResponse,
   type ClientStateUpdate,
   type CommandResponse,
   type ExecuteCommandRequest,
   type ResetRequest,
   type ResetResponse,
+  type SensorsResponse,
   type ServerEvent,
   type SimulatorStateResponse,
   type SimulatorStatusResponse,
 } from '../shared/protocol.js';
 import { normalizeLbml, validateLbml } from '../shared/lbml.js';
+import { computeProximity } from './sensors.js';
+
+const require = createRequire(import.meta.url);
+
+let HeadlessSceneRenderer: typeof import('./scene-renderer.js').HeadlessSceneRenderer | null = null;
+try {
+  HeadlessSceneRenderer = require('./scene-renderer.js').HeadlessSceneRenderer as typeof import('./scene-renderer.js').HeadlessSceneRenderer;
+} catch {
+  HeadlessSceneRenderer = null;
+}
 
 type EventSink = {
   clientId: string;
@@ -23,6 +36,7 @@ const port = Number.parseInt(process.env.PORT ?? '3001', 10);
 let activeClient: EventSink | null = null;
 let lastKnownState: ClientStateUpdate['state'] | null = null;
 let pendingEvents = 0;
+let renderer: import('./scene-renderer.js').HeadlessSceneRenderer | null = null;
 
 app.use(cors());
 app.use(express.json());
@@ -62,6 +76,17 @@ function setSseHeaders(response: Response): void {
   response.flushHeaders();
 }
 
+function getRenderer(): import('./scene-renderer.js').HeadlessSceneRenderer | null {
+  if (renderer) return renderer;
+  if (!HeadlessSceneRenderer) return null;
+  try {
+    renderer = new HeadlessSceneRenderer();
+  } catch {
+    renderer = null;
+  }
+  return renderer;
+}
+
 app.get('/api/health', (_request, response) => {
   response.json({ status: 'online' });
 });
@@ -80,6 +105,65 @@ app.get('/api/state', (_request, response: Response<SimulatorStateResponse>) => 
     activeClientId: activeClient?.clientId ?? null,
     state: lastKnownState,
   });
+});
+
+app.get('/api/camera', (_request, response: Response<CameraResponse>) => {
+  try {
+    const r = getRenderer();
+    if (!r || !r.available) {
+      response.json({
+        connected: false,
+        image: null,
+        format: 'png',
+        encoding: 'base64',
+        error: 'camera indisponivel',
+      });
+      return;
+    }
+
+    const state = lastKnownState;
+    const x = state?.x ?? 0;
+    const z = state?.z ?? 0;
+    const rotation = state?.rotation ?? 0;
+    const base64 = r.render(x, z, rotation);
+
+    response.json({
+      connected: true,
+      image: base64,
+      format: 'png',
+      encoding: 'base64',
+      robotPosition: { x, z, rotation },
+    });
+  } catch (err) {
+    response.json({
+      connected: false,
+      image: null,
+      format: 'png',
+      encoding: 'base64',
+      error: `camera indisponivel: ${err instanceof Error ? err.message : 'erro desconhecido'}`,
+    });
+  }
+});
+
+app.get('/api/sensors', (_request, response: Response<SensorsResponse>) => {
+  try {
+    const state = lastKnownState;
+    const x = state?.x ?? 0;
+    const z = state?.z ?? 0;
+    const rotation = state?.rotation ?? 0;
+    const readings = computeProximity(x, z, rotation);
+
+    response.json({
+      connected: true,
+      readings,
+    });
+  } catch (err) {
+    response.json({
+      connected: false,
+      readings: null,
+      error: `sensor indisponivel: ${err instanceof Error ? err.message : 'erro desconhecido'}`,
+    });
+  }
 });
 
 app.get('/api/events', (request, response) => {
@@ -184,4 +268,11 @@ app.post('/api/state', (request: Request<object, object, ClientStateUpdate>, res
 
 app.listen(port, () => {
   console.log(`LBot simulator API listening on http://localhost:${port}`);
+
+  const r = getRenderer();
+  if (r?.available) {
+    console.log('Headless renderer inicializado.');
+  } else {
+    console.log('Headless renderer nao disponivel.');
+  }
 });
