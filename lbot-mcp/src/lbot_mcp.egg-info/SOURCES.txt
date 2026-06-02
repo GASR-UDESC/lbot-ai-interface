@@ -1,5 +1,9 @@
 pyproject.toml
 src/harness/__init__.py
+src/harness/agent.py
+src/harness/cli.py
+src/harness/mcp_client.py
+src/harness/personality.py
 src/lbot_mcp.egg-info/PKG-INFO
 src/lbot_mcp.egg-info/SOURCES.txt
 src/lbot_mcp.egg-info/dependency_links.txt
@@ -7,9 +11,17 @@ src/lbot_mcp.egg-info/entry_points.txt
 src/lbot_mcp.egg-info/requires.txt
 src/lbot_mcp.egg-info/top_level.txt
 src/mcp_server/__init__.py
+src/mcp_server/context.py
 src/mcp_server/server.py
 src/mcp_server/backends/__init__.py
 src/mcp_server/backends/base.py
 src/mcp_server/backends/simulator.py
 src/mcp_server/tools/__init__.py
+src/mcp_server/tools/camera.py
+src/mcp_server/tools/movement.py
+src/mcp_server/tools/proximity.py
 src/mcp_server/translator/__init__.py
+tests/test_backends.py
+tests/test_e2e.py
+tests/test_integration.py
+tests/test_translator.py
