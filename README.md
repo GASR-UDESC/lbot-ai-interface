@@ -2,41 +2,41 @@
 
 O **L-Bot AI Interface** é uma plataforma integrada para controle e simulação de robôs E-Puck com capacidades de inteligência artificial. O projeto combina simulação 3D, controle via linguagem natural, geração de dados para treinamento e interfaces web modernas.
 
-## 📋 Visão Geral
+## 📋 Estrutura do Projeto
 
-Este projeto é uma solução completa para:
-- **Simulação 3D** de robôs E-Puck
-- **Controle via linguagem natural** usando modelos GPT
-- **Geração de datasets** para treinamento de IA
-- **Controle via socket** para integração com simuladores
-- **Interfaces web** modernas para interação
-
+```
+1.coleta-de-dados/lbot-datagen          → Geração de datasets para treinamento
+2.treinamento-de-modelo/lbot-natural-language-controller → Tradutor NL→LBML (v3-v7, modelo RASA)
+3.controlador/lbot-mcp                  → MCP Server + Harness (FastMCP, OpenAI SDK)
+3.controlador/lbot-simulator-web        → Simulador 3D Web (Three.js, cannon-es, Express)
+```
 
 ## 🚀 Funcionalidades
 
-### 🎮 Simulador 3D Web
+### 🎮 Simulador 3D Web (`3.controlador/lbot-simulator-web`)
 - Simulação visual em tempo real de robôs E-Puck
 - Interface web responsiva
 - Controle direto via browser
 - Visualização 3D com Three.js
+- Câmera 1ª pessoa e sensores de proximidade via API REST
 
-### 🤖 Controle via Linguagem Natural
+### 🤖 Controle via Linguagem Natural (`2.treinamento-de-modelo/lbot-natural-language-controller`)
 - Modelo GPT customizado para comandos de robô
 - Tradução de linguagem natural para comandos de movimento
 - API REST para integração
 - Cliente web Angular
 
-### 📊 Geração de Dados
+### 📊 Geração de Dados (`1.coleta-de-dados/lbot-datagen`)
 - Backend Spring Boot para processamento
 - Frontend Angular para visualização
 - Geração automática de datasets de treinamento
 - API REST completa
 
-### 🔌 Controle via Socket
-- Comunicação TCP com simulador Enki
-- Controle programático em Python
-- Comandos de movimento em tempo real
-- Interface gráfica Qt
+### 🔌 MCP Server + Harness (`3.controlador/lbot-mcp`)
+- MCP Server com 3 tools (câmera, proximidade, deslocamento)
+- CLI interativo com loop agêntico ReAct
+- Integração com LM Studio via OpenAI SDK
+- Backend plugável (simulador ou hardware real)
 
 ## 🛠️ Tecnologias Utilizadas
 

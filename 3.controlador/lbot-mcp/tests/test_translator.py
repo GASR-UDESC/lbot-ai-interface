@@ -5,7 +5,7 @@ import os
 MODEL_AVAILABLE = False
 _translator_dir = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", "lbot-natural-language-controller", "lbot-v7",
+    "..", "..", "..", "2.treinamento-de-modelo", "lbot-natural-language-controller", "lbot-v7",
 )
 _model_path = os.path.join(_translator_dir, "lbot_translator_v7.pt")
 if os.path.exists(_model_path):

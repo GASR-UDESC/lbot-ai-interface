@@ -13,14 +13,14 @@ Estender o `lbot-simulator-web` com renderização 3D headless (câmera 1ª pess
 ## Tarefas
 
 - [x] Tarefa 1: Adicionar dependência `gl` ao `package.json`
-  - Arquivo: `lbot-simulator-web/package.json`
+  - Arquivo: `3.controlador/lbot-simulator-web/package.json`
   - O que fazer:
     - Adicionar `"gl": "^6.0.2"` em `dependencies`
     - Adicionar `"@types/gl": "^6.0.5"` em `devDependencies`
-    - Rodar `npm install` no diretório `lbot-simulator-web/`
+    - Rodar `npm install` no diretório `3.controlador/lbot-simulator-web/`
 
 - [x] Tarefa 2: Criar `server/scene-renderer.ts` — Headless Three.js Renderer
-  - Arquivo: `lbot-simulator-web/server/scene-renderer.ts` (novo)
+  - Arquivo: `3.controlador/lbot-simulator-web/server/scene-renderer.ts` (novo)
   - O que fazer:
     - Criar classe `HeadlessSceneRenderer` que:
       - Recebe `width` e `height` (default 640×480)
@@ -40,7 +40,7 @@ Estender o `lbot-simulator-web` com renderização 3D headless (câmera 1ª pess
 - [x] Tarefa 3: Criar `server/sensors.ts` — Cálculo Geométrico de Proximidade
 - [x] Tarefa 4: Estender `shared/protocol.ts` com novos tipos
 - [x] Tarefa 5: Adicionar endpoints `GET /api/camera` e `GET /api/sensors` ao servidor
-  - Arquivo: `lbot-simulator-web/server/index.ts`
+  - Arquivo: `3.controlador/lbot-simulator-web/server/index.ts`
   - O que fazer:
     - Importar `HeadlessSceneRenderer` e `computeProximity`
     - Instanciar renderer ao iniciar o servidor (fora das rotas)
@@ -58,13 +58,13 @@ Estender o `lbot-simulator-web` com renderização 3D headless (câmera 1ª pess
 
 ## Arquivos Referência
 
-- `lbot-simulator-web/server/index.ts` — Estrutura atual do Express, middleware, padrão de resposta
-- `lbot-simulator-web/shared/protocol.ts` — Tipos existentes, padrão de nomenclatura
-- `lbot-simulator-web/src/simulator/robot.ts` — Geometria 3D do robô (para replicar no server)
-- `lbot-simulator-web/src/simulator/arena.ts` — Geometria da arena (ground 800×800, paredes em ±200 de centro)
-- `lbot-simulator-web/src/simulator/scene.ts` — Configuração de cena Three.js (iluminação, câmera)
-- `lbot-simulator-web/tsconfig.server.json` — Config TypeScript do server (inclui `server/` e `shared/`)
-- `lbot-simulator-web/package.json` — Scripts (`dev`, `check`, `test`) e dependências atuais
+- `3.controlador/lbot-simulator-web/server/index.ts` — Estrutura atual do Express, middleware, padrão de resposta
+- `3.controlador/lbot-simulator-web/shared/protocol.ts` — Tipos existentes, padrão de nomenclatura
+- `3.controlador/lbot-simulator-web/src/simulator/robot.ts` — Geometria 3D do robô (para replicar no server)
+- `3.controlador/lbot-simulator-web/src/simulator/arena.ts` — Geometria da arena (ground 800×800, paredes em ±200 de centro)
+- `3.controlador/lbot-simulator-web/src/simulator/scene.ts` — Configuração de cena Three.js (iluminação, câmera)
+- `3.controlador/lbot-simulator-web/tsconfig.server.json` — Config TypeScript do server (inclui `server/` e `shared/`)
+- `3.controlador/lbot-simulator-web/package.json` — Scripts (`dev`, `check`, `test`) e dependências atuais
 
 ## Critérios de Aceite
 
@@ -97,21 +97,21 @@ Estender o `lbot-simulator-web` com renderização 3D headless (câmera 1ª pess
 ## Comandos pós-fase
 
 ```bash
-cd lbot-simulator-web && npm install
-cd lbot-simulator-web && npm run check
-cd lbot-simulator-web && npm test
+cd 3.controlador/lbot-simulator-web && npm install
+cd 3.controlador/lbot-simulator-web && npm run check
+cd 3.controlador/lbot-simulator-web && npm test
 ```
 
 ## Registro de Execução
 
 - Data: 2026-06-02
 - Arquivos criados:
-  - `lbot-simulator-web/server/scene-renderer.ts` — Headless renderer com fallback 2D (pngjs) quando WebGL 2 indisponível
-  - `lbot-simulator-web/server/sensors.ts` — Cálculo geométrico de proximidade (raycasting contra paredes da arena)
+  - `3.controlador/lbot-simulator-web/server/scene-renderer.ts` — Headless renderer com fallback 2D (pngjs) quando WebGL 2 indisponível
+  - `3.controlador/lbot-simulator-web/server/sensors.ts` — Cálculo geométrico de proximidade (raycasting contra paredes da arena)
 - Arquivos alterados:
-  - `lbot-simulator-web/shared/protocol.ts` — Adicionados tipos `ProximityReadings`, `SensorsResponse`, `CameraResponse`
-  - `lbot-simulator-web/server/index.ts` — Adicionados endpoints `GET /api/camera` e `GET /api/sensors`
-  - `lbot-simulator-web/package.json` — Adicionados `gl`, `pngjs`, `@types/gl`, `@types/pngjs`
+  - `3.controlador/lbot-simulator-web/shared/protocol.ts` — Adicionados tipos `ProximityReadings`, `SensorsResponse`, `CameraResponse`
+  - `3.controlador/lbot-simulator-web/server/index.ts` — Adicionados endpoints `GET /api/camera` e `GET /api/sensors`
+  - `3.controlador/lbot-simulator-web/package.json` — Adicionados `gl`, `pngjs`, `@types/gl`, `@types/pngjs`
 - Testes executados:
   - `npm test` (vitest): 6/6 passando (testes existentes mantidos)
   - Smoke test manual: `/api/sensors` retorna `{frente: 200, tras: 200}` no centro; `/api/camera` retorna PNG base64 válido (modo 2D)

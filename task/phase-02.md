@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretórios, backend plugável (interface abstrata + implementação HTTP para simulador) e wrapper do tradutor LBotTranslatorV7.
+Criar o monorepo Python `3.controlador/lbot-mcp/` com `pyproject.toml`, estrutura de diretórios, backend plugável (interface abstrata + implementação HTTP para simulador) e wrapper do tradutor LBotTranslatorV7.
 
 ## Pré-requisitos
 
@@ -13,9 +13,9 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
 ## Tarefas
 
 - [x] Tarefa 1: Criar estrutura de diretórios e `pyproject.toml`
-  - Arquivo: `lbot-mcp/pyproject.toml` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/pyproject.toml` (novo)
   - O que fazer:
-    - Criar diretório `lbot-mcp/` na raiz do workspace
+    - Criar diretório `3.controlador/lbot-mcp/` na raiz do workspace
     - Criar `pyproject.toml` com:
       - `name = "lbot-mcp"`
       - `version = "0.1.0"`
@@ -45,7 +45,7 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
       ```
 
 - [x] Tarefa 2: Criar interface abstrata de backend (`backends/base.py`)
-  - Arquivo: `lbot-mcp/src/mcp_server/backends/base.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/backends/base.py` (novo)
   - O que fazer:
     - Criar classe abstrata `LBotBackend` com métodos:
       - `async get_camera() -> str`: Retorna imagem base64
@@ -57,7 +57,7 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
     - Adicionar mensagens de erro padronizadas (português): `"câmera indisponível"`, `"sensor indisponível"`, etc.
 
 - [x] Tarefa 3: Implementar backend HTTP para simulador (`backends/simulator.py`)
-  - Arquivo: `lbot-mcp/src/mcp_server/backends/simulator.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/backends/simulator.py` (novo)
   - O que fazer:
     - Classe `SimulatorBackend(LBotBackend)`:
       - `__init__(base_url: str = "http://localhost:3001")`
@@ -71,10 +71,10 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
       - Tratamento de erros com mensagens em português
 
 - [x] Tarefa 4: Criar wrapper do tradutor (`translator/__init__.py`)
-  - Arquivo: `lbot-mcp/src/mcp_server/translator/__init__.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/translator/__init__.py` (novo)
   - O que fazer:
     - Módulo que importa `LBotTranslatorV7` do path externo
-    - Adicionar `lbot-natural-language-controller/lbot-v7/` ao `sys.path` se necessário
+    - Adicionar `2.treinamento-de-modelo/lbot-natural-language-controller/lbot-v7/` ao `sys.path` se necessário
     - Classe `TranslatorWrapper`:
       - Singleton ou instância lazy (carrega modelo ~12MB apenas uma vez)
       - `translate(command: str) -> str`: Chama `translator.translate(command)`, retorna LBML ou levanta `TranslationError` se resultado for `"ERRO"`
@@ -84,7 +84,7 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
     - Inicialização lazy: modelo carregado na primeira chamada, não no import
 
 - [x] Tarefa 5: Criar skeleton do MCP Server com FastMCP
-  - Arquivo: `lbot-mcp/src/mcp_server/server.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/server.py` (novo)
   - O que fazer:
     - Criar app FastMCP: `mcp = FastMCP("LBot")`
     - Configurar backend via variável de ambiente `LBOT_BACKEND` (default `"simulator"`)
@@ -96,15 +96,15 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
 
 ## Arquivos Referência
 
-- `lbot-natural-language-controller/lbot-v7/lbot_v7.py` — API do tradutor: classe `LBotTranslatorV7`, método `translate(command) -> str`, carregamento do modelo
-- `lbot-simulator-web/server/index.ts` — Endpoints existentes que o backend vai chamar (`/api/health`, `/api/commands`, `/api/state`)
-- `lbot-simulator-web/shared/protocol.ts` — Tipos de resposta esperados dos endpoints
-- `lbot-simulator-web/package.json` — Porta do servidor (3001) e estrutura do projeto
+- `2.treinamento-de-modelo/lbot-natural-language-controller/lbot-v7/lbot_v7.py` — API do tradutor: classe `LBotTranslatorV7`, método `translate(command) -> str`, carregamento do modelo
+- `3.controlador/lbot-simulator-web/server/index.ts` — Endpoints existentes que o backend vai chamar (`/api/health`, `/api/commands`, `/api/state`)
+- `3.controlador/lbot-simulator-web/shared/protocol.ts` — Tipos de resposta esperados dos endpoints
+- `3.controlador/lbot-simulator-web/package.json` — Porta do servidor (3001) e estrutura do projeto
 
 ## Critérios de Aceite
 
 - [x] CA01: Projeto instala e importa sem erros
-  - Cenario: Dado `pip install -e .` no diretório `lbot-mcp/`, Quando `python -c "from mcp_server.backends.simulator import SimulatorBackend"`, Então importa sem erros
+  - Cenario: Dado `pip install -e .` no diretório `3.controlador/lbot-mcp/`, Quando `python -c "from mcp_server.backends.simulator import SimulatorBackend"`, Então importa sem erros
 
 - [x] CA02: Backend simulador faz health check
   - Cenario: Dado simulador rodando em localhost:3001, Quando `backend.health_check()`, Então retorna `True`
@@ -132,26 +132,26 @@ Criar o monorepo Python `lbot-mcp/` com `pyproject.toml`, estrutura de diretóri
 ## Comandos pós-fase
 
 ```bash
-cd lbot-mcp && pip install -e .
-cd lbot-mcp && python -c "from mcp_server.server import mcp; print('MCP Server OK')"
-cd lbot-mcp && python -c "from mcp_server.translator import TranslatorWrapper; print('Translator OK')"
+cd 3.controlador/lbot-mcp && pip install -e .
+cd 3.controlador/lbot-mcp && python -c "from mcp_server.server import mcp; print('MCP Server OK')"
+cd 3.controlador/lbot-mcp && python -c "from mcp_server.translator import TranslatorWrapper; print('Translator OK')"
 ```
 
 ## Registro de Execução
 
 - Data: 2026-06-02
 - Arquivos criados:
-  - `lbot-mcp/pyproject.toml`
-  - `lbot-mcp/src/__init__.py`
-  - `lbot-mcp/src/mcp_server/__init__.py`
-  - `lbot-mcp/src/mcp_server/server.py`
-  - `lbot-mcp/src/mcp_server/tools/__init__.py`
-  - `lbot-mcp/src/mcp_server/backends/__init__.py`
-  - `lbot-mcp/src/mcp_server/backends/base.py`
-  - `lbot-mcp/src/mcp_server/backends/simulator.py`
-  - `lbot-mcp/src/mcp_server/translator/__init__.py`
-  - `lbot-mcp/src/harness/__init__.py`
-  - `lbot-mcp/tests/__init__.py`
+  - `3.controlador/lbot-mcp/pyproject.toml`
+  - `3.controlador/lbot-mcp/src/__init__.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/__init__.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/server.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/tools/__init__.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/backends/__init__.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/backends/base.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/backends/simulator.py`
+  - `3.controlador/lbot-mcp/src/mcp_server/translator/__init__.py`
+  - `3.controlador/lbot-mcp/src/harness/__init__.py`
+  - `3.controlador/lbot-mcp/tests/__init__.py`
 - Arquivos alterados: Nenhum existente (todos novos)
 - Testes executados:
   - Import do MCP Server: OK

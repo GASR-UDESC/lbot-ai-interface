@@ -2,7 +2,7 @@
 
 ## Contexto
 
-O LBot é um robô E-Puck controlado remotamente. Atualmente o projeto possui um simulador 3D web (`lbot-simulator-web`), um tradutor de linguagem natural para LBML (`lbot-translator-v7`), e backend de geração de dados. A tarefa é transformar o ecossistema em uma plataforma baseada no protocolo **MCP (Model Context Protocol)** para permitir que o robô seja operado por IA de forma agêntica, com um simulador para testes e desenvolvimento.
+O LBot é um robô E-Puck controlado remotamente. Atualmente o projeto possui um simulador 3D web (`3.controlador/lbot-simulator-web`), um tradutor de linguagem natural para LBML (`lbot-translator-v7`), e backend de geração de dados. A tarefa é transformar o ecossistema em uma plataforma baseada no protocolo **MCP (Model Context Protocol)** para permitir que o robô seja operado por IA de forma agêntica, com um simulador para testes e desenvolvimento.
 
 ## Requisitos Funcionais
 
@@ -30,7 +30,7 @@ O simulador deve prover medição de distância via sensores de proximidade fron
 - Nenhum obstáculo no alcance do sensor: retornar valor máximo ou "sem obstáculo"
 
 ### RF03 - Simulador: Execução de Comandos LBML
-O simulador deve continuar suportando a execução de sequências de comandos LBML com física (cannon-es), já existente no `lbot-simulator-web`.
+O simulador deve continuar suportando a execução de sequências de comandos LBML com física (cannon-es), já existente no `3.controlador/lbot-simulator-web`.
 
 **Regras:**
 - Mantém o comportamento atual de parsing e execução de LBML (`D<valor><F|B|L|R>;R<ângulo><L|R>;`)
@@ -87,7 +87,7 @@ O MCP Server deve suportar troca de backend (simulador vs real) sem alterar a in
 
 **Regras:**
 - Configuração de backend via variável de ambiente ou arquivo de configuração
-- Backend simulador: comunica-se via HTTP com o `lbot-simulator-web`
+- Backend simulador: comunica-se via HTTP com o `3.controlador/lbot-simulator-web`
 - Backend real: comunica-se com o ESP32 (implementação futura)
 - A interface das tools MCP é idêntica independente do backend ativo
 
@@ -138,7 +138,7 @@ Quando uma ferramenta MCP falha, o harness deve reportar o erro de forma clara.
 - **RNF02**: O MCP Server usa FastMCP como framework MCP
 - **RNF03**: O Harness usa OpenAI SDK (modo compatível) para comunicar com LM Studio
 - **RNF04**: O LLM utilizado é carregado via LM Studio (localhost), com configuração padrão de API compatível OpenAI
-- **RNF05**: O simulador estende o `lbot-simulator-web` existente (TypeScript, React, Three.js, Express)
+- **RNF05**: O simulador estende o `3.controlador/lbot-simulator-web` existente (TypeScript, React, Three.js, Express)
 - **RNF06**: A comunicação entre MCP Server e simulador é via HTTP (REST + SSE)
 - **RNF07**: O tradutor `lbot-translator-v7` é importado como módulo Python pelo MCP Server
 
@@ -156,7 +156,7 @@ Quando uma ferramenta MCP falha, o harness deve reportar o erro de forma clara.
 
 ## Premissas
 
-- O `lbot-simulator-web` existente é funcional e será a base do simulador estendido
+- O `3.controlador/lbot-simulator-web` existente é funcional e será a base do simulador estendido
 - O `lbot-translator-v7` está treinado e pronto para uso como módulo Python
 - O LM Studio está instalado e rodando localmente com um modelo compatível com function calling carregado
 - O protocolo MCP é adequado para a comunicação entre harness e server

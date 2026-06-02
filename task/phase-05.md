@@ -16,7 +16,7 @@ Implementar testes unitários e de integração para todos os componentes criado
 ## Tarefas
 
 - [x] Tarefa 1: Testes do simulador (TypeScript/Vitest)
-  - Arquivo: `lbot-simulator-web/tests/api.test.ts` (novo)
+  - Arquivo: `3.controlador/lbot-simulator-web/tests/api.test.ts` (novo)
   - O que fazer:
     - Criar testes de integração para os novos endpoints da API
     - Iniciar servidor Express em porta aleatória para testes
@@ -31,7 +31,7 @@ Implementar testes unitários e de integração para todos os componentes criado
   - **Atenção**: O `gl` (headless WebGL) precisa estar disponível no ambiente de teste. O Vitest roda em Node.js (jsdom não suporta WebGL). Para o teste de câmera, pode ser necessário mock do `gl` ou usar flag para skip se GL não disponível.
 
 - [x] Tarefa 2: Testes unitários de sensores (TypeScript/Vitest)
-  - Arquivo: `lbot-simulator-web/tests/sensors.test.ts` (novo)
+  - Arquivo: `3.controlador/lbot-simulator-web/tests/sensors.test.ts` (novo)
   - O que fazer:
     - Testar função `computeProximity` isoladamente
     - `test_center_position`: Robô em (0,0,0) → ~200cm frente e trás
@@ -43,7 +43,7 @@ Implementar testes unitários e de integração para todos os componentes criado
     - `test_max_distance_cap`: Distância calculada não excede 400 (cap do sensor)
 
 - [x] Tarefa 3: Testes do backend simulador (Python/pytest)
-  - Arquivo: `lbot-mcp/tests/test_backends.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/tests/test_backends.py` (novo)
   - O que fazer:
     - Testar `SimulatorBackend` com mock HTTP (usando `pytest-httpx` ou `responses`)
     - `test_health_check_online`: Mock retorna 200 → `health_check()` é True
@@ -57,7 +57,7 @@ Implementar testes unitários e de integração para todos os componentes criado
     - `test_timeout`: Simular timeout → verificar tratamento
 
 - [x] Tarefa 4: Testes do wrapper do tradutor (Python/pytest)
-   - Arquivo: `lbot-mcp/tests/test_translator.py` (novo)
+   - Arquivo: `3.controlador/lbot-mcp/tests/test_translator.py` (novo)
    - O que fazer:
      - Testar `TranslatorWrapper` com o modelo real (se `.pt` disponível) OU mock
      - `test_translate_simple`: "ande 40cm pra frente" → "D40F;"
@@ -71,7 +71,7 @@ Implementar testes unitários e de integração para todos os componentes criado
      - **Nota**: Se modelo `.pt` não estiver disponível no CI, marcar testes com `@pytest.mark.skip` ou usar mock
 
 - [x] Tarefa 5: Testes de integração MCP Server (Python/pytest)
-   - Arquivo: `lbot-mcp/tests/test_integration.py` (novo)
+   - Arquivo: `3.controlador/lbot-mcp/tests/test_integration.py` (novo)
    - O que fazer:
      - Testar MCP Server com backend mockado
      - `test_server_starts`: Server inicia sem erros
@@ -84,7 +84,7 @@ Implementar testes unitários e de integração para todos os componentes criado
      - `test_backend_switch`: Trocar variável de ambiente → backend correto é instanciado
 
 - [x] Tarefa 6: Testes de integração ponta-a-ponta
-  - Arquivo: `lbot-mcp/tests/test_e2e.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/tests/test_e2e.py` (novo)
   - O que fazer:
     - Teste que requer simulador rodando (marcado com `@pytest.mark.e2e`)
     - `test_full_flow_camera`: Simulador → MCP Server → tool camera → retorna imagem
@@ -94,12 +94,12 @@ Implementar testes unitários e de integração para todos os componentes criado
 
 ## Arquivos Referência
 
-- `lbot-simulator-web/tests/lbml.test.ts` — Padrão de testes Vitest existente
-- `lbot-simulator-web/vitest.config.ts` — Configuração Vitest (jsdom, setup)
-- `lbot-simulator-web/tests/setup.ts` — Setup de testes
-- `lbot-mcp/src/mcp_server/server.py` — MCP Server a ser testado
-- `lbot-mcp/src/mcp_server/backends/simulator.py` — Backend a ser mockado/testado
-- `lbot-mcp/src/mcp_server/translator/__init__.py` — Translator wrapper a ser testado
+- `3.controlador/lbot-simulator-web/tests/lbml.test.ts` — Padrão de testes Vitest existente
+- `3.controlador/lbot-simulator-web/vitest.config.ts` — Configuração Vitest (jsdom, setup)
+- `3.controlador/lbot-simulator-web/tests/setup.ts` — Setup de testes
+- `3.controlador/lbot-mcp/src/mcp_server/server.py` — MCP Server a ser testado
+- `3.controlador/lbot-mcp/src/mcp_server/backends/simulator.py` — Backend a ser mockado/testado
+- `3.controlador/lbot-mcp/src/mcp_server/translator/__init__.py` — Translator wrapper a ser testado
 - `task/business-spec.md` — Cenários de aceite originais
 
 ## Critérios de Aceite
@@ -108,10 +108,10 @@ Implementar testes unitários e de integração para todos os componentes criado
   - Cenario: Mapear CA01-CA06 da business-spec para testes nesta fase
 
 - [x] CA02: Testes do simulador passam (`npm test`)
-   - Cenario: Rodar `npm test` em `lbot-simulator-web/`, todos os testes passam
+   - Cenario: Rodar `npm test` em `3.controlador/lbot-simulator-web/`, todos os testes passam
 
 - [x] CA03: Testes Python passam (`pytest`)
-   - Cenario: Rodar `pytest` em `lbot-mcp/`, todos os testes unitários passam
+   - Cenario: Rodar `pytest` em `3.controlador/lbot-mcp/`, todos os testes unitários passam
 
 - [x] CA04: Testes de integração passam com mock
    - Cenario: Testes que usam mock HTTP passam sem simulador real
@@ -137,26 +137,26 @@ Total: ~41 testes
 
 ```bash
 # Simulador
-cd lbot-simulator-web && npm test
-cd lbot-simulator-web && npm run check
+cd 3.controlador/lbot-simulator-web && npm test
+cd 3.controlador/lbot-simulator-web && npm run check
 
 # Python
-cd lbot-mcp && python -m pytest tests/ -v
-cd lbot-mcp && python -m pytest tests/ -v -m "not e2e"  # sem testes que precisam de simulador
+cd 3.controlador/lbot-mcp && python -m pytest tests/ -v
+cd 3.controlador/lbot-mcp && python -m pytest tests/ -v -m "not e2e"  # sem testes que precisam de simulador
 ```
 
 ## Registro de Execução
 
 - Data: 2026-06-02
 - Arquivos criados:
-  - `lbot-simulator-web/tests/api.test.ts` — 13 testes de integração para endpoints REST (camera, sensors, health, status, state)
-  - `lbot-simulator-web/tests/sensors.test.ts` — 11 testes unitários do `computeProximity` (posições, rotações, bordas)
-  - `lbot-mcp/tests/test_backends.py` — 16 testes do `SimulatorBackend` com mock HTTP (health, camera, proximity, execute, state, errors)
-  - `lbot-mcp/tests/test_translator.py` — 9 testes do `TranslatorWrapper` (singleton, translate, verbose, invalid input, model detection)
-  - `lbot-mcp/tests/test_integration.py` — 12 testes de integração das tools MCP (camera, proximity, move) e módulo context
-  - `lbot-mcp/tests/test_e2e.py` — 3 testes ponta-a-ponta (health, camera, sensors via backend com simulador real)
+  - `3.controlador/lbot-simulator-web/tests/api.test.ts` — 13 testes de integração para endpoints REST (camera, sensors, health, status, state)
+  - `3.controlador/lbot-simulator-web/tests/sensors.test.ts` — 11 testes unitários do `computeProximity` (posições, rotações, bordas)
+  - `3.controlador/lbot-mcp/tests/test_backends.py` — 16 testes do `SimulatorBackend` com mock HTTP (health, camera, proximity, execute, state, errors)
+  - `3.controlador/lbot-mcp/tests/test_translator.py` — 9 testes do `TranslatorWrapper` (singleton, translate, verbose, invalid input, model detection)
+  - `3.controlador/lbot-mcp/tests/test_integration.py` — 12 testes de integração das tools MCP (camera, proximity, move) e módulo context
+  - `3.controlador/lbot-mcp/tests/test_e2e.py` — 3 testes ponta-a-ponta (health, camera, sensors via backend com simulador real)
 - Arquivos alterados:
-  - `lbot-mcp/pyproject.toml` — Adicionado marcador `e2e` no `[tool.pytest.ini_options]`
+  - `3.controlador/lbot-mcp/pyproject.toml` — Adicionado marcador `e2e` no `[tool.pytest.ini_options]`
 - Testes executados:
   - Vitest (`npm test`): 30/30 passando (6 lbml + 11 sensors + 13 api)
   - TypeScript check (`npm run check`): limpo

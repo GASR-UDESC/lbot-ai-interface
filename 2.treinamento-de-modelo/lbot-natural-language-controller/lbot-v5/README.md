@@ -125,7 +125,7 @@ The output format remains the same as V4:
 
 ### Step 1: Generate Dataset
 ```bash
-cd lbot-natural-language-controller/lbot-v5
+cd 2.treinamento-de-modelo/lbot-natural-language-controller/lbot-v5
 python3 generate_dataset_v5.py
 ```
 

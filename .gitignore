@@ -5,3 +5,4 @@
 # Python cache files
 __pycache__/
 *.py[cod]
+lbot-ai-interface/.DS_Store

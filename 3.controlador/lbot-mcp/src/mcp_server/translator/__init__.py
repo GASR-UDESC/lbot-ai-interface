@@ -5,8 +5,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-_lbot_mcp_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_current_dir))))
-_translator_dir = os.path.join(_lbot_mcp_root, "lbot-natural-language-controller", "lbot-v7")
+_repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_current_dir)))))
+_translator_dir = os.path.join(_repo_root, "2.treinamento-de-modelo", "lbot-natural-language-controller", "lbot-v7")
 
 if _translator_dir not in sys.path:
     sys.path.insert(0, _translator_dir)

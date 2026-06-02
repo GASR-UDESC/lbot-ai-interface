@@ -15,7 +15,7 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
 ## Tarefas
 
 - [x] Tarefa 1: Criar system prompt com personalidade do robô
-  - Arquivo: `lbot-mcp/src/harness/personality.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/harness/personality.py` (novo)
   - O que fazer:
     - Constante `SYSTEM_PROMPT` (string) com personalidade do robô em português:
       ```
@@ -52,7 +52,7 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
     - Função `get_tools_description() -> list[dict]` que retorna descrição das tools no formato OpenAI function calling (caso necessário para o LLM)
 
 - [x] Tarefa 2: Criar cliente MCP via stdio
-  - Arquivo: `lbot-mcp/src/harness/mcp_client.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/harness/mcp_client.py` (novo)
   - O que fazer:
     - Classe `MCPClient`:
       - `__init__(server_command: list[str] = ["python", "-m", "mcp_server.server"])`
@@ -67,7 +67,7 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
       - Timeout na chamada → erro com mensagem amigável
 
 - [x] Tarefa 3: Criar loop agêntico ReAct
-  - Arquivo: `lbot-mcp/src/harness/agent.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/harness/agent.py` (novo)
   - O que fazer:
     - Classe `ReActAgent`:
       - `__init__(mcp_client: MCPClient, llm_config: dict)`
@@ -90,7 +90,7 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
     - Suporte a function calling (tools) no formato OpenAI — LM Studio com modelo compatível
 
 - [x] Tarefa 4: Criar CLI interativo (REPL)
-  - Arquivo: `lbot-mcp/src/harness/cli.py` (novo)
+  - Arquivo: `3.controlador/lbot-mcp/src/harness/cli.py` (novo)
   - O que fazer:
     - Função `main()`: entry point do harness
     - Fluxo:
@@ -113,7 +113,7 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
     - Exibir mensagens de status (conectando, pensando...)
 
 - [x] Tarefa 5: Integrar todos os componentes e testar fluxo completo
-  - Arquivo: `lbot-mcp/src/harness/__init__.py` (atualizar se necessário)
+  - Arquivo: `3.controlador/lbot-mcp/src/harness/__init__.py` (atualizar se necessário)
   - O que fazer:
     - Garantir que `python -m harness.cli` funcione como entry point
     - Testar fluxo completo: CLI → MCP client → MCP Server → Simulador
@@ -122,11 +122,11 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
 
 ## Arquivos Referência
 
-- `lbot-mcp/src/mcp_server/server.py` — MCP Server que será spawnado como subprocesso
-- `lbot-mcp/src/mcp_server/tools/camera.py` — Tool camera (para descrição)
-- `lbot-mcp/src/mcp_server/tools/proximity.py` — Tool proximity
-- `lbot-mcp/src/mcp_server/tools/movement.py` — Tool move
-- `lbot-mcp/pyproject.toml` — Dependências (openai, fastmcp)
+- `3.controlador/lbot-mcp/src/mcp_server/server.py` — MCP Server que será spawnado como subprocesso
+- `3.controlador/lbot-mcp/src/mcp_server/tools/camera.py` — Tool camera (para descrição)
+- `3.controlador/lbot-mcp/src/mcp_server/tools/proximity.py` — Tool proximity
+- `3.controlador/lbot-mcp/src/mcp_server/tools/movement.py` — Tool move
+- `3.controlador/lbot-mcp/pyproject.toml` — Dependências (openai, fastmcp)
 - Documentação OpenAI SDK: `openai.OpenAI(base_url=..., api_key=...)` para LM Studio
 - Documentação MCP SDK Python: cliente stdio
 
@@ -173,21 +173,21 @@ Criar o harness (MCP Client) com interface CLI interativa (REPL), conexão MCP v
 ## Comandos pós-fase
 
 ```bash
-cd lbot-mcp && python -c "from harness.personality import get_system_prompt; print(get_system_prompt()[:100])"
-cd lbot-mcp && python -c "from harness.mcp_client import MCPClient; print('MCP Client OK')"
-cd lbot-mcp && python -c "from harness.agent import ReActAgent; print('ReAct Agent OK')"
+cd 3.controlador/lbot-mcp && python -c "from harness.personality import get_system_prompt; print(get_system_prompt()[:100])"
+cd 3.controlador/lbot-mcp && python -c "from harness.mcp_client import MCPClient; print('MCP Client OK')"
+cd 3.controlador/lbot-mcp && python -c "from harness.agent import ReActAgent; print('ReAct Agent OK')"
 ```
 
 ## Registro de Execução
 
 - Data: 2026-06-02
 - Arquivos criados:
-  - `lbot-mcp/src/harness/personality.py` — System prompt em português com personalidade do robô E-Puck + descrição das 3 tools para function calling
-  - `lbot-mcp/src/harness/mcp_client.py` — Cliente MCP usando FastMCP Client + StdioTransport (spawna MCP Server como subprocesso)
-  - `lbot-mcp/src/harness/agent.py` — Loop agêntico ReAct usando OpenAI SDK (modo compatível LM Studio) com function calling
-  - `lbot-mcp/src/harness/cli.py` — CLI interativo com REPL, comandos /help /tools /exit e suporte a Ctrl+C
+  - `3.controlador/lbot-mcp/src/harness/personality.py` — System prompt em português com personalidade do robô E-Puck + descrição das 3 tools para function calling
+  - `3.controlador/lbot-mcp/src/harness/mcp_client.py` — Cliente MCP usando FastMCP Client + StdioTransport (spawna MCP Server como subprocesso)
+  - `3.controlador/lbot-mcp/src/harness/agent.py` — Loop agêntico ReAct usando OpenAI SDK (modo compatível LM Studio) com function calling
+  - `3.controlador/lbot-mcp/src/harness/cli.py` — CLI interativo com REPL, comandos /help /tools /exit e suporte a Ctrl+C
 - Arquivos alterados:
-  - `lbot-mcp/src/mcp_server/server.py` — Adicionado `show_banner=False` no `mcp.run()`, log level WARNING com output para stderr, e fix de `sys.modules` para compatibilidade `python -m`
+  - `3.controlador/lbot-mcp/src/mcp_server/server.py` — Adicionado `show_banner=False` no `mcp.run()`, log level WARNING com output para stderr, e fix de `sys.modules` para compatibilidade `python -m`
 - Testes executados:
   - Import check: todos os 4 módulos do harness importam sem erros
   - MCP Client: conecta ao MCP Server, lista 3 tools (camera, proximity, move)

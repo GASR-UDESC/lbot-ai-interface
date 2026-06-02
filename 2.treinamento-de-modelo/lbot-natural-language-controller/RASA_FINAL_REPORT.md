@@ -589,7 +589,7 @@ Aumento: +800 MB (+28.6%)
 
 ### Código
 - **Framework:** PyTorch 2.0+
-- **Repositório:** `lbot-ai-interface/lbot-natural-language-controller/`
+- **Repositório:** `lbot-ai-interface/2.treinamento-de-modelo/lbot-natural-language-controller/`
 - **Notebook:** `lbot-v5.1/lbot_training_v5-1.ipynb`
 - **Benchmark:** `benchmark/benchmark_v5_vs_v5-1.py`
 
