@@ -1,6 +1,6 @@
 # Fase 01: Modelagem e Configuracao
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -69,9 +69,14 @@ Criar a infraestrutura compartilhada para definicao dos objetos da arena e pared
 
 <Preenchido pelo agente durante a execucao>
 
-- Data:
+- Data: 2026-06-02
 - Arquivos criados:
+  - `3.controlador/lbot-simulator-web/shared/arena-objects.ts`
+  - `3.controlador/lbot-simulator-web/tests/arena-objects.test.ts`
 - Arquivos alterados:
+  - Nenhum (apenas criacoes)
 - Testes executados:
-- Resultado:
-- Pendencias:
+  - `npm run check` (tsc app + server) -> 0 erros
+  - `npm test` (vitest run) -> 41/41 passaram (incluindo 11 novos testes de arena-objects)
+- Resultado: SUCESSO. Configuracao centralizada criada, testada e compilando sem erros.
+- Pendencias: Nenhuma
