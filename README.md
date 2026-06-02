@@ -50,6 +50,49 @@ O **L-Bot AI Interface** é uma plataforma integrada para controle e simulação
 | **Build** | CMake, npm, Maven |
 
 
+## 🏃 Como Rodar (Simulador + Harness)
+
+Pré-requisitos: **Node.js 18+**, **npm**, **Python 3.12**, **uv** e **LM Studio** rodando localmente com um modelo carregado.
+
+### 1. Simulador 3D (com frontend)
+
+```bash
+cd 3.controlador/lbot-simulator-web
+npm install       # apenas na primeira vez
+npm run dev
+```
+
+Abra `http://localhost:5173` no navegador para ver o robô na arena.
+
+### 2. Harness (CLI com IA)
+
+O harness roda num **venv local** dentro de `3.controlador/lbot-mcp/` — não instala nada na sua máquina:
+
+```bash
+cd 3.controlador/lbot-mcp
+
+# Criar venv e instalar (apenas na primeira vez)
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install -e ".[dev]"
+
+# Executar o harness
+.venv/bin/lbot-harness
+```
+
+Comandos no prompt `🤖 >`:
+- `tire uma foto`
+- `qual a distância até a parede?`
+- `ande 30cm para frente`
+- `explore a sala e me diga o que você vê`
+- `/help`, `/tools`, `/exit`
+- `Ctrl+C` durante execução → interrompe o agente sem fechar o CLI
+
+### LM Studio
+
+Certifique-se de que o **LM Studio** está rodando com um modelo compatível com *function calling* (ex: Qwen 2.5, Mistral, Llama 3) e a porta padrão `1234`.
+
+
 ## 👥 Autores
 
 - **Guilherme Mendes Rosa** - Desenvolvimento principal
