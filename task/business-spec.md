@@ -136,8 +136,8 @@ Quando uma ferramenta MCP falha, o harness deve reportar o erro de forma clara.
 
 - **RNF01**: O MCP Server e o Harness devem ser implementados em Python, gerenciados com `uv` ou Poetry (`pyproject.toml`)
 - **RNF02**: O MCP Server usa FastMCP como framework MCP
-- **RNF03**: O Harness usa OpenAI SDK (modo compatível) para comunicar com Ollama
-- **RNF04**: O LLM utilizado é Qwen 3.5 7B via Ollama, com configuração padrão
+- **RNF03**: O Harness usa OpenAI SDK (modo compatível) para comunicar com LM Studio
+- **RNF04**: O LLM utilizado é carregado via LM Studio (localhost), com configuração padrão de API compatível OpenAI
 - **RNF05**: O simulador estende o `lbot-simulator-web` existente (TypeScript, React, Three.js, Express)
 - **RNF06**: A comunicação entre MCP Server e simulador é via HTTP (REST + SSE)
 - **RNF07**: O tradutor `lbot-translator-v7` é importado como módulo Python pelo MCP Server
@@ -158,7 +158,7 @@ Quando uma ferramenta MCP falha, o harness deve reportar o erro de forma clara.
 
 - O `lbot-simulator-web` existente é funcional e será a base do simulador estendido
 - O `lbot-translator-v7` está treinado e pronto para uso como módulo Python
-- O Ollama está instalado e rodando localmente com o modelo Qwen 3.5 7B disponível
+- O LM Studio está instalado e rodando localmente com um modelo compatível com function calling carregado
 - O protocolo MCP é adequado para a comunicação entre harness e server
 - A comunicação com o ESP32 (backend real) será tratada futuramente, fora do escopo imediato
 - O ambiente Python será isolado com venv gerenciado por uv ou Poetry

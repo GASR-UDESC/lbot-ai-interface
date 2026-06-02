@@ -5,7 +5,7 @@
 Transformação do ecossistema LBot em plataforma baseada em MCP (Model Context Protocol). O trabalho se divide em duas frentes:
 
 1. **Simulador estendido** (TypeScript): Adicionar renderização 3D headless (câmera 1ª pessoa) e sensores de proximidade ao `lbot-simulator-web`, expostos via API REST.
-2. **MCP Server + Harness** (Python, monorepo): Construir servidor MCP com 3 ferramentas (câmera, proximidade, deslocamento) usando FastMCP, e um cliente CLI com loop agêntico ReAct usando Ollama + Qwen 3.5.
+2. **MCP Server + Harness** (Python, monorepo): Construir servidor MCP com 3 ferramentas (câmera, proximidade, deslocamento) usando FastMCP, e um cliente CLI com loop agêntico ReAct usando LM Studio.
 
 A comunicação é via HTTP entre MCP Server e simulador, e via stdio (MCP protocol) entre Harness e MCP Server.
 
@@ -68,7 +68,7 @@ A comunicação é via HTTP entre MCP Server e simulador, e via stdio (MCP proto
 | Disponibilidade dos endpoints | Headless total (funcionam sem navegador) | Independência do browser; MCP Server pode operar com simulador em background |
 | GPU do tradutor | Auto-detect (GPU se CUDA disponível) | Mantém comportamento atual do LBotTranslatorV7; inferência mais rápida quando GPU presente |
 | Framework MCP | FastMCP | Especificado no RNF02, simplifica criação de tools com decorators |
-| LLM | Ollama com Qwen 3.5 7B via OpenAI SDK modo compatível | Especificado nos RNF03/RNF04 |
+| LLM | LM Studio via OpenAI SDK modo compatível | Especificado nos RNF03/RNF04 |
 | Gerenciador Python | uv (pyproject.toml) | Recomendado pelo RNF01, rápido, compatível com pip |
 | Testes | pytest (Python) + vitest (TypeScript) | Segue frameworks já em uso no projeto |
 

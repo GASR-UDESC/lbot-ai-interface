@@ -1,11 +1,20 @@
 import os
 import logging
+import sys
 
 from fastmcp import FastMCP
 
 from .backends.base import LBotBackend
 
-logging.basicConfig(level=logging.INFO)
+if __name__ == "__main__":
+    sys.modules["mcp_server.server"] = sys.modules["__main__"]
+    sys.modules["mcp_server"].server = sys.modules["__main__"]
+
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    stream=sys.stderr,
+)
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("LBot")
@@ -38,7 +47,7 @@ def main():
     import mcp_server.tools.movement  # noqa: F401
 
     logger.info("Tools registradas: camera, proximity, move")
-    mcp.run()
+    mcp.run(show_banner=False)
 
 
 if __name__ == "__main__":
