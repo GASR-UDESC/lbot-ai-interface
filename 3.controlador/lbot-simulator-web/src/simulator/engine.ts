@@ -1,6 +1,7 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { formatParsedCommand, parseLbmlSequence, type ParsedCommand } from '../../shared/lbml.js';
+import { ARENA_OBJECTS, PHYSICAL_WALLS } from '../../shared/arena-objects.js';
 import type { SimulatorSnapshot, StatusMessage } from './types.js';
 
 const ROBOT_SPEED = 30;
@@ -38,6 +39,39 @@ export class SimulatorEngine {
     this.robotBody.linearDamping = 0.05;
     this.robotBody.angularDamping = 0.99;
     this.world.addBody(this.robotBody);
+
+    // Add arena objects physical bodies
+    for (const obj of ARENA_OBJECTS) {
+      let shape: CANNON.Shape;
+      let yPos: number;
+
+      if (obj.type === 'cube') {
+        const s = obj.size as { width: number; height: number; depth: number };
+        shape = new CANNON.Box(new CANNON.Vec3(s.width / 2, s.height / 2, s.depth / 2));
+        yPos = s.height / 2;
+      } else if (obj.type === 'sphere') {
+        const s = obj.size as { radius: number };
+        shape = new CANNON.Sphere(s.radius);
+        yPos = s.radius;
+      } else {
+        const s = obj.size as { radius: number; height: number };
+        shape = new CANNON.Box(new CANNON.Vec3(s.radius, s.height / 2, s.radius));
+        yPos = s.height / 2;
+      }
+
+      const body = new CANNON.Body({ mass: 0 });
+      body.addShape(shape);
+      body.position.set(obj.x, yPos, obj.z);
+      this.world.addBody(body);
+    }
+
+    // Add physical walls
+    for (const wall of PHYSICAL_WALLS) {
+      const body = new CANNON.Body({ mass: 0 });
+      body.addShape(new CANNON.Box(new CANNON.Vec3(wall.width / 2, wall.height / 2, wall.depth / 2)));
+      body.position.set(wall.x, wall.height / 2, wall.z);
+      this.world.addBody(body);
+    }
 
     this.syncVisual();
   }

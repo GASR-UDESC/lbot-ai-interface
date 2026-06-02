@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import type { ServerEvent, SimulatorStateSnapshot } from '../../shared/protocol.js';
 import { createArenaWalls, createGridHelper, createGround } from '../simulator/arena.js';
 import { createCameraController } from '../simulator/camera.js';
+import { createArenaObjects } from '../simulator/objects.js';
 import { SimulatorEngine } from '../simulator/engine.js';
 import { createRobot } from '../simulator/robot.js';
 import { createScene, resizeScene } from '../simulator/scene.js';
@@ -36,6 +37,10 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
     scene.add(createGridHelper());
     for (const wall of createArenaWalls()) {
       scene.add(wall);
+    }
+
+    for (const obj of createArenaObjects()) {
+      scene.add(obj);
     }
 
     const robotGroup = createRobot();
