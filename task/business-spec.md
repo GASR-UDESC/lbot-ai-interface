@@ -1,208 +1,139 @@
-# Especificação de Negócio: LBot AI Interface - MCP Server, Harness e Simulador
+# Especificacao de Negocio: Adicionar Objetos e Itens no Simulador
 
 ## Contexto
 
-O LBot é um robô E-Puck controlado remotamente. Atualmente o projeto possui um simulador 3D web (`3.controlador/lbot-simulator-web`), um tradutor de linguagem natural para LBML (`lbot-translator-v7`), e backend de geração de dados. A tarefa é transformar o ecossistema em uma plataforma baseada no protocolo **MCP (Model Context Protocol)** para permitir que o robô seja operado por IA de forma agêntica, com um simulador para testes e desenvolvimento.
+O projeto LBot possui um simulador 3D web (`3.controlador/lbot-simulator-web`) que já inclui:
+- Robô E-Puck com movimentação via LBML e física (cannon-es)
+- Arena retangular (800×800 unidades) com chão e paredes
+- Câmera em primeira pessoa (headless WebGL + fallback 2D) exposta via API REST (`GET /api/camera`)
+- Sensores de proximidade frontal e traseiro (`GET /api/sensors`)
+- MCP Server e Harness que operam o robô de forma agêntica
+
+Atualmente, a arena contém apenas o robô, o chão e as quatro paredes. Isso faz com que a câmera do robô retorne imagens monótonas — apenas paredes e chão verde — o que limita drasticamente a utilidade da ferramenta de câmera para o loop agêntico do harness. O LLM não consegue "enxergar" nada de interessante para descrever ao usuário ou para se orientar no ambiente.
+
+Esta tarefa adiciona objetos e itens na arena para que a função de câmera faça sentido, permitindo que o robô "veja" e "descreva" elementos distintos no ambiente.
 
 ## Requisitos Funcionais
 
-### RF01 - Simulador: Câmera em Primeira Pessoa
-O simulador 3D web deve ser capaz de gerar uma imagem renderizada da perspectiva frontal do robô (visão em 1ª pessoa), equivalente à câmera que o robô real terá.
+### RF01 - Objetos Geométricos na Arena
+A arena deve conter 4 a 6 objetos geométricos de tamanho médio (10–20 unidades), em cores distintas, posicionados em locais fixos pré-definidos.
 
 **Regras:**
-- O render deve ser uma visualização 3D simplificada (cores sólidas) da frente do robô
-- O retorno é uma imagem codificada em base64
-- A câmera está posicionada na parte frontal do robô, orientada na direção que ele está enfrentando
+- Os objetos são: cubos, cones e esferas
+- Cores distintas para fácil identificação visual: vermelho, azul, amarelo, verde, laranja, roxo
+- Tamanho médio: cubos ~15×15×15, esferas raio ~10, cones raio base ~10 altura ~15
+- Posições fixas pré-definidas dentro da arena (ex: (-150, -150), (150, -100), (-100, 150), (180, 180), (0, -180), (-180, 0))
+- Os objetos permanecem nas mesmas posições após `POST /api/reset`
+- Os objetos não podem ser coletados, removidos ou empurrados pelo robô
+- Os objetos são puramente decorativos/pontos de referência visual
 
 **Cenários de erro:**
-- Falha no render: retornar mensagem de erro descritiva
+- Objeto posicionado fora da arena ou sobreposto a parede: deve ser reposicionado automaticamente para dentro da área válida
+- Objeto sobreposto ao robô na posição inicial (0,0): deve ser reposicionado para não obstruir o spawn
 
-### RF02 - Simulador: Sensores de Proximidade
-O simulador deve prover medição de distância via sensores de proximidade frontal e traseiro.
+### RF02 - Objetos na Visualização 3D do Navegador
+Os objetos devem ser renderizados na cena Three.js do navegador, visíveis na visualização 3D do simulador.
 
 **Regras:**
-- Dois sensores: um na frente e um atrás do robô
-- Distância medida em centímetros (cm) até a parede ou sólido mais próximo
-- Utiliza raycasting a partir do robô na direção do sensor
-- O robô não é impedido de colidir — o sensor apenas reporta a distância
+- Os objetos devem lançar e receber sombras (`castShadow = true`, `receiveShadow = true`)
+- Os objetos devem usar `MeshStandardMaterial` para consistência com o restante da cena
+- Os objetos são adicionados à cena no momento da inicialização do `SimulatorEngine` ou `SimulatorCanvas`
+
+### RF03 - Objetos no Renderer Headless WebGL 3D
+Os objetos devem aparecer na imagem retornada pelo endpoint `GET /api/camera` quando o renderer headless opera em modo WebGL 3D.
+
+**Regras:**
+- A classe `HeadlessSceneRenderer` (modo WebGL) deve reconstruir os mesmos objetos na cena headless
+- A geometria, cor e posição dos objetos no headless devem ser idênticas às do navegador
+- Os objetos NÃO precisam ser reimplementados no renderer 2D top-down fallback (`render2DScene`)
 
 **Cenários de erro:**
-- Nenhum obstáculo no alcance do sensor: retornar valor máximo ou "sem obstáculo"
+- Falha na inicialização do contexto WebGL: o fallback 2D continua funcionando sem objetos (comportamento aceitável)
 
-### RF03 - Simulador: Execução de Comandos LBML
-O simulador deve continuar suportando a execução de sequências de comandos LBML com física (cannon-es), já existente no `3.controlador/lbot-simulator-web`.
-
-**Regras:**
-- Mantém o comportamento atual de parsing e execução de LBML (`D<valor><F|B|L|R>;R<ângulo><L|R>;`)
-- Robô se move livremente pela arena (800x800), podendo colidir com paredes
-- Comandos são enviados via API REST e executados com animação e física
-
-### RF04 - Simulador: API REST + SSE
-A API do simulador deve ser estendida para expor os novos recursos (câmera, sensores) mantendo o protocolo REST + SSE existente.
+### RF04 - Objetos Detectáveis pelos Sensores de Proximidade
+Os sensores de proximidade (`GET /api/sensors`) devem reportar a distância até o objeto mais próximo (frente ou trás), não apenas até as paredes.
 
 **Regras:**
-- Manter endpoints existentes: `/api/health`, `/api/status`, `/api/state`, `/api/events` (SSE), `/api/commands`, `/api/reset`
-- Novos endpoints para câmera (GET, retorna base64) e sensores (GET, retorna distâncias)
-- Estender o snapshot de estado para incluir leituras dos sensores
-
-### RF05 - MCP Server: Ferramenta Câmera
-O MCP Server deve expor uma tool MCP que captura a imagem da câmera do robô.
-
-**Regras:**
-- A tool retorna a imagem como string base64
-- No backend simulador: obtém a imagem via API HTTP do simulador
-- No backend real: obtém a imagem do hardware (câmera conectada ao Raspberry Pi/ESP32)
-- O MCP Server não processa a imagem — apenas a serve
+- O cálculo geométrico de proximidade deve considerar tanto as paredes da arena quanto os objetos
+- A distância reportada é a menor distância até qualquer obstáculo na direção do sensor (parede OU objeto)
+- Formato de resposta permanece `{ frente: <float>, tras: <float> }` em centímetros
+- Objetos são modelados como caixas delimitadoras (AABB) simplificadas para o cálculo de raycasting
 
 **Cenários de erro:**
-- Backend indisponível: retornar erro "câmera indisponível"
-- Timeout na captura: retornar erro após timeout configurável
+- Nenhum obstáculo no alcance: retornar valor máximo (400 cm) como já faz hoje
 
-### RF06 - MCP Server: Ferramenta Sensor de Proximidade
-O MCP Server deve expor uma tool MCP que retorna as leituras dos sensores de proximidade.
+### RF05 - Colisão Física dos Objetos (cannon-es)
+Os objetos devem ter corpos físicos no mundo cannon-es, impedindo que o robô os atravesse.
 
 **Regras:**
-- A tool retorna um objeto com duas distâncias em cm: `{ frente: <float>, tras: <float> }`
-- No backend simulador: obtém via API HTTP do simulador
-- No backend real: obtém do hardware
+- Cada objeto tem um `CANNON.Body` com massa 0 (estático) e forma geométrica correspondente (Box, Sphere)
+- O robô colide com os objetos e é desviado/impedido de passar, assim como com as paredes
+- Os objetos não se movem (massa = 0)
+- Não há interação além da colisão (não coletáveis, não empurráveis)
 
 **Cenários de erro:**
-- Sensor indisponível: retornar erro "sensor indisponível"
-
-### RF07 - MCP Server: Ferramenta Deslocamento
-O MCP Server deve expor uma tool MCP que recebe comandos de movimento em linguagem natural, traduz para LBML usando o `lbot-translator-v7`, e executa o movimento no robô.
-
-**Regras:**
-- Entrada: texto em linguagem natural (ex: "anda 30cm para frente e vira 90 graus para direita")
-- O translator é carregado como módulo Python interno ao MCP Server
-- A tool traduz NL → LBML, envia ao backend, e retorna o resultado da execução (LBML gerada + status)
-- O MCP Server não tem inteligência própria — apenas orquestra tradução e execução
-
-**Cenários de erro:**
-- Texto de entrada incompreensível: tradutor retorna LBML inválida → erro "não entendi o comando"
-- Falha na execução do movimento: retornar erro reportado pelo backend
-
-### RF08 - MCP Server: Backends Plugáveis
-O MCP Server deve suportar troca de backend (simulador vs real) sem alterar a interface MCP exposta.
-
-**Regras:**
-- Configuração de backend via variável de ambiente ou arquivo de configuração
-- Backend simulador: comunica-se via HTTP com o `3.controlador/lbot-simulator-web`
-- Backend real: comunica-se com o ESP32 (implementação futura)
-- A interface das tools MCP é idêntica independente do backend ativo
-
-### RF09 - MCP Client (Harness): Interface CLI
-O harness deve prover uma interface de linha de comando interativa para o usuário conversar com o robô.
-
-**Regras:**
-- CLI interativo (REPL) que aceita comandos em texto
-- Conecta-se ao MCP Server como MCP Client
-- Saída puramente textual (sem imagens ou áudio)
-- O usuário pode dar comandos de alto nível (ex: "explore a sala", "vá até a parede e tire uma foto")
-
-### RF10 - MCP Client (Harness): Loop Agêntico
-O harness deve operar o robô com IA usando loop agêntico baseado no padrão ReAct (Reason + Act).
-
-**Regras:**
-- A cada passo: o LLM raciocina sobre o estado atual, decide qual ferramenta MCP usar, executa, e avalia o resultado
-- O loop continua até que o objetivo seja cumprido ou o LLM decida que não é possível continuar
-- O LLM tem acesso às 3 ferramentas MCP (câmera, proximidade, deslocamento)
-- O LLM decide autonomamente quantos passos e quais ferramentas usar para cumprir o objetivo
-- O usuário pode interromper o loop a qualquer momento (Ctrl+C)
-
-**Cenários de erro:**
-- Ferramenta retorna erro: o LLM é informado do erro e decide se tenta alternativa ou reporta ao usuário
-
-### RF11 - MCP Client (Harness): Personalidade do Robô
-O harness deve configurar o LLM com um system prompt que dá personalidade ao robô.
-
-**Regras:**
-- Personalidade: robô curioso e humilde, consciente de suas limitações físicas
-- O robô se entende como um robô E-Puck com sensores e câmera
-- Responde sempre em português
-- É prestativo mas não finge ter capacidades que não tem
-- O system prompt descreve as ferramentas disponíveis e como usá-las
-
-### RF12 - MCP Client (Harness): Tratamento de Erros
-Quando uma ferramenta MCP falha, o harness deve reportar o erro de forma clara.
-
-**Regras:**
-- Erros das ferramentas são repassados ao LLM no contexto da conversa
-- O LLM decide como comunicar o erro ao usuário (de forma natural, mantendo a personalidade)
-- Não há retry automático — o LLM pode decidir tentar outra abordagem se fizer sentido
-- Se o MCP Server estiver indisponível: informar "não consigo me comunicar com meu corpo no momento"
+- Colisão mal configurada (objeto sem body físico): o robô atravessa o objeto visual
 
 ## Requisitos Não-Funcionais
 
-- **RNF01**: O MCP Server e o Harness devem ser implementados em Python, gerenciados com `uv` ou Poetry (`pyproject.toml`)
-- **RNF02**: O MCP Server usa FastMCP como framework MCP
-- **RNF03**: O Harness usa OpenAI SDK (modo compatível) para comunicar com LM Studio
-- **RNF04**: O LLM utilizado é carregado via LM Studio (localhost), com configuração padrão de API compatível OpenAI
-- **RNF05**: O simulador estende o `3.controlador/lbot-simulator-web` existente (TypeScript, React, Three.js, Express)
-- **RNF06**: A comunicação entre MCP Server e simulador é via HTTP (REST + SSE)
-- **RNF07**: O tradutor `lbot-translator-v7` é importado como módulo Python pelo MCP Server
+- **RNF01**: O número de objetos (4–6) e suas posições devem ser facilmente configuráveis no código (array/constante), mas não precisam ser expostos via API REST
+- **RNF02**: A renderização no navegador não deve degradar a performance abaixo de 60 FPS
+- **RNF03**: O cálculo de proximidade no servidor (Node.js) deve permanecer síncrono e rápido (O(n) onde n = número de objetos, que é pequeno)
 
 ## Glossário / Definições
 
-- **MCP (Model Context Protocol)**: Protocolo aberto que padroniza como aplicações fornecem contexto e ferramentas para LLMs
-- **MCP Server**: Servidor que expõe ferramentas e recursos via protocolo MCP
-- **MCP Client**: Cliente (harness) que consome ferramentas MCP e as disponibiliza para um LLM
-- **FastMCP**: Framework Python para construir MCP Servers de forma simplificada
-- **LBML (LBot Movement Language)**: Linguagem de comandos de movimento do robô, formato `D<valor><direção>;R<ângulo><direção>;`
-- **Harness**: O MCP Client com personalidade que opera o robô via IA (loop agêntico)
-- **Loop Agêntico / ReAct**: Padrão onde o agente raciocina (Reason), age (Act), observa o resultado, e repete
-- **lbot-translator-v7**: Modelo Seq2Seq (BiGRU + Bahdanau Attention) que traduz português → LBML
-- **E-Puck**: Modelo de robô educacional simulado/controlado pelo projeto
+- **Objeto / Item**: Qualquer entidade geométrica estática na arena além do robô e das paredes (cubos, cones, esferas)
+- **AABB (Axis-Aligned Bounding Box)**: Caixa delimitadora alinhada aos eixos, usada para simplificar o raycasting de proximidade contra objetos
+- **Renderer headless**: Renderização 3D sem navegador, usada pela API `/api/camera` para gerar imagens via WebGL nativo (`gl`)
+- **Modo 2D fallback**: Renderização top-down simplificada usada quando WebGL headless não está disponível
+- **cannon-es**: Motor de física usado no navegador para colisões e movimentação do robô
 
 ## Premissas
 
-- O `3.controlador/lbot-simulator-web` existente é funcional e será a base do simulador estendido
-- O `lbot-translator-v7` está treinado e pronto para uso como módulo Python
-- O LM Studio está instalado e rodando localmente com um modelo compatível com function calling carregado
-- O protocolo MCP é adequado para a comunicação entre harness e server
-- A comunicação com o ESP32 (backend real) será tratada futuramente, fora do escopo imediato
-- O ambiente Python será isolado com venv gerenciado por uv ou Poetry
-- O simulador roda em Node.js (existente) e o MCP Server em Python — a comunicação entre eles é via HTTP
+- O simulador já possui câmera headless e sensores implementados (Fase 01 concluída)
+- A arena tem tamanho fixo de 800×800 unidades (paredes em ±400, mas HALF_ARENA usado nos sensores é 200 — isto será verificado na fase técnica)
+- O robô inicia no centro (0, 0)
+- O número de objetos é pequeno (≤6), então performance não é uma preocupação
+- O MCP Server e o Harness já estão funcionais; esta tarefa é uma evolução do simulador, não requer mudanças no MCP Server
 
 ## Fora de escopo
 
-- Firmware/software do ESP32 para controle de motores e sensores reais
-- Comunicação entre MCP Server e hardware real (ESP32)
-- Interface gráfica para o harness (é apenas CLI)
-- Suporte a múltiplos robôs simultaneamente
-- Treinamento ou fine-tuning do modelo de tradução
-- Output de áudio/voz no harness
-- Deploy em produção ou containerização
-- Detecção e prevenção automática de colisões (movimento livre na arena)
+- Endpoint REST para listar/adicionar/remover objetos dinamicamente
+- Objetos que aparecem no renderer 2D fallback
+- Texturas complexas nos objetos (apenas cores sólidas)
+- Objetos coletáveis, empurráveis ou com comportamento dinâmico
+- Suporte a diferentes conjuntos de objetos (apenas um conjunto fixo)
+- Mudanças no MCP Server, Harness ou tradutor
+- Alteração do comportamento de movimentação LBML existente
 
-## Cenários de Aceite
+## Cenarios de Aceite
 
-### CA01 - Câmera simulada retorna imagem
-**Dado** que o simulador está rodando com o robô em uma posição conhecida na arena
-**Quando** a ferramenta de câmera é acionada via MCP
-**Então** o sistema retorna uma imagem em base64 representando a visão frontal do robô
+### CA01 - Câmera mostra objetos na imagem
+**Dado** que o simulador está rodando com o robô posicionado de forma que um objeto esteja à sua frente
+**Quando** a ferramenta de câmera é acionada via `GET /api/camera` (modo WebGL)
+**Então** a imagem retornada em base64 contém a representação do objeto (cor e forma visíveis)
 
-### CA02 - Sensores de proximidade retornam distâncias
-**Dado** que o robô está a 50cm de uma parede à frente e 200cm de uma parede atrás
-**Quando** a ferramenta de sensor é acionada via MCP
-**Então** o sistema retorna `{ frente: 50, tras: 200 }`
+### CA02 - Visualização 3D no navegador mostra objetos
+**Dado** que o simulador está aberto no navegador
+**Quando** o usuário observa a arena
+**Então** os 4–6 objetos coloridos estão visíveis no chão, lançando sombras
 
-### CA03 - Comando de deslocamento em linguagem natural
-**Dado** que o usuário envia "anda 30 centímetros para frente"
-**Quando** a ferramenta de deslocamento processa o comando
-**Então** o sistema traduz para LBML, executa o movimento, e retorna confirmação com a LBML gerada
+### CA03 - Sensor de proximidade detecta objeto à frente
+**Dado** que o robô está a 50 cm de um objeto à sua frente e a 200 cm da parede
+**Quando** `GET /api/sensors` é chamado
+**Então** o valor de `frente` retornado é ~50 cm (o objeto, não a parede)
 
-### CA04 - Harness explora a arena autonomamente
-**Dado** que o harness está conectado ao MCP Server (modo simulador)
-**Quando** o usuário digita "explore a sala e me diga o que você vê"
-**Então** o robô usa o loop ReAct para: verificar sensores, mover-se, tirar foto, e descrever o ambiente ao usuário, tudo de forma autônoma
+### CA04 - Robô colide com objeto e não atravessa
+**Dado** que existe um objeto no caminho do robô
+**Quando** o robô recebe o comando LBML para andar em direção ao objeto
+**Então** o robô para ou desliza ao lado do objeto, sem atravessá-lo
 
-### CA05 - Erro de ferramenta reportado ao usuário
-**Dado** que o simulador está indisponível
-**Quando** o harness tenta usar qualquer ferramenta MCP
-**Então** o LLM informa o usuário de forma amigável que não consegue se comunicar com seu "corpo"
+### CA05 - Renderer 2D fallback continua funcionando
+**Dado** que o ambiente não suporta WebGL 2 headless
+**Quando** `GET /api/camera` é chamado
+**Então** a imagem 2D top-down é retornada normalmente (sem objetos, comportamento aceitável)
 
-### CA06 - Troca de backend transparente
-**Dado** que o MCP Server está configurado com backend simulador
-**Quando** o harness consulta as ferramentas disponíveis e as utiliza
-**Então** o comportamento é idêntico ao que seria com o backend real (mesma interface MCP)
+### CA06 - Reset preserva objetos
+**Dado** que o robô se moveu e colidiu com objetos
+**Quando** `POST /api/reset` é executado
+**Então** o robô volta ao centro, e todos os objetos permanecem nas mesmas posições originais

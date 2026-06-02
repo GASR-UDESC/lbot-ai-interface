@@ -1,167 +1,73 @@
-# Fase 02: MCP Server - Setup do Projeto + Backend Abstraction
+# Fase 02: Frontend (Three.js + Cannon-es)
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Criar o monorepo Python `3.controlador/lbot-mcp/` com `pyproject.toml`, estrutura de diretórios, backend plugável (interface abstrata + implementação HTTP para simulador) e wrapper do tradutor LBotTranslatorV7.
+Adicionar os 6 objetos geometricos a cena Three.js do navegador, criar seus corpos fisicos no mundo cannon-es, e adicionar as 4 paredes fisicas ao mundo cannon-es. Ao final desta fase, o simulador visual no navegador deve mostrar os objetos coloridos com sombras, o robo deve colidir com eles e com as paredes, e o reset deve preservar os objetos.
 
-## Pré-requisitos
+## Pre-requisitos
 
-- Nenhum (fase independente; Phase 01 pode rodar em paralelo)
+- Fase 01 concluida (`shared/arena-objects.ts` criado e testado)
+- `ARENA_OBJECTS` e `PHYSICAL_WALLS` disponiveis para importacao
 
 ## Tarefas
 
-- [x] Tarefa 1: Criar estrutura de diretórios e `pyproject.toml`
-  - Arquivo: `3.controlador/lbot-mcp/pyproject.toml` (novo)
-  - O que fazer:
-    - Criar diretório `3.controlador/lbot-mcp/` na raiz do workspace
-    - Criar `pyproject.toml` com:
-      - `name = "lbot-mcp"`
-      - `version = "0.1.0"`
-      - Python `>=3.10`
-      - Dependências: `fastmcp>=2.0`, `httpx>=0.27`, `openai>=1.0`, `torch>=2.0`, `numpy>=1.24`
-      - Dev: `pytest>=8.0`, `pytest-asyncio>=0.24`, `mypy>=1.0`
-      - Entry points (scripts): `lbot-mcp-server = "mcp_server.server:main"`, `lbot-harness = "harness.cli:main"`
-      - Usar `[tool.uv]` config se for uv; compatível com Poetry também
-    - Criar estrutura:
-      ```
-      lbot-mcp/
-        pyproject.toml
-        src/
-          mcp_server/
-            __init__.py
-            server.py
-            tools/
-              __init__.py
-            backends/
-              __init__.py
-            translator/
-              __init__.py
-          harness/
-            __init__.py
-        tests/
-          __init__.py
-      ```
+- [ ] Tarefa 1: Criar funcao para gerar mesh Three.js dos objetos
+  - Arquivo: `3.controlador/lbot-simulator-web/src/simulator/arena.ts` (ou novo arquivo `src/simulator/objects.ts`)
+  - O que fazer: Implementar `createArenaObjects()` que retorna um array de `THREE.Mesh` para cada objeto em `ARENA_OBJECTS`. Usar `BoxGeometry` para cubos, `SphereGeometry` para esferas, `ConeGeometry` para cones. Material: `MeshStandardMaterial` com a cor definida. Configurar `castShadow = true` e `receiveShadow = true`.
+- [ ] Tarefa 2: Adicionar objetos na cena do navegador
+  - Arquivo: `3.controlador/lbot-simulator-web/src/components/SimulatorCanvas.tsx`
+  - O que fazer: Importar `createArenaObjects` e adicionar os meshes retornados a `scene` logo apos as paredes. Garantir que o cleanup no `useEffect` dispose das geometrias e materiais dos objetos junto com o restante da cena.
+- [ ] Tarefa 3: Adicionar corpos fisicos dos objetos no cannon-es
+  - Arquivo: `3.controlador/lbot-simulator-web/src/simulator/engine.ts`
+  - O que fazer: No construtor, apos adicionar o robo, iterar sobre `ARENA_OBJECTS` e criar um `CANNON.Body` com massa 0 para cada objeto. Formas: `CANNON.Box` para cubos e cones (usar AABB), `CANNON.Sphere` para esferas. Posicionar em `(x, y/2, z)` onde y e a altura do objeto. Adicionar ao `this.world`.
+- [ ] Tarefa 4: Adicionar paredes fisicas no cannon-es
+  - Arquivo: `3.controlador/lbot-simulator-web/src/simulator/engine.ts`
+  - O que fazer: Criar 4 `CANNON.Body` com massa 0 para as paredes usando `PHYSICAL_WALLS`. Forma: `CANNON.Box` com dimensoes correspondentes as paredes visuais (Norte/Sul: 204x7.5x4; Leste/Oeste: 4x7.5x200). Posicionar em y=7.5. Adicionar ao `this.world`.
+- [ ] Tarefa 5: Verificar que reset nao remove objetos
+  - Arquivo: `3.controlador/lbot-simulator-web/src/simulator/engine.ts`
+  - O que fazer: Confirmar que `reset()` apenas reseta `robotBody` e estado. Nao deve haver codigo que limpe o mundo cannon-es ou a cena Three.js. Se houver, ajustar para preservar objetos.
+- [ ] Tarefa 6: Verificar visualizacao no navegador
+  - Arquivo: N/A (teste manual)
+  - O que fazer: Rodar `npm run dev` e abrir o navegador. Verificar que os 6 objetos aparecem coloridos, lancam sombras, e o robo colide com eles e com as paredes.
 
-- [x] Tarefa 2: Criar interface abstrata de backend (`backends/base.py`)
-  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/backends/base.py` (novo)
-  - O que fazer:
-    - Criar classe abstrata `LBotBackend` com métodos:
-      - `async get_camera() -> str`: Retorna imagem base64
-      - `async get_proximity() -> dict`: Retorna `{"frente": float, "tras": float}`
-      - `async execute_lbml(lbml: str) -> dict`: Retorna `{"accepted": bool, "command": str, "status": str}`
-      - `async get_state() -> dict | None`: Retorna posição atual do robô ou None
-      - `async health_check() -> bool`: Verifica se backend está acessível
-    - Usar `abc.ABC` e `@abstractmethod`
-    - Adicionar mensagens de erro padronizadas (português): `"câmera indisponível"`, `"sensor indisponível"`, etc.
+## Arquivos Referencia
 
-- [x] Tarefa 3: Implementar backend HTTP para simulador (`backends/simulator.py`)
-  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/backends/simulator.py` (novo)
-  - O que fazer:
-    - Classe `SimulatorBackend(LBotBackend)`:
-      - `__init__(base_url: str = "http://localhost:3001")`
-      - Usa `httpx.AsyncClient` para chamadas HTTP
-      - `get_camera()` → `GET {base_url}/api/camera`, retorna `response.json()["image"]` ou levanta erro
-      - `get_proximity()` → `GET {base_url}/api/sensors`, retorna `response.json()["readings"]`
-      - `execute_lbml(lbml)` → `POST {base_url}/api/commands` com `{"command": lbml, "source": "http"}`, retorna status
-      - `get_state()` → `GET {base_url}/api/state`, retorna `response.json()["state"]`
-      - `health_check()` → `GET {base_url}/api/health`, retorna `True` se status 200
-      - Timeout padrão de 10s para todas as chamadas
-      - Tratamento de erros com mensagens em português
+- `3.controlador/lbot-simulator-web/shared/arena-objects.ts` - Definicoes dos objetos e paredes (criado na Fase 01)
+- `3.controlador/lbot-simulator-web/src/simulator/engine.ts` - Referencia para adicionar bodies ao cannon-es (pattern do robo e chao)
+- `3.controlador/lbot-simulator-web/src/simulator/arena.ts` - Referencia para criar meshes com `MeshStandardMaterial` e sombras
+- `3.controlador/lbot-simulator-web/src/components/SimulatorCanvas.tsx` - Referencia para adicionar/remover meshes da cena e cleanup
 
-- [x] Tarefa 4: Criar wrapper do tradutor (`translator/__init__.py`)
-  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/translator/__init__.py` (novo)
-  - O que fazer:
-    - Módulo que importa `LBotTranslatorV7` do path externo
-    - Adicionar `2.treinamento-de-modelo/lbot-natural-language-controller/lbot-v7/` ao `sys.path` se necessário
-    - Classe `TranslatorWrapper`:
-      - Singleton ou instância lazy (carrega modelo ~12MB apenas uma vez)
-      - `translate(command: str) -> str`: Chama `translator.translate(command)`, retorna LBML ou levanta `TranslationError` se resultado for `"ERRO"`
-      - `translate_verbose(command: str) -> tuple[str, str, str]`: Retorna (original, preprocessed, lbml)
-      - `is_loaded() -> bool`
-      - Log de inicialização informando device (CPU/GPU) e número de parâmetros
-    - Inicialização lazy: modelo carregado na primeira chamada, não no import
+## Criterios de Aceite
 
-- [x] Tarefa 5: Criar skeleton do MCP Server com FastMCP
-  - Arquivo: `3.controlador/lbot-mcp/src/mcp_server/server.py` (novo)
-  - O que fazer:
-    - Criar app FastMCP: `mcp = FastMCP("LBot")`
-    - Configurar backend via variável de ambiente `LBOT_BACKEND` (default `"simulator"`)
-    - Configurar URL do simulador via `LBOT_SIMULATOR_URL` (default `"http://localhost:3001"`)
-    - Função `create_backend(name: str) -> LBotBackend`: factory que retorna `SimulatorBackend` (ou futuro `HardwareBackend`)
-    - Função `main()`: entry point que inicia o server com `mcp.run()`
-    - Bloco `if __name__ == "__main__": main()`
-    - Por enquanto sem tools registradas (serão adicionadas na Fase 03)
-
-## Arquivos Referência
-
-- `2.treinamento-de-modelo/lbot-natural-language-controller/lbot-v7/lbot_v7.py` — API do tradutor: classe `LBotTranslatorV7`, método `translate(command) -> str`, carregamento do modelo
-- `3.controlador/lbot-simulator-web/server/index.ts` — Endpoints existentes que o backend vai chamar (`/api/health`, `/api/commands`, `/api/state`)
-- `3.controlador/lbot-simulator-web/shared/protocol.ts` — Tipos de resposta esperados dos endpoints
-- `3.controlador/lbot-simulator-web/package.json` — Porta do servidor (3001) e estrutura do projeto
-
-## Critérios de Aceite
-
-- [x] CA01: Projeto instala e importa sem erros
-  - Cenario: Dado `pip install -e .` no diretório `3.controlador/lbot-mcp/`, Quando `python -c "from mcp_server.backends.simulator import SimulatorBackend"`, Então importa sem erros
-
-- [x] CA02: Backend simulador faz health check
-  - Cenario: Dado simulador rodando em localhost:3001, Quando `backend.health_check()`, Então retorna `True`
-
-- [x] CA03: Backend simulador detecta indisponibilidade
-  - Cenario: Dado simulador não está rodando, Quando `backend.health_check()`, Então retorna `False` (sem lançar exceção)
-
-- [x] CA04: Translator wrapper carrega modelo e traduz
-  - Cenario: Dado `lbot_translator_v7.pt` no path esperado, Quando `translator.translate("ande 40 centímetros para frente")`, Então retorna `"D40F;"`
-
-- [x] CA05: Translator wrapper trata entrada inválida
-  - Cenario: Dado input incompreensível, Quando `translator.translate("xyz abc def")`, Então levanta `TranslationError`
-
-- [x] CA06: Factory de backend retorna instância correta
-  - Cenario: Dado `LBOT_BACKEND=simulator`, Quando `create_backend("simulator")`, Então retorna instância de `SimulatorBackend`
+- [ ] CA02 - Visualizacao 3D no navegador mostra objetos
+  - Cenario: Dado que o simulador esta aberto no navegador, quando o usuario observa a arena, entao os 6 objetos coloridos estao visiveis no chao, lancando sombras.
+- [ ] CA04 - Robo colide com objeto e nao atravessa
+  - Cenario: Dado que existe um objeto no caminho do robo, quando o robo recebe o comando LBML para andar em direcao ao objeto, entao o robo para ou desliza ao lado do objeto, sem atravessa-lo.
+- [ ] CA06 - Reset preserva objetos
+  - Cenario: Dado que o robo se moveu e colidiu com objetos, quando `POST /api/reset` e executado, entao o robo volta ao centro, e todos os objetos permanecem nas mesmas posicoes originais.
+- [ ] CA-PAREDE-01 - Robo nao atravessa paredes fisicas
+  - Cenario: Dado que as paredes fisicas foram adicionadas, quando o robo anda em direcao a uma parede, entao ele colide e para, nao atravessando o limite da arena.
 
 ## Testes Esperados
 
-- `test_simulator_backend_health` — Health check retorna True com simulador ativo
-- `test_simulator_backend_unavailable` — Health check retorna False sem simulador
-- `test_translator_load_and_translate` — Tradução básica funciona
-- `test_translator_error_on_invalid_input` — Input inválido levanta TranslationError
-- `test_create_backend_simulator` — Factory retorna SimulatorBackend
+- Nao ha testes unitarios automatizados para colisao fisica (requer navegador). A validacao e feita via:
+  - Teste manual no navegador (`npm run dev`)
+  - Verificacao de que `engine.reset()` nao remove bodies do mundo
 
-## Comandos pós-fase
+## Comandos pos-fase
 
-```bash
-cd 3.controlador/lbot-mcp && pip install -e .
-cd 3.controlador/lbot-mcp && python -c "from mcp_server.server import mcp; print('MCP Server OK')"
-cd 3.controlador/lbot-mcp && python -c "from mcp_server.translator import TranslatorWrapper; print('Translator OK')"
-```
+- `npm run check` - Verificar compilacao TypeScript sem erros
+- `npm run dev` - Iniciar simulador e validar visualmente no navegador
 
-## Registro de Execução
+## Registro de Execucao
 
-- Data: 2026-06-02
+<Preenchido pelo agente durante a execucao>
+
+- Data:
 - Arquivos criados:
-  - `3.controlador/lbot-mcp/pyproject.toml`
-  - `3.controlador/lbot-mcp/src/__init__.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/__init__.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/server.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/tools/__init__.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/backends/__init__.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/backends/base.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/backends/simulator.py`
-  - `3.controlador/lbot-mcp/src/mcp_server/translator/__init__.py`
-  - `3.controlador/lbot-mcp/src/harness/__init__.py`
-  - `3.controlador/lbot-mcp/tests/__init__.py`
-- Arquivos alterados: Nenhum existente (todos novos)
+- Arquivos alterados:
 - Testes executados:
-  - Import do MCP Server: OK
-  - Import do TranslatorWrapper: OK
-  - Import do SimulatorBackend: OK
-  - Factory create_backend('simulator'): OK (retorna SimulatorBackend)
-  - Translator translate('ande 40 centímetros para frente'): D40F; OK
-  - Translator translate_verbose('ande 40cm pra frente'): (original, preprocessed, lbml) OK
-  - Translator translate('zzzzzzzzzzz'): TranslationError OK
-  - Backend health_check: True (simulador ativo em localhost:3001)
-  - Correção de pickle: classes do lbot_v7 registradas em __main__ antes do torch.load
-- Resultado: Todos os 6 critérios de aceite validados com sucesso
-- Pendências: Nenhuma
+- Resultado:
+- Pendencias:
