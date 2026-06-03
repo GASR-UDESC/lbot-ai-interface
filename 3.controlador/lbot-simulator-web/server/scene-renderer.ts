@@ -37,14 +37,10 @@ function setPixel(
 function drawReticle(buffer: Uint8Array, width: number, height: number): void {
   const centerX = Math.floor(width / 2);
   const centerY = Math.floor(height / 2);
-  const armLength = 12;
-  const color: [number, number, number, number] = [0xff, 0x52, 0x52, 180];
-
-  for (let dx = -armLength; dx <= armLength; dx++) {
-    setPixel(buffer, width, height, centerX + dx, centerY, color);
-  }
-  for (let dy = -armLength; dy <= armLength; dy++) {
-    setPixel(buffer, width, height, centerX, centerY + dy, color);
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      setPixel(buffer, width, height, centerX + dx, centerY + dy, RETICLE_COLOR);
+    }
   }
 }
 

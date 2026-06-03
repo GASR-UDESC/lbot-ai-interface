@@ -351,26 +351,17 @@ code {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.camera-preview-reticle-h,
-.camera-preview-reticle-v {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 82, 82, 0.7);
-  pointer-events: none;
-}
-
-.camera-preview-reticle-h {
-  width: 26px;
-  height: 1px;
-}
-
-.camera-preview-reticle-v {
-  width: 1px;
-  height: 26px;
+.camera-preview-reticle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 82, 82, 0.98);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7), 0 0 10px rgba(255, 82, 82, 0.32);
 }
 
 .camera-preview-placeholder {
