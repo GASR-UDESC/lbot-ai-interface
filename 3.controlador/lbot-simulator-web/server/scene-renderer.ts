@@ -14,6 +14,7 @@ interface GLContext {
 }
 
 const RETICLE_COLOR: [number, number, number, number] = [0xff, 0x52, 0x52, 255];
+const RETICLE_RING_COLOR: [number, number, number, number] = [0xff, 0xff, 0xff, 255];
 
 function setPixel(
   buffer: Uint8Array,
@@ -37,10 +38,33 @@ function setPixel(
 function drawReticle(buffer: Uint8Array, width: number, height: number): void {
   const centerX = Math.floor(width / 2);
   const centerY = Math.floor(height / 2);
-  for (let dx = -1; dx <= 1; dx++) {
-    for (let dy = -1; dy <= 1; dy++) {
-      setPixel(buffer, width, height, centerX + dx, centerY + dy, RETICLE_COLOR);
+  const ringRadius = Math.max(10, Math.round(Math.min(width, height) * 0.035));
+  const armLength = ringRadius + 10;
+
+  for (let dx = -armLength; dx <= armLength; dx++) {
+    const gap = Math.abs(dx) <= ringRadius - 3;
+    if (!gap) {
+      setPixel(buffer, width, height, centerX + dx, centerY, RETICLE_COLOR);
+      setPixel(buffer, width, height, centerX + dx, centerY - 1, RETICLE_RING_COLOR);
+      setPixel(buffer, width, height, centerX + dx, centerY + 1, RETICLE_RING_COLOR);
     }
+  }
+
+  for (let dy = -armLength; dy <= armLength; dy++) {
+    const gap = Math.abs(dy) <= ringRadius - 3;
+    if (!gap) {
+      setPixel(buffer, width, height, centerX, centerY + dy, RETICLE_COLOR);
+      setPixel(buffer, width, height, centerX - 1, centerY + dy, RETICLE_RING_COLOR);
+      setPixel(buffer, width, height, centerX + 1, centerY + dy, RETICLE_RING_COLOR);
+    }
+  }
+
+  const ringSteps = 48;
+  for (let i = 0; i < ringSteps; i++) {
+    const angle = (Math.PI * 2 * i) / ringSteps;
+    const ringX = centerX + Math.round(Math.cos(angle) * ringRadius);
+    const ringY = centerY + Math.round(Math.sin(angle) * ringRadius);
+    setPixel(buffer, width, height, ringX, ringY, RETICLE_RING_COLOR);
   }
 }
 

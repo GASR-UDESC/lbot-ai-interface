@@ -323,10 +323,6 @@ def _is_strictly_centered_text(text: str | None) -> bool:
         r"alinhad[oa] de forma inequivoca com o reticulo",
         r"no centro do reticulo",
         r"centralizad[oa] no reticulo",
-        r"alinhad[oa] com o reticulo central",
-        r"esta alinhad[oa] com o reticulo central",
-        r"esta no centro do reticulo",
-        r"esta totalmente dentro do reticulo",
     ]
     negative_patterns = [
         r"a esquerda",
@@ -337,9 +333,6 @@ def _is_strictly_centered_text(text: str | None) -> bool:
         r"parcialmente fora",
         r"mais proxima do centro",
         r"aproximadamente centraliz",
-        r"parece estar alinhad",
-        r"parece alinhad",
-        r"parece estar no centro",
     ]
     if any(re.search(pattern, normalized) for pattern in negative_patterns):
         return False
@@ -814,6 +807,14 @@ class ReActAgent:
                                 result = _build_alignment_guardrail_error(
                                     visual_direction,
                                     raw_args.get("command", ""),
+                                )
+                            elif (
+                                _is_forward_motion_command(raw_args.get("command", ""))
+                                and _mentions_visual_target_alignment(message.content)
+                                and not _is_strictly_centered_text(message.content)
+                            ):
+                                result = _build_forward_alignment_guardrail_error(
+                                    raw_args.get("command", "")
                                 )
                             else:
                                 result = await self._mcp.call_tool(

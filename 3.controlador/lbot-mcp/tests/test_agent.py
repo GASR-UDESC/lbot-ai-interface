@@ -56,8 +56,8 @@ class TestSystemPrompt:
         assert "90 em 90 graus" in SYSTEM_PROMPT
 
     def test_mentions_strict_centering_before_forward_motion(self):
-        assert "muito criterioso com centralização" in SYSTEM_PROMPT or "muito criterioso com centralizacao" in SYSTEM_PROMPT
-        assert "sensor frontal esteja apontando para ele" in SYSTEM_PROMPT
+        assert "estritamente centralizado" in SYSTEM_PROMPT
+        assert "totalmente dentro do retículo" in SYSTEM_PROMPT or "totalmente dentro do reticulo" in SYSTEM_PROMPT
 
 
 class TestReActAgentEvents:
@@ -544,3 +544,43 @@ class TestReActAgentOperationalState:
             msg.get("role") == "user" and "Continue exatamente de onde parou" in str(msg.get("content"))
             for msg in agent.history
         )
+
+    @pytest.mark.asyncio
+    async def test_blocks_forward_motion_without_strict_centering(self, mock_mcp_client):
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = (
+                "A esfera azul esta mais proxima do centro, mas ainda nao esta totalmente dentro do reticulo. "
+                "Vou andar 10 cm para frente."
+            )
+            tc = MagicMock()
+            tc.id = "tc-1"
+            tc.function.name = "move"
+            tc.function.arguments = json.dumps({"command": "ande 10 cm para frente"})
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Vou recentralizar antes de avancar."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client)
+            result = await agent.run("chegue perto da esfera azul")
+
+        assert result == "Vou recentralizar antes de avancar."
+        mock_mcp_client.call_tool.assert_not_called()
+        tool_message = next(msg for msg in agent.history if msg.get("role") == "tool")
+        assert "Avanco bloqueado por seguranca visual" in tool_message["content"]
