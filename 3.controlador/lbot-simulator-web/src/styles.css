@@ -325,6 +325,7 @@ code {
 .camera-preview-frame {
   width: 100%;
   aspect-ratio: 4 / 3;
+  position: relative;
   border-radius: 18px;
   overflow: hidden;
   background: rgba(10, 20, 36, 0.95);
@@ -344,6 +345,39 @@ code {
   position: absolute;
   left: -9999px;
   top: -9999px;
+}
+
+.camera-preview-reticle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-preview-reticle-ring {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 82, 82, 0.8), 0 0 18px rgba(255, 82, 82, 0.22);
+}
+
+.camera-preview-reticle-line {
+  position: absolute;
+  background: rgba(255, 82, 82, 0.95);
+  box-shadow: 0 0 12px rgba(255, 82, 82, 0.3);
+}
+
+.camera-preview-reticle-line--horizontal {
+  width: 72px;
+  height: 2px;
+}
+
+.camera-preview-reticle-line--vertical {
+  width: 2px;
+  height: 72px;
 }
 
 .camera-preview-placeholder {
