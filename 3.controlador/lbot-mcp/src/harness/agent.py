@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import re
-from copy import deepcopy
 from typing import Any, Callable
 
 from openai import OpenAI
@@ -17,7 +16,6 @@ _BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+=*$')
 
 _MAX_CONTEXT_TOKENS = int(os.environ.get("LBOT_MAX_CONTEXT_TOKENS", "4000"))
 _APPROX_CHARS_PER_TOKEN = 4
-_MINIMUM_SAFE_DISTANCE_CM = 20
 
 EventCallback = Callable[[str, dict[str, Any]], None] | None
 
@@ -219,22 +217,6 @@ def _sanitize_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
-def _try_parse_json(value: Any) -> dict[str, Any] | None:
-    if not isinstance(value, str):
-        return None
-    try:
-        parsed = json.loads(value)
-    except (json.JSONDecodeError, TypeError):
-        return None
-    return parsed if isinstance(parsed, dict) else None
-
-
-def _format_float(value: Any) -> str:
-    if isinstance(value, (int, float)):
-        return f"{value:.1f}"
-    return "desconhecido"
-
-
 class ReActAgent:
     def __init__(
         self,
@@ -242,7 +224,7 @@ class ReActAgent:
         base_url: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
-        max_steps: int = 100,
+        max_steps: int = 20,
         verbose: bool = False,
         on_event: EventCallback = None,
     ):
@@ -254,7 +236,6 @@ class ReActAgent:
         self._messages: list[dict[str, Any]] = [
             {"role": "system", "content": SYSTEM_PROMPT},
         ]
-        self._operational_state = self._new_operational_state()
 
         base_url = base_url or os.environ.get(
             "LBOT_LLM_URL", "http://127.0.0.1:1234/v1"
@@ -265,19 +246,6 @@ class ReActAgent:
         self._llm = OpenAI(base_url=base_url, api_key=api_key)
         self._model = model
         self._tools = get_tools_description()
-
-    def _new_operational_state(self) -> dict[str, Any]:
-        return {
-            "current_goal": None,
-            "safety_distance_cm": _MINIMUM_SAFE_DISTANCE_CM,
-            "last_pose": None,
-            "last_proximity": None,
-            "last_camera": None,
-            "last_action": None,
-            "last_action_result": None,
-            "recent_actions": [],
-            "observations_stale": False,
-        }
 
     def _emit(self, event: str, data: dict[str, Any]) -> None:
         if self._on_event is not None:
@@ -291,132 +259,6 @@ class ReActAgent:
 
     def reset(self):
         self._messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        self._operational_state = self._new_operational_state()
-
-    def _record_action(self, tool_name: str, summary: str, raw: Any) -> None:
-        entry = {"tool": tool_name, "summary": summary}
-        recent_actions = self._operational_state["recent_actions"]
-        recent_actions.append(entry)
-        if len(recent_actions) > 6:
-            del recent_actions[:-6]
-        self._operational_state["last_action"] = tool_name
-        self._operational_state["last_action_result"] = raw
-
-    def _update_pose(self, pose: dict[str, Any] | None) -> None:
-        if not isinstance(pose, dict):
-            return
-        self._operational_state["last_pose"] = {
-            "x": pose.get("x"),
-            "z": pose.get("z"),
-            "rotation": pose.get("rotation"),
-            "current_command": pose.get("current_command"),
-            "is_animating": pose.get("is_animating"),
-            "updated_at": pose.get("updated_at"),
-            "last_request_id": pose.get("last_request_id"),
-            "last_command_status": pose.get("last_command_status"),
-            "last_command_message": pose.get("last_command_message"),
-        }
-
-    def _update_camera_state(self, camera_data: dict[str, Any]) -> None:
-        self._operational_state["last_camera"] = {
-            "render_method": camera_data.get("render_method"),
-            "observation_mode": camera_data.get("observation_mode"),
-            "warning": camera_data.get("warning"),
-        }
-        self._update_pose(camera_data.get("robot_position"))
-        self._operational_state["observations_stale"] = False
-
-    def _update_proximity_state(self, proximity_data: dict[str, Any]) -> None:
-        self._operational_state["last_proximity"] = {
-            "front_cm": proximity_data.get("front_cm"),
-            "rear_cm": proximity_data.get("rear_cm"),
-            "safe_to_move_forward": proximity_data.get("safe_to_move_forward"),
-            "safe_to_move_backward": proximity_data.get("safe_to_move_backward"),
-            "minimum_safe_distance_cm": proximity_data.get(
-                "minimum_safe_distance_cm", _MINIMUM_SAFE_DISTANCE_CM
-            ),
-        }
-        self._update_pose(proximity_data.get("robot_position"))
-        self._operational_state["observations_stale"] = False
-
-    def _update_move_state(self, move_data: dict[str, Any]) -> None:
-        self._update_pose(move_data.get("final_state"))
-        self._operational_state["observations_stale"] = move_data.get(
-            "needs_reobservation", True
-        )
-
-    def _build_operational_context(self) -> dict[str, Any]:
-        state = deepcopy(self._operational_state)
-        pose = state.get("last_pose")
-        proximity = state.get("last_proximity")
-        camera = state.get("last_camera")
-
-        pose_text = "Pose desconhecida."
-        if pose:
-            pose_text = (
-                f"Pose: x={_format_float(pose.get('x'))}, "
-                f"z={_format_float(pose.get('z'))}, "
-                f"rotacao={_format_float(pose.get('rotation'))}°."
-            )
-
-        proximity_text = "Sem leitura recente de proximidade."
-        if proximity:
-            proximity_text = (
-                f"Proximidade: frente={_format_float(proximity.get('front_cm'))} cm, "
-                f"tras={_format_float(proximity.get('rear_cm'))} cm, "
-                f"seguro_frente={proximity.get('safe_to_move_forward')}, "
-                f"seguro_tras={proximity.get('safe_to_move_backward')}."
-            )
-
-        camera_text = "Sem leitura recente de camera."
-        if camera:
-            warning = camera.get("warning")
-            camera_text = (
-                f"Camera: modo={camera.get('observation_mode')}, "
-                f"render={camera.get('render_method')}"
-                + (f", aviso={warning}" if warning else "")
-                + "."
-            )
-
-        recent_actions = state.get("recent_actions") or []
-        actions_text = "; ".join(
-            f"{entry.get('tool')}: {entry.get('summary')}" for entry in recent_actions
-        ) or "Nenhuma acao recente."
-
-        stale_text = (
-            "Observacoes anteriores podem estar desatualizadas porque houve movimento recente. "
-            "Reobserve com proximity() e camera() antes de decidir novo deslocamento."
-            if state.get("observations_stale")
-            else "Observacoes atuais estao frescas ou nao ha movimento recente."
-        )
-
-        return {
-            "role": "system",
-            "content": (
-                "Resumo operacional atual:\n"
-                f"- Objetivo: {state.get('current_goal') or 'nao definido'}\n"
-                f"- Distancia minima de seguranca: {state.get('safety_distance_cm')} cm\n"
-                f"- {pose_text}\n"
-                f"- {proximity_text}\n"
-                f"- {camera_text}\n"
-                f"- Ultimas acoes: {actions_text}\n"
-                f"- {stale_text}\n"
-                "- Nunca avance ou recue se isso violar a margem de 20 cm."
-            ),
-        }
-
-    def _messages_for_llm(self) -> list[dict[str, Any]]:
-        messages = list(self._messages)
-        operational_context = self._build_operational_context()["content"]
-
-        if messages and messages[0].get("role") == "system":
-            messages[0] = {
-                **messages[0],
-                "content": f"{messages[0].get('content', '')}\n\n{operational_context}",
-            }
-        else:
-            messages.insert(0, {"role": "system", "content": operational_context})
-        return messages
 
     @property
     def history(self) -> list[dict[str, Any]]:
@@ -459,7 +301,6 @@ class ReActAgent:
     async def run(self, goal: str, max_steps: int | None = None) -> str:
         max_steps = max_steps if max_steps is not None else self._max_steps
         self._cancelled = False
-        self._operational_state["current_goal"] = goal
 
         self._messages.append({"role": "user", "content": goal})
         self._messages = _trim_messages(self._messages, _MAX_CONTEXT_TOKENS)
@@ -473,7 +314,7 @@ class ReActAgent:
                 return "Interrompido."
 
             step += 1
-            messages = self._messages_for_llm()
+            messages = self._messages
 
             self._emit(
                 "llm_request",
@@ -603,44 +444,33 @@ class ReActAgent:
                     if self._verbose:
                         logger.info("[Step %d] Tool result: %s", step, result[:200])
 
-                    structured_result = _try_parse_json(result)
-
                     if tool_name == "camera":
                         camera_data = {}
-                        if structured_result is not None:
-                            camera_data = structured_result
+                        try:
+                            camera_data = json.loads(result)
+                        except (json.JSONDecodeError, TypeError):
+                            pass
 
                         image_base64 = ""
                         render_method = "unknown"
                         robot_position = None
                         camera_error = None
-                        observation_mode = "unknown"
-                        warning = None
 
                         if isinstance(camera_data, dict):
                             image_base64 = camera_data.get("image", "")
                             render_method = camera_data.get("render_method", "unknown")
                             robot_position = camera_data.get("robot_position")
                             camera_error = camera_data.get("error")
-                            observation_mode = camera_data.get("observation_mode", "unknown")
-                            warning = camera_data.get("warning")
                         elif isinstance(result, str) and _is_valid_base64(result):
                             image_base64 = result
 
                         if camera_error:
-                            self._record_action("camera", f"erro: {camera_error}", camera_data or result)
                             self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": f"Erro ao capturar imagem: {camera_error}",
                             })
                         elif _is_valid_base64(image_base64):
-                            self._update_camera_state({
-                                "render_method": render_method,
-                                "robot_position": robot_position,
-                                "observation_mode": observation_mode,
-                                "warning": warning,
-                            })
                             pos_text = ""
                             if robot_position:
                                 pos_text = (
@@ -649,18 +479,10 @@ class ReActAgent:
                                     f"rotação={robot_position.get('rotation', 0):.1f}°."
                                 )
                             render_desc = ""
-                            if observation_mode == "topdown_simplified":
-                                render_desc = " A imagem e uma visao superior simplificada da arena. Use para orientacao geral, nao para centralizacao fina."
+                            if render_method == "2d":
+                                render_desc = " A imagem é uma visão superior (mapa 2D) da arena — verde é o chão, marrom são paredes, azul é o robô."
                             elif render_method == "webgl":
                                 render_desc = " A imagem é uma visão em primeira pessoa (3D) da câmera frontal do robô."
-                            if warning:
-                                render_desc += f" Aviso: {warning}"
-
-                            self._record_action(
-                                "camera",
-                                f"captura ok em modo {observation_mode or render_method}",
-                                camera_data,
-                            )
 
                             self._messages.append({
                                 "role": "tool",
@@ -678,71 +500,12 @@ class ReActAgent:
                                 "content": image_content,
                             })
                         else:
-                            self._record_action("camera", "imagem invalida", camera_data or result)
                             self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": "Erro: a imagem capturada não pôde ser processada (dados de imagem inválidos ou ausentes).",
                             })
-                    elif tool_name == "proximity":
-                        if structured_result is not None and not structured_result.get("error"):
-                            self._update_proximity_state(structured_result)
-                            front = structured_result.get("front_cm")
-                            rear = structured_result.get("rear_cm")
-                            self._record_action(
-                                "proximity",
-                                f"frente={front} cm, tras={rear} cm",
-                                structured_result,
-                            )
-                        else:
-                            self._record_action(
-                                "proximity",
-                                f"erro: {(structured_result or {}).get('error', result)}",
-                                structured_result or result,
-                            )
-                        self._messages.append({
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "content": result,
-                        })
-                    elif tool_name == "move":
-                        if structured_result is not None and not structured_result.get("error"):
-                            self._update_move_state(structured_result)
-                            status = structured_result.get("status", "unknown")
-                            summary = structured_result.get("summary") or status
-                            self._record_action("move", summary, structured_result)
-                        else:
-                            self._record_action(
-                                "move",
-                                f"erro: {(structured_result or {}).get('error', result)}",
-                                structured_result or result,
-                            )
-                        self._messages.append({
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "content": result,
-                        })
-                    elif tool_name == "state":
-                        if structured_result is not None and not structured_result.get("error"):
-                            self._update_pose(structured_result)
-                            self._record_action(
-                                "state",
-                                f"pose x={structured_result.get('x')} z={structured_result.get('z')} rot={structured_result.get('rotation')}",
-                                structured_result,
-                            )
-                        else:
-                            self._record_action(
-                                "state",
-                                f"erro: {(structured_result or {}).get('error', result)}",
-                                structured_result or result,
-                            )
-                        self._messages.append({
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "content": result,
-                        })
                     else:
-                        self._record_action(tool_name, "resultado recebido", structured_result or result)
                         self._messages.append({
                             "role": "tool",
                             "tool_call_id": tc.id,

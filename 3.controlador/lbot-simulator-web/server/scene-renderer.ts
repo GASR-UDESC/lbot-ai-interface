@@ -32,18 +32,6 @@ function encodePng(
   return PNG.sync.write(png).toString('base64');
 }
 
-function hexToRgba(hex: string): [number, number, number, number] {
-  const normalized = hex.replace('#', '');
-  const value = normalized.length === 3
-    ? normalized
-        .split('')
-        .map((char) => char + char)
-        .join('')
-    : normalized;
-  const intValue = Number.parseInt(value, 16);
-  return [(intValue >> 16) & 0xff, (intValue >> 8) & 0xff, intValue & 0xff, 255];
-}
-
 function render2DScene(
   width: number,
   height: number,
@@ -71,27 +59,6 @@ function render2DScene(
       wz > HALF_ARENA - wallThicknessHalfWorld
     ) {
       return wallColor;
-    }
-
-    for (const obj of ARENA_OBJECTS) {
-      if (obj.type === 'cube') {
-        const s = obj.size as { width: number; depth: number };
-        if (
-          wx >= obj.x - s.width / 2 &&
-          wx <= obj.x + s.width / 2 &&
-          wz >= obj.z - s.depth / 2 &&
-          wz <= obj.z + s.depth / 2
-        ) {
-          return hexToRgba(obj.color);
-        }
-      } else {
-        const radius = 'radius' in obj.size ? obj.size.radius : 10;
-        const dxObj = wx - obj.x;
-        const dzObj = wz - obj.z;
-        if (dxObj * dxObj + dzObj * dzObj <= radius * radius) {
-          return hexToRgba(obj.color);
-        }
-      }
     }
 
     const dx = wx - robotX;

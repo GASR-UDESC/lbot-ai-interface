@@ -1,5 +1,4 @@
 import re
-import json
 import httpx
 
 from ..server import mcp
@@ -16,94 +15,27 @@ async def move(command: str) -> str:
         translator = get_translator()
         original, preprocessed, lbml = translator.translate_verbose(command)
     except TranslationError as e:
-        return json.dumps(
-            {
-                "original_command": command,
-                "accepted": False,
-                "completed": False,
-                "status": "translation_error",
-                "needs_reobservation": False,
-                "error": f"não entendi o comando '{command}'. Pode reformular? ({e})",
-            },
-            ensure_ascii=False,
-        )
+        return f"Erro: não entendi o comando '{command}'. Pode reformular? ({e})"
 
     if lbml == "ERRO" or not LBML_SEQUENCE_RE.match(lbml):
-        return json.dumps(
-            {
-                "original_command": command,
-                "accepted": False,
-                "completed": False,
-                "status": "translation_error",
-                "needs_reobservation": False,
-                "error": f"não entendi o comando '{command}'. Pode reformular?",
-            },
-            ensure_ascii=False,
-        )
+        return f"Erro: não entendi o comando '{command}'. Pode reformular?"
 
     try:
         backend = get_backend()
         result = await backend.execute_lbml(lbml)
-        return json.dumps(
-            {
-                "original_command": original,
-                "preprocessed_command": preprocessed,
-                "translated_lbml": lbml,
-                "accepted": result.get("accepted", False),
-                "completed": result.get("completed", False),
-                "status": result.get("status", "unknown"),
-                "needs_reobservation": True,
-                "request_id": result.get("request_id"),
-                "target_client_id": result.get("target_client_id"),
-                "final_state": result.get("final_state"),
-                "message": result.get("message"),
-                "summary": "movimento concluído" if result.get("completed") else "movimento aceito, mas sem confirmação final",
-            },
-            ensure_ascii=False,
-        )
+
+        if result.get("accepted"):
+            return f"Comando executado: {lbml} ({preprocessed})"
+        else:
+            error_msg = result.get("error", "falha na execução")
+            return f"Erro: falha na execução — {error_msg}"
 
     except RuntimeError as e:
         error_str = str(e)
         if "409" in error_str:
-            error_str = "o simulador não está conectado. Abra o simulador no navegador para executar movimentos."
-        return json.dumps(
-            {
-                "original_command": original,
-                "preprocessed_command": preprocessed,
-                "translated_lbml": lbml,
-                "accepted": False,
-                "completed": False,
-                "status": "execution_error",
-                "needs_reobservation": False,
-                "error": f"falha na execução — {error_str}",
-            },
-            ensure_ascii=False,
-        )
+            return "Erro: o simulador não está conectado. Abra o simulador no navegador para executar movimentos."
+        return f"Erro: falha na execução — {e}"
     except httpx.TimeoutException:
-        return json.dumps(
-            {
-                "original_command": original,
-                "preprocessed_command": preprocessed,
-                "translated_lbml": lbml,
-                "accepted": False,
-                "completed": False,
-                "status": "timeout",
-                "needs_reobservation": False,
-                "error": "timeout ao executar movimento",
-            },
-            ensure_ascii=False,
-        )
+        return "Erro: timeout ao executar movimento."
     except Exception as e:
-        return json.dumps(
-            {
-                "original_command": original,
-                "preprocessed_command": preprocessed,
-                "translated_lbml": lbml,
-                "accepted": False,
-                "completed": False,
-                "status": "execution_error",
-                "needs_reobservation": False,
-                "error": f"falha na execução — {e}",
-            },
-            ensure_ascii=False,
-        )
+        return f"Erro: falha na execução — {e}"

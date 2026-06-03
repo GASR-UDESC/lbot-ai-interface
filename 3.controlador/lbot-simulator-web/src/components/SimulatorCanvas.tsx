@@ -94,15 +94,6 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
 
     let animationFrame = 0;
     let lastPreviewTime = 0;
-    let lastCommandMeta: {
-      lastRequestId: string | null;
-      lastCommandStatus: 'idle' | 'completed' | 'error' | 'interrupted' | 'reset';
-      lastCommandMessage: string | null;
-    } = {
-      lastRequestId: null,
-      lastCommandStatus: 'idle',
-      lastCommandMessage: null,
-    };
 
     const animate = () => {
       animationFrame = requestAnimationFrame(animate);
@@ -189,27 +180,12 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
       async handleRemoteEvent(event) {
         if (event.type === 'execute') {
           const message = await engine.executeSequence(event.command);
-          lastCommandMeta = {
-            lastRequestId: event.requestId,
-            lastCommandStatus:
-              message.kind === 'error'
-                ? 'error'
-                : message.text.toLowerCase().includes('interrompida')
-                  ? 'interrupted'
-                  : 'completed',
-            lastCommandMessage: message.text,
-          };
           publishSnapshot();
           return message;
         }
 
         if (event.type === 'reset') {
           engine.reset();
-          lastCommandMeta = {
-            lastRequestId: null,
-            lastCommandStatus: 'reset',
-            lastCommandMessage: 'Simulador reiniciado.',
-          };
           publishSnapshot();
           return { kind: 'info', text: 'Simulador reiniciado.' };
         }
@@ -224,9 +200,6 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
         return {
           ...engine.getSnapshot(),
           updatedAt: new Date().toISOString(),
-          lastRequestId: lastCommandMeta.lastRequestId,
-          lastCommandStatus: lastCommandMeta.lastCommandStatus,
-          lastCommandMessage: lastCommandMeta.lastCommandMessage,
         };
       },
       bindPreviewCanvas(canvas: HTMLCanvasElement) {

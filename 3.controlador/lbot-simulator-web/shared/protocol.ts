@@ -15,7 +15,6 @@ export interface CommandResponse {
   accepted: boolean;
   command: string;
   targetClientId: string;
-   requestId: string;
   source: 'ui' | 'http';
 }
 
@@ -38,9 +37,6 @@ export interface SimulatorStateSnapshot {
   currentCommand: string;
   isAnimating: boolean;
   updatedAt: string;
-  lastRequestId?: string | null;
-  lastCommandStatus?: 'idle' | 'completed' | 'error' | 'interrupted' | 'reset' | null;
-  lastCommandMessage?: string | null;
 }
 
 export interface SimulatorStateResponse {
@@ -61,7 +57,6 @@ export type ServerEvent =
   | {
       type: 'execute';
       command: string;
-      requestId: string;
       source: 'ui' | 'http';
       issuedAt: string;
     }
@@ -84,10 +79,6 @@ export interface ProximityReadings {
 export interface SensorsResponse {
   connected: boolean;
   readings: ProximityReadings | null;
-  minimumSafeDistanceCm?: number;
-  safeToMoveForward?: boolean;
-  safeToMoveBackward?: boolean;
-  robotPosition?: { x: number; z: number; rotation: number };
   error?: string;
 }
 
@@ -97,8 +88,6 @@ export interface CameraResponse {
   format: 'png';
   encoding: 'base64';
   renderMethod?: 'webgl' | '2d' | 'none';
-  observationMode?: 'first_person' | 'topdown_simplified' | 'unknown';
-  warning?: string;
   error?: string;
   robotPosition?: { x: number; z: number; rotation: number };
 }

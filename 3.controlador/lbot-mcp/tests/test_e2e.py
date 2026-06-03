@@ -62,9 +62,9 @@ async def test_e2e_sensors_via_backend():
     backend = SimulatorBackend(base_url=E2E_SIMULATOR_URL)
     try:
         readings = await backend.get_proximity()
-        assert "front_cm" in readings
-        assert "rear_cm" in readings
-        assert isinstance(readings["front_cm"], (int, float))
-        assert isinstance(readings["rear_cm"], (int, float))
+        assert "frente" in readings
+        assert "tras" in readings
+        assert isinstance(readings["frente"], (int, float))
+        assert isinstance(readings["tras"], (int, float))
     finally:
         await backend.close()

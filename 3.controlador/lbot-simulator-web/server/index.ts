@@ -46,10 +46,6 @@ function createClientId(): string {
   return `sim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createRequestId(): string {
-  return `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
 function writeEvent(response: Response, event: ServerEvent): void {
   response.write(`data: ${JSON.stringify(event)}\n\n`);
 }
@@ -138,11 +134,6 @@ app.get('/api/camera', (_request, response: Response<CameraResponse>) => {
       format: 'png',
       encoding: 'base64',
       renderMethod: r.renderMethod,
-      observationMode: r.renderMethod === 'webgl' ? 'first_person' : 'topdown_simplified',
-      warning:
-        r.renderMethod === '2d'
-          ? 'camera simplificada em vista superior; use para orientação geral, não para centralização fina'
-          : undefined,
       robotPosition: { x, z, rotation },
     });
   } catch (err) {
@@ -167,10 +158,6 @@ app.get('/api/sensors', (_request, response: Response<SensorsResponse>) => {
     response.json({
       connected: true,
       readings,
-      minimumSafeDistanceCm: 20,
-      safeToMoveForward: readings.frente >= 20,
-      safeToMoveBackward: readings.tras >= 20,
-      robotPosition: { x, z, rotation },
     });
   } catch (err) {
     response.json({
@@ -220,7 +207,6 @@ app.post(
 
     const rawCommand = request.body?.command ?? '';
     const command = normalizeLbml(rawCommand);
-    const requestId = createRequestId();
 
     if (!validateLbml(command)) {
       response.status(400).json({ error: 'Comando LBML invalido.' } as never);
@@ -230,7 +216,6 @@ app.post(
     const targetClientId = publish({
       type: 'execute',
       command,
-      requestId,
       source: request.body?.source ?? 'http',
       issuedAt: new Date().toISOString(),
     });
@@ -239,7 +224,6 @@ app.post(
       accepted: true,
       command,
       targetClientId,
-      requestId,
       source: request.body?.source ?? 'http',
     });
   },
