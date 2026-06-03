@@ -1,3 +1,5 @@
+import { ARENA_OBJECTS, getObjectAABB, type AABB } from '../shared/arena-objects.js';
+
 const HALF_ARENA = 200;
 const MAX_SENSOR_DISTANCE = 400;
 
@@ -32,6 +34,64 @@ function rayWallDistance(
   return minDist;
 }
 
+function rayAABBDistance(
+  ox: number,
+  oz: number,
+  dx: number,
+  dz: number,
+  aabb: AABB,
+): number {
+  let tmin = -Infinity;
+  let tmax = Infinity;
+
+  if (Math.abs(dx) > 0.0001) {
+    const tx1 = (aabb.minX - ox) / dx;
+    const tx2 = (aabb.maxX - ox) / dx;
+    tmin = Math.max(tmin, Math.min(tx1, tx2));
+    tmax = Math.min(tmax, Math.max(tx1, tx2));
+  } else {
+    if (ox < aabb.minX || ox > aabb.maxX) {
+      return Infinity;
+    }
+  }
+
+  if (Math.abs(dz) > 0.0001) {
+    const tz1 = (aabb.minZ - oz) / dz;
+    const tz2 = (aabb.maxZ - oz) / dz;
+    tmin = Math.max(tmin, Math.min(tz1, tz2));
+    tmax = Math.min(tmax, Math.max(tz1, tz2));
+  } else {
+    if (oz < aabb.minZ || oz > aabb.maxZ) {
+      return Infinity;
+    }
+  }
+
+  if (tmax >= tmin && tmax > 0) {
+    return tmin > 0 ? tmin : tmax;
+  }
+
+  return Infinity;
+}
+
+function rayClosestDistance(
+  ox: number,
+  oz: number,
+  dx: number,
+  dz: number,
+): number {
+  let minDist = rayWallDistance(ox, oz, dx, dz);
+
+  for (const obj of ARENA_OBJECTS) {
+    const aabb = getObjectAABB(obj);
+    const dist = rayAABBDistance(ox, oz, dx, dz, aabb);
+    if (dist < minDist) {
+      minDist = dist;
+    }
+  }
+
+  return minDist;
+}
+
 export function computeProximity(
   x: number,
   z: number,
@@ -41,12 +101,12 @@ export function computeProximity(
   const frontDx = Math.sin(rad);
   const frontDz = Math.cos(rad);
 
-  let frente = rayWallDistance(x, z, frontDx, frontDz);
+  let frente = rayClosestDistance(x, z, frontDx, frontDz);
   if (frente > MAX_SENSOR_DISTANCE) {
     frente = MAX_SENSOR_DISTANCE;
   }
 
-  let tras = rayWallDistance(x, z, -frontDx, -frontDz);
+  let tras = rayClosestDistance(x, z, -frontDx, -frontDz);
   if (tras > MAX_SENSOR_DISTANCE) {
     tras = MAX_SENSOR_DISTANCE;
   }

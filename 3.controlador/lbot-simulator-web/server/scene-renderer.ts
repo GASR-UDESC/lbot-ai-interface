@@ -1,9 +1,10 @@
 import { createRequire } from 'node:module';
 import { PNG } from 'pngjs';
+import { ARENA_OBJECTS } from '../shared/arena-objects.js';
 
 const require = createRequire(import.meta.url);
 
-const ARENA_WORLD = 800;
+const ARENA_WORLD = 400;
 const HALF_ARENA = ARENA_WORLD / 2;
 
 interface GLContext {
@@ -90,7 +91,7 @@ export class HeadlessSceneRenderer {
   private scene: unknown = null;
   private camera: unknown = null;
   private robotGroup: unknown = null;
-  private THREE: { WebGLRenderer: new (...args: unknown[]) => unknown; Scene: new () => unknown; PerspectiveCamera: new (...args: unknown[]) => unknown; Color: new (c: number) => unknown; AmbientLight: new (...args: unknown[]) => unknown; DirectionalLight: new (...args: unknown[]) => unknown; HemisphereLight: new (...args: unknown[]) => unknown; Mesh: new (...args: unknown[]) => unknown; PlaneGeometry: new (...args: unknown[]) => unknown; BoxGeometry: new (...args: unknown[]) => unknown; MeshLambertMaterial: new (...args: unknown[]) => unknown; MeshStandardMaterial: new (...args: unknown[]) => unknown; Group: new () => unknown } | null = null;
+  private THREE: { WebGLRenderer: new (...args: unknown[]) => unknown; Scene: new () => unknown; PerspectiveCamera: new (...args: unknown[]) => unknown; Color: new (c: number) => unknown; AmbientLight: new (...args: unknown[]) => unknown; DirectionalLight: new (...args: unknown[]) => unknown; HemisphereLight: new (...args: unknown[]) => unknown; Mesh: new (...args: unknown[]) => unknown; PlaneGeometry: new (...args: unknown[]) => unknown; BoxGeometry: new (...args: unknown[]) => unknown; SphereGeometry: new (...args: unknown[]) => unknown; ConeGeometry: new (...args: unknown[]) => unknown; MeshLambertMaterial: new (...args: unknown[]) => unknown; MeshStandardMaterial: new (...args: unknown[]) => unknown; Group: new () => unknown } | null = null;
 
   readonly available: boolean;
 
@@ -155,7 +156,7 @@ export class HeadlessSceneRenderer {
         scene.add(new THREE.HemisphereLight(0x87ceeb, 0x228b22, 0.6));
 
         const ground = new THREE.Mesh(
-          new THREE.PlaneGeometry(800, 800),
+          new THREE.PlaneGeometry(400, 400),
           new THREE.MeshLambertMaterial({ color: 0x90ee90 }),
         );
         ground.rotation.x = -Math.PI / 2;
@@ -175,6 +176,31 @@ export class HeadlessSceneRenderer {
           wall.castShadow = true;
           wall.receiveShadow = true;
           scene.add(wall);
+        }
+
+        for (const obj of ARENA_OBJECTS) {
+          let geometry: { type?: string } | null = null;
+          if (obj.type === 'cube') {
+            const s = obj.size as { width: number; height: number; depth: number };
+            geometry = new THREE.BoxGeometry(s.width, s.height, s.depth);
+          } else if (obj.type === 'sphere') {
+            const s = obj.size as { radius: number };
+            geometry = new THREE.SphereGeometry(s.radius, 32, 32);
+          } else {
+            const s = obj.size as { radius: number; height: number };
+            geometry = new THREE.ConeGeometry(s.radius, s.height, 32);
+          }
+          const material = new THREE.MeshStandardMaterial({ color: obj.color, roughness: 0.7, metalness: 0.1 });
+          const mesh = new THREE.Mesh(geometry as never, material);
+          const yPos = obj.type === 'sphere'
+            ? (obj.size as { radius: number }).radius
+            : obj.type === 'cone'
+              ? (obj.size as { radius: number; height: number }).height / 2
+              : (obj.size as { width: number; height: number; depth: number }).height / 2;
+          mesh.position.set(obj.x, yPos, obj.z);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          scene.add(mesh);
         }
 
         const robot = new THREE.Group();
@@ -202,6 +228,8 @@ export class HeadlessSceneRenderer {
           Mesh: THREE.Mesh,
           PlaneGeometry: THREE.PlaneGeometry,
           BoxGeometry: THREE.BoxGeometry,
+          SphereGeometry: THREE.SphereGeometry,
+          ConeGeometry: THREE.ConeGeometry,
           MeshLambertMaterial: THREE.MeshLambertMaterial,
           MeshStandardMaterial: THREE.MeshStandardMaterial,
           Group: THREE.Group,

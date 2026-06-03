@@ -2,6 +2,8 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { HeadlessSceneRenderer } from '../server/scene-renderer.js';
+import { ARENA_OBJECTS } from '../shared/arena-objects.js';
 
 let BASE_URL: string;
 let serverProcess: ChildProcess;
@@ -155,5 +157,62 @@ describe('/api/state', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.state).toBeNull();
+  });
+});
+
+describe('HeadlessSceneRenderer', () => {
+  it('is available and initialized', () => {
+    const renderer = new HeadlessSceneRenderer(320, 240);
+    expect(renderer.available).toBe(true);
+  });
+
+  it('contains all 6 arena objects in the scene when WebGL is available', () => {
+    const renderer = new HeadlessSceneRenderer(320, 240);
+    expect(renderer.available).toBe(true);
+
+    // If gl is not available, renderer falls back to 2D mode; skip scene inspection
+    const renderMethod = (renderer as unknown as { renderMethod: string }).renderMethod;
+    if (renderMethod !== 'webgl') {
+      return;
+    }
+
+    const scene = (renderer as unknown as { scene: { children: unknown[] } }).scene;
+    expect(scene).toBeDefined();
+
+    // Access scene children and count objects by checking if their positions match ARENA_OBJECTS
+    const children = scene.children as { position?: { x: number; z: number } }[];
+    const objectPositions = ARENA_OBJECTS.map((o) => ({ x: o.x, z: o.z }));
+
+    let foundCount = 0;
+    for (const child of children) {
+      if (!child.position) continue;
+      for (const pos of objectPositions) {
+        if (Math.abs(child.position.x - pos.x) < 0.1 && Math.abs(child.position.z - pos.z) < 0.1) {
+          foundCount++;
+          break;
+        }
+      }
+    }
+
+    expect(foundCount).toBe(6);
+  });
+
+  it('arena scale is 400x400 (ground geometry) when WebGL is available', () => {
+    const renderer = new HeadlessSceneRenderer(320, 240);
+    expect(renderer.available).toBe(true);
+
+    const renderMethod = (renderer as unknown as { renderMethod: string }).renderMethod;
+    if (renderMethod !== 'webgl') {
+      return;
+    }
+
+    const scene = (renderer as unknown as { scene: { children: unknown[] } }).scene;
+    const children = scene.children as { geometry?: { parameters?: { width?: number; height?: number } } }[];
+
+    // Find ground plane (PlaneGeometry with width=400, height=400)
+    const ground = children.find(
+      (c) => c.geometry?.parameters?.width === 400 && c.geometry?.parameters?.height === 400,
+    );
+    expect(ground).toBeDefined();
   });
 });
