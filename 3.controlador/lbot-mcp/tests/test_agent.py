@@ -300,3 +300,108 @@ class TestReActAgentCameraTool:
         assert result == "Foto tirada."
         assert "tool_call" in [e[0] for e in events]
         assert "tool_result" in [e[0] for e in events]
+
+
+class TestReActAgentOperationalState:
+    @pytest.mark.asyncio
+    async def test_marks_observations_stale_after_move(self, mock_mcp_client):
+        move_payload = json.dumps({
+            "accepted": True,
+            "completed": True,
+            "status": "completed",
+            "needs_reobservation": True,
+            "translated_lbml": "D10F;",
+            "final_state": {"x": 10, "z": 0, "rotation": 0},
+        })
+        mock_mcp_client.call_tool = AsyncMock(return_value=move_payload)
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = "Vou mover."
+            tc = MagicMock()
+            tc.id = "tc-1"
+            tc.function.name = "move"
+            tc.function.arguments = json.dumps({"command": "ande 10cm para frente"})
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Feito."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client)
+            await agent.run("avance um pouco")
+
+        assert agent._operational_state["observations_stale"] is True
+        assert agent._operational_state["last_pose"]["x"] == 10
+
+    @pytest.mark.asyncio
+    async def test_refreshes_proximity_state_from_json_tool_result(self, mock_mcp_client):
+        proximity_payload = json.dumps({
+            "front_cm": 35,
+            "rear_cm": 120,
+            "safe_to_move_forward": True,
+            "safe_to_move_backward": True,
+            "minimum_safe_distance_cm": 20,
+            "robot_position": {"x": 1, "z": 2, "rotation": 90},
+        })
+        mock_mcp_client.call_tool = AsyncMock(return_value=proximity_payload)
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = "Vou medir."
+            tc = MagicMock()
+            tc.id = "tc-1"
+            tc.function.name = "proximity"
+            tc.function.arguments = "{}"
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Ok."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client)
+            await agent.run("veja se esta seguro")
+
+        assert agent._operational_state["last_proximity"]["front_cm"] == 35
+        assert agent._operational_state["observations_stale"] is False
+        assert agent._operational_state["last_pose"]["rotation"] == 90
+
+    def test_injects_operational_summary_before_llm(self, mock_mcp_client):
+        with patch("harness.agent.OpenAI"):
+            agent = ReActAgent(mock_mcp_client)
+            agent._operational_state["current_goal"] = "procure algo amarelo"
+            agent._operational_state["observations_stale"] = True
+            messages = agent._messages_for_llm()
+
+        assert messages[0]["role"] == "system"
+        assert "Resumo operacional atual" in messages[0]["content"]
+        assert "20 cm" in messages[0]["content"]
+        assert "desatualizadas" in messages[0]["content"]

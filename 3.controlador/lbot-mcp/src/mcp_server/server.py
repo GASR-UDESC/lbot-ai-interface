@@ -45,8 +45,9 @@ def main():
     import mcp_server.tools.camera  # noqa: F401
     import mcp_server.tools.proximity  # noqa: F401
     import mcp_server.tools.movement  # noqa: F401
+    import mcp_server.tools.state  # noqa: F401
 
-    logger.info("Tools registradas: camera, proximity, move")
+    logger.info("Tools registradas: camera, proximity, move, state")
     mcp.run(show_banner=False)
 
 

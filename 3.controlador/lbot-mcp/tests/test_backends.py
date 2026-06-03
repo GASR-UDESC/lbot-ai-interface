@@ -75,7 +75,13 @@ class TestSimulatorBackend:
         resp = _make_response(json_data={"connected": True, "image": "iVBORbase64fake"})
         _mock_async_client(backend, get_return=resp)
         result = await backend.get_camera()
-        assert result == {"image": "iVBORbase64fake", "render_method": "unknown", "robot_position": None}
+        assert result == {
+            "image": "iVBORbase64fake",
+            "render_method": "unknown",
+            "robot_position": None,
+            "observation_mode": "unknown",
+            "warning": None,
+        }
 
     @pytest.mark.asyncio
     async def test_get_camera_unavailable(self, backend):
@@ -97,7 +103,14 @@ class TestSimulatorBackend:
         resp = _make_response(json_data={"connected": True, "readings": {"frente": 50.0, "tras": 200.0}})
         _mock_async_client(backend, get_return=resp)
         result = await backend.get_proximity()
-        assert result == {"frente": 50.0, "tras": 200.0}
+        assert result == {
+            "front_cm": 50.0,
+            "rear_cm": 200.0,
+            "safe_to_move_forward": True,
+            "safe_to_move_backward": True,
+            "minimum_safe_distance_cm": 20,
+            "robot_position": None,
+        }
 
     @pytest.mark.asyncio
     async def test_get_proximity_unavailable(self, backend):
@@ -108,14 +121,33 @@ class TestSimulatorBackend:
 
     @pytest.mark.asyncio
     async def test_execute_lbml_accepted(self, backend):
-        resp = _make_response(json_data={
-            "accepted": True, "command": "D40F;", "targetClientId": "sim-123",
+        get_resp = _make_response(
+            json_data={
+                "connected": True,
+                "state": {
+                    "x": 0,
+                    "z": 0,
+                    "rotation": 0,
+                    "isAnimating": False,
+                    "currentCommand": "-",
+                    "updatedAt": "2026-01-01T00:00:00Z",
+                    "lastRequestId": "req-123",
+                    "lastCommandStatus": "completed",
+                    "lastCommandMessage": "Sequencia executada com sucesso.",
+                },
+            }
+        )
+        post_resp = _make_response(json_data={
+            "accepted": True, "command": "D40F;", "targetClientId": "sim-123", "requestId": "req-123",
         })
-        _mock_async_client(backend, post_return=resp)
+        mock_client = _mock_async_client(backend, post_return=post_resp)
+        mock_client.get.return_value = get_resp
         result = await backend.execute_lbml("D40F;")
         assert result["accepted"] is True
         assert result["command"] == "D40F;"
-        assert result["status"] == "executado"
+        assert result["status"] == "completed"
+        assert result["completed"] is True
+        assert result["request_id"] == "req-123"
 
     @pytest.mark.asyncio
     async def test_execute_lbml_rejected_409(self, backend):
@@ -123,17 +155,19 @@ class TestSimulatorBackend:
 
         error_resp = MagicMock()
         error_resp.status_code = 409
-        _mock_async_client(
+        mock_client = _mock_async_client(
             backend,
             post_side_effect=httpx.HTTPStatusError("409 Conflict", request=MagicMock(), response=error_resp),
         )
+        mock_client.get.return_value = _make_response(json_data={"connected": True, "state": None})
         with pytest.raises(RuntimeError, match=ERROR_COMMAND_FAILED):
             await backend.execute_lbml("D40F;")
 
     @pytest.mark.asyncio
     async def test_execute_lbml_not_accepted(self, backend):
         resp = _make_response(json_data={"accepted": False, "error": "Comando invalido"})
-        _mock_async_client(backend, post_return=resp)
+        mock_client = _mock_async_client(backend, post_return=resp)
+        mock_client.get.return_value = _make_response(json_data={"connected": True, "state": None})
         with pytest.raises(RuntimeError, match="Comando invalido"):
             await backend.execute_lbml("INVALID")
 
@@ -141,11 +175,28 @@ class TestSimulatorBackend:
     async def test_get_state_returns_dict(self, backend):
         resp = _make_response(json_data={
             "connected": True, "activeClientId": "sim-123",
-            "state": {"x": 100, "z": 50, "rotation": 0},
+            "state": {
+                "x": 100,
+                "z": 50,
+                "rotation": 0,
+                "currentCommand": "-",
+                "isAnimating": False,
+                "updatedAt": "2026-01-01T00:00:00Z",
+            },
         })
         _mock_async_client(backend, get_return=resp)
         result = await backend.get_state()
-        assert result == {"x": 100, "z": 50, "rotation": 0}
+        assert result == {
+            "x": 100,
+            "z": 50,
+            "rotation": 0,
+            "current_command": "-",
+            "is_animating": False,
+            "updated_at": "2026-01-01T00:00:00Z",
+            "last_request_id": None,
+            "last_command_status": None,
+            "last_command_message": None,
+        }
 
     @pytest.mark.asyncio
     async def test_get_state_null(self, backend):
