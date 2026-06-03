@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 _BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+=*$')
 
+_MAX_CONTEXT_TOKENS = int(os.environ.get("LBOT_MAX_CONTEXT_TOKENS", "4000"))
+_APPROX_CHARS_PER_TOKEN = 4
+
 
 def _is_valid_base64(s: str) -> bool:
     if not s or len(s) < 100:
@@ -50,6 +53,45 @@ def _strip_images(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return stripped
 
 
+def _estimate_tokens(messages: list[dict[str, Any]]) -> int:
+    total = 0
+    for msg in messages:
+        content = msg.get("content")
+        if isinstance(content, str):
+            total += len(content) // _APPROX_CHARS_PER_TOKEN
+        elif isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict):
+                    if part.get("type") == "text":
+                        total += len(part.get("text", "")) // _APPROX_CHARS_PER_TOKEN
+                    elif part.get("type") == "image_url":
+                        total += 500
+        if msg.get("tool_calls"):
+            for tc in msg["tool_calls"]:
+                fn = tc.get("function", {})
+                total += len(fn.get("name", "")) // _APPROX_CHARS_PER_TOKEN
+                total += len(fn.get("arguments", "")) // _APPROX_CHARS_PER_TOKEN
+    return total
+
+
+def _trim_messages(messages: list[dict[str, Any]], max_tokens: int) -> list[dict[str, Any]]:
+    if not messages:
+        return messages
+    if messages[0].get("role") == "system":
+        system_msg = messages[0]
+        rest = messages[1:]
+    else:
+        system_msg = None
+        rest = messages
+
+    while rest and _estimate_tokens([system_msg] + rest if system_msg else rest) > max_tokens:
+        rest = rest[1:]
+
+    if system_msg:
+        return [system_msg] + rest
+    return rest
+
+
 class ReActAgent:
     def __init__(
         self,
@@ -64,6 +106,9 @@ class ReActAgent:
         self._max_steps = max_steps
         self._verbose = verbose
         self._cancelled = False
+        self._messages: list[dict[str, Any]] = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+        ]
 
         base_url = base_url or os.environ.get(
             "LBOT_LLM_URL", "http://127.0.0.1:1234/v1"
@@ -78,14 +123,53 @@ class ReActAgent:
     def cancel(self):
         self._cancelled = True
 
+    def reset(self):
+        self._messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    @property
+    def history(self) -> list[dict[str, Any]]:
+        return list(self._messages)
+
+    @property
+    def history_summary(self) -> str:
+        lines = []
+        for i, msg in enumerate(self._messages):
+            role = msg.get("role", "?")
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                parts = []
+                for part in content:
+                    if isinstance(part, dict):
+                        if part.get("type") == "text":
+                            parts.append(part.get("text", "")[:80])
+                        elif part.get("type") == "image_url":
+                            parts.append("[imagem]")
+                content = " | ".join(parts)
+            elif isinstance(content, str):
+                content = content[:80]
+            else:
+                content = str(content)[:80]
+
+            if role == "tool":
+                name = msg.get("name", "")
+                lines.append(f"  [{i}] tool({name}): {content}")
+            elif role == "assistant":
+                tc = msg.get("tool_calls")
+                if tc:
+                    names = [t.get("function", {}).get("name", "?") for t in tc]
+                    lines.append(f"  [{i}] assistant → chamou {', '.join(names)}")
+                else:
+                    lines.append(f"  [{i}] assistant: {content}")
+            else:
+                lines.append(f"  [{i}] {role}: {content}")
+        return "\n".join(lines)
+
     async def run(self, goal: str, max_steps: int | None = None) -> str:
         max_steps = max_steps if max_steps is not None else self._max_steps
         self._cancelled = False
 
-        messages: list[dict[str, Any]] = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": goal},
-        ]
+        self._messages.append({"role": "user", "content": goal})
+        self._messages = _trim_messages(self._messages, _MAX_CONTEXT_TOKENS)
 
         step = 0
         while step < max_steps:
@@ -93,6 +177,7 @@ class ReActAgent:
                 return "Interrompido."
 
             step += 1
+            messages = self._messages
 
             try:
                 response = self._llm.chat.completions.create(
@@ -105,7 +190,7 @@ class ReActAgent:
                 error_msg = str(e)
                 if "does not support image" in error_msg.lower() or "image input" in error_msg.lower():
                     logger.warning("Modelo não suporta imagem, removendo conteúdo de imagem e tentando novamente: %s", error_msg)
-                    messages_no_image = self._strip_images(messages)
+                    messages_no_image = _strip_images(messages)
                     try:
                         response = self._llm.chat.completions.create(
                             model=self._model,
@@ -132,10 +217,11 @@ class ReActAgent:
                 )
 
             if message.content and not message.tool_calls:
+                self._messages.append({"role": "assistant", "content": message.content})
                 return message.content
 
             if message.tool_calls:
-                messages.append({
+                self._messages.append({
                     "role": "assistant",
                     "content": message.content,
                     "tool_calls": [
@@ -195,7 +281,7 @@ class ReActAgent:
                             image_base64 = result
 
                         if camera_error:
-                            messages.append({
+                            self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": f"Erro ao capturar imagem: {camera_error}",
@@ -214,7 +300,7 @@ class ReActAgent:
                             elif render_method == "webgl":
                                 render_desc = " A imagem é uma visão em primeira pessoa (3D) da câmera frontal do robô."
 
-                            messages.append({
+                            self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": "Imagem capturada com sucesso.",
@@ -225,24 +311,25 @@ class ReActAgent:
                                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}},
                             ]
 
-                            messages.append({
+                            self._messages.append({
                                 "role": "user",
                                 "content": image_content,
                             })
                         else:
-                            messages.append({
+                            self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": "Erro: a imagem capturada não pôde ser processada (dados de imagem inválidos ou ausentes).",
                             })
                     else:
-                        messages.append({
+                        self._messages.append({
                             "role": "tool",
                             "tool_call_id": tc.id,
                             "content": result,
                         })
             else:
                 if message.content:
+                    self._messages.append({"role": "assistant", "content": message.content})
                     return message.content
                 return "Não consegui processar sua solicitação."
 

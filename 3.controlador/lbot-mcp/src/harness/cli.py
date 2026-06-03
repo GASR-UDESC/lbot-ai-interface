@@ -19,9 +19,11 @@ BANNER = """
 ║                                                  ║
 ║  Conecte-se ao seu robô e explore o mundo!       ║
 ║  Comandos especiais:                             ║
-║    /help   - Mostra esta ajuda                   ║
-║    /tools  - Lista ferramentas disponíveis       ║
-║    /exit   - Encerra o harness                   ║
+║    /help    - Mostra esta ajuda                   ║
+║    /tools   - Lista ferramentas disponíveis       ║
+║    /reset   - Limpa o histórico de conversa       ║
+║    /history - Mostra o histórico de conversa      ║
+║    /exit    - Encerra o harness                   ║
 ╚══════════════════════════════════════════════════╝
 """
 
@@ -30,14 +32,18 @@ Comandos disponíveis:
 
   /help     Mostra esta ajuda
   /tools    Lista as ferramentas MCP disponíveis
+  /reset    Limpa o histórico de conversa (o robô esquece tudo)
+  /history  Mostra o histórico de mensagens da conversa
   /exit     Encerra o harness (também /quit ou Ctrl+D)
 
-Você pode conversar com o robô em linguagem natural. Exemplos:
+Você pode conversar com o robô em linguagem natural. O robô mantém
+memória da conversa entre comandos. Exemplos:
 
   • "tire uma foto"
   • "me diga a distância até a parede"
   • "ande 30cm para frente"
-  • "explore a sala e me diga o que você vê"
+  • "gira 180 graus, olha na câmera, se ver bola amarela anda 20cm pra direita"
+  • "procure algo vermelho na sala"
 
 O robô usará seus sensores, câmera e motores para responder da melhor
 forma possível. Pressione Ctrl+C durante uma execução para interromper
@@ -117,6 +123,15 @@ async def _run_repl(client: MCPClient):
                 break
             elif cmd == "/help":
                 print(HELP_TEXT)
+            elif cmd == "/reset":
+                agent.reset()
+                print("Histórico limpo! O robô esqueceu tudo da conversa anterior.\n")
+            elif cmd == "/history":
+                summary = agent.history_summary
+                if summary:
+                    print(f"\nHistórico de conversa:\n{summary}\n")
+                else:
+                    print("\nNenhum histórico ainda.\n")
             elif cmd == "/tools":
                 try:
                     tools = await client.list_tools()
