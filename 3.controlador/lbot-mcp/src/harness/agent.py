@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import re
-import unicodedata
 from copy import deepcopy
 from typing import Any, Callable
 
@@ -236,163 +235,6 @@ def _format_float(value: Any) -> str:
     return "desconhecido"
 
 
-def _normalize_text(text: str) -> str:
-    return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii").lower()
-
-
-def _extract_visual_direction(text: str | None) -> str | None:
-    if not text:
-        return None
-    normalized = _normalize_text(text)
-    left_patterns = [
-        r"esta a esquerda",
-        r"esta a esquerda da imagem",
-        r"visivel a esquerda",
-        r"objeto a esquerda",
-        r"alvo a esquerda",
-        r"esfera .* a esquerda",
-    ]
-    right_patterns = [
-        r"esta a direita",
-        r"esta a direita da imagem",
-        r"visivel a direita",
-        r"objeto a direita",
-        r"alvo a direita",
-        r"esfera .* a direita",
-    ]
-    if any(re.search(pattern, normalized) for pattern in left_patterns):
-        return "left"
-    if any(re.search(pattern, normalized) for pattern in right_patterns):
-        return "right"
-    if "esquerda" in normalized and "direita" not in normalized:
-        return "left"
-    if "direita" in normalized and "esquerda" not in normalized:
-        return "right"
-    return None
-
-
-def _extract_rotation_direction(command: str | None) -> str | None:
-    if not command:
-        return None
-    normalized = _normalize_text(command)
-    if not any(keyword in normalized for keyword in ("gire", "girar", "vire", "virar")):
-        return None
-    if "esquerda" in normalized and "direita" not in normalized:
-        return "left"
-    if "direita" in normalized and "esquerda" not in normalized:
-        return "right"
-    return None
-
-
-def _build_alignment_guardrail_error(visual_direction: str, command: str) -> str:
-    side = "esquerda" if visual_direction == "left" else "direita"
-    correction = "esquerda" if visual_direction == "left" else "direita"
-    return json.dumps(
-        {
-            "accepted": False,
-            "completed": False,
-            "status": "guardrail_blocked",
-            "needs_reobservation": False,
-            "error": (
-                f"Inconsistencia de centralizacao: voce disse que o alvo esta a {side} da imagem, "
-                f"mas tentou executar '{command}'. Se o alvo esta a {side}, o giro correto para centralizar "
-                f"e para a {correction}. Corrija o sentido do giro, use um angulo pequeno e observe novamente."
-            ),
-        },
-        ensure_ascii=False,
-    )
-
-
-def _is_forward_motion_command(command: str | None) -> bool:
-    if not command:
-        return False
-    normalized = _normalize_text(command)
-    has_forward = any(keyword in normalized for keyword in ("frente", "avancar", "avance", "andar para frente", "ande para frente"))
-    has_move = any(keyword in normalized for keyword in ("ande", "andar", "avance", "avancar", "mova", "ir"))
-    return has_forward and has_move
-
-
-def _is_strictly_centered_text(text: str | None) -> bool:
-    if not text:
-        return False
-    normalized = _normalize_text(text)
-    positive_patterns = [
-        r"estritamente centraliz",
-        r"totalmente centraliz",
-        r"dentro do reticulo",
-        r"alinhad[oa] de forma inequivoca com o reticulo",
-        r"no centro do reticulo",
-        r"centralizad[oa] no reticulo",
-    ]
-    negative_patterns = [
-        r"a esquerda",
-        r"a direita",
-        r"ainda nao esta centraliz",
-        r"nao esta centraliz",
-        r"fora do reticulo",
-        r"parcialmente fora",
-        r"mais proxima do centro",
-        r"aproximadamente centraliz",
-    ]
-    if any(re.search(pattern, normalized) for pattern in negative_patterns):
-        return False
-    return any(re.search(pattern, normalized) for pattern in positive_patterns)
-
-
-def _mentions_visual_target_alignment(text: str | None) -> bool:
-    if not text:
-        return False
-    normalized = _normalize_text(text)
-    keywords = (
-        "reticulo",
-        "imagem",
-        "camera",
-        "centraliz",
-        "alinh",
-        "esfera",
-        "objeto",
-        "alvo",
-        "visao",
-    )
-    return any(keyword in normalized for keyword in keywords)
-
-
-def _build_forward_alignment_guardrail_error(command: str) -> str:
-    return json.dumps(
-        {
-            "accepted": False,
-            "completed": False,
-            "status": "guardrail_blocked",
-            "needs_reobservation": True,
-            "error": (
-                f"Avanco bloqueado por seguranca visual: voce tentou executar '{command}', mas nao comprovou "
-                "que o alvo esta estritamente centralizado dentro do reticulo. Se houver qualquer desvio lateral, "
-                "o sensor frontal pode estar apontando para a parede. Reobserve com a camera, confirme alinhamento "
-                "estrito e so entao avance."
-            ),
-        },
-        ensure_ascii=False,
-    )
-
-
-def _build_continuation_prompt(partial_content: str | None) -> str:
-    base_prompt = (
-        "Seu passo anterior foi interrompido por limite de tokens antes de concluir a tarefa. "
-        "Continue exatamente de onde parou. Se a tarefa ainda nao terminou, nao encerre cedo: "
-        "observe, mova e valide quantas vezes forem necessarias ate concluir ou declarar claramente "
-        "que nao foi possivel concluir."
-    )
-    if partial_content:
-        return f"{base_prompt} Ultimo texto interrompido: {partial_content}"
-    return base_prompt
-
-
-def _is_continuation_prompt(msg: dict[str, Any]) -> bool:
-    return msg.get("role") == "user" and isinstance(msg.get("content"), str) and msg.get(
-        "content", ""
-    ).startswith("Seu passo anterior foi interrompido por limite de tokens")
-
-
 class ReActAgent:
     def __init__(
         self,
@@ -413,7 +255,6 @@ class ReActAgent:
             {"role": "system", "content": SYSTEM_PROMPT},
         ]
         self._operational_state = self._new_operational_state()
-        self._pending_camera_message: dict[str, Any] | None = None
 
         base_url = base_url or os.environ.get(
             "LBOT_LLM_URL", "http://127.0.0.1:1234/v1"
@@ -432,7 +273,6 @@ class ReActAgent:
             "last_pose": None,
             "last_proximity": None,
             "last_camera": None,
-            "last_visual_summary": None,
             "last_action": None,
             "last_action_result": None,
             "recent_actions": [],
@@ -452,7 +292,6 @@ class ReActAgent:
     def reset(self):
         self._messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         self._operational_state = self._new_operational_state()
-        self._pending_camera_message = None
 
     def _record_action(self, tool_name: str, summary: str, raw: Any) -> None:
         entry = {"tool": tool_name, "summary": summary}
@@ -487,36 +326,6 @@ class ReActAgent:
         self._update_pose(camera_data.get("robot_position"))
         self._operational_state["observations_stale"] = False
 
-    def _set_visual_summary(self, summary: str) -> None:
-        self._operational_state["last_visual_summary"] = summary[:240]
-
-    def _compact_history(self) -> None:
-        compacted: list[dict[str, Any]] = []
-        latest_continuation: dict[str, Any] | None = None
-        for msg in self._messages:
-            if _is_continuation_prompt(msg):
-                latest_continuation = msg
-                continue
-            compacted.append(msg)
-
-        if latest_continuation is not None:
-            compacted.append(latest_continuation)
-
-        self._messages = _trim_messages(compacted, _MAX_CONTEXT_TOKENS)
-
-    def _append_message(self, message: dict[str, Any], *, compact: bool = True) -> None:
-        self._messages.append(message)
-        if compact:
-            self._compact_history()
-
-    def _consume_pending_camera_message(self) -> dict[str, Any] | None:
-        pending = self._pending_camera_message
-        self._pending_camera_message = None
-        return pending
-
-    def _clear_pending_camera_message(self) -> None:
-        self._pending_camera_message = None
-
     def _update_proximity_state(self, proximity_data: dict[str, Any]) -> None:
         self._operational_state["last_proximity"] = {
             "front_cm": proximity_data.get("front_cm"),
@@ -541,7 +350,6 @@ class ReActAgent:
         pose = state.get("last_pose")
         proximity = state.get("last_proximity")
         camera = state.get("last_camera")
-        visual_summary = state.get("last_visual_summary")
 
         pose_text = "Pose desconhecida."
         if pose:
@@ -569,8 +377,6 @@ class ReActAgent:
                 + (f", aviso={warning}" if warning else "")
                 + "."
             )
-            if visual_summary:
-                camera_text += f" Resumo visual: {visual_summary}."
 
         recent_actions = state.get("recent_actions") or []
         actions_text = "; ".join(
@@ -610,10 +416,6 @@ class ReActAgent:
             }
         else:
             messages.insert(0, {"role": "system", "content": operational_context})
-
-        pending_camera_message = self._consume_pending_camera_message()
-        if pending_camera_message is not None:
-            messages.append(pending_camera_message)
         return messages
 
     @property
@@ -659,7 +461,8 @@ class ReActAgent:
         self._cancelled = False
         self._operational_state["current_goal"] = goal
 
-        self._append_message({"role": "user", "content": goal})
+        self._messages.append({"role": "user", "content": goal})
+        self._messages = _trim_messages(self._messages, _MAX_CONTEXT_TOKENS)
 
         self._emit("goal", {"goal": goal})
 
@@ -738,33 +541,13 @@ class ReActAgent:
                     message.content[:100] if message.content else None,
                 )
 
-            if finish_reason == "length" and not message.tool_calls:
-                if message.content:
-                    self._append_message({"role": "assistant", "content": message.content})
-                self._append_message({
-                    "role": "user",
-                    "content": _build_continuation_prompt(message.content),
-                })
-                self._emit(
-                    "llm_request_retry",
-                    {"step": step, "reason": "resposta truncada por limite de tokens"},
-                )
-                continue
-
             if message.content and not message.tool_calls:
-                self._append_message({"role": "assistant", "content": message.content})
+                self._messages.append({"role": "assistant", "content": message.content})
                 self._emit("final_answer", {"step": step, "content": message.content})
                 return message.content
 
             if message.tool_calls:
-                if message.content:
-                    normalized_content = _normalize_text(message.content)
-                    if "esfera azul" in normalized_content and "esquerda" in normalized_content:
-                        self._set_visual_summary("esfera azul visivel a esquerda do reticulo")
-                    elif "esfera azul" in normalized_content and "direita" in normalized_content:
-                        self._set_visual_summary("esfera azul visivel a direita do reticulo")
-
-                self._append_message({
+                self._messages.append({
                     "role": "assistant",
                     "content": message.content,
                     "tool_calls": [
@@ -795,31 +578,9 @@ class ReActAgent:
 
                     try:
                         if tool_name == "move":
-                            visual_direction = _extract_visual_direction(message.content)
-                            rotation_direction = _extract_rotation_direction(
-                                raw_args.get("command", "")
+                            result = await self._mcp.call_tool(
+                                "move", {"command": raw_args.get("command", "")}
                             )
-                            if (
-                                visual_direction is not None
-                                and rotation_direction is not None
-                                and visual_direction != rotation_direction
-                            ):
-                                result = _build_alignment_guardrail_error(
-                                    visual_direction,
-                                    raw_args.get("command", ""),
-                                )
-                            elif (
-                                _is_forward_motion_command(raw_args.get("command", ""))
-                                and _mentions_visual_target_alignment(message.content)
-                                and not _is_strictly_centered_text(message.content)
-                            ):
-                                result = _build_forward_alignment_guardrail_error(
-                                    raw_args.get("command", "")
-                                )
-                            else:
-                                result = await self._mcp.call_tool(
-                                    "move", {"command": raw_args.get("command", "")}
-                                )
                         else:
                             result = await self._mcp.call_tool(tool_name, raw_args)
                     except Exception as e:
@@ -868,7 +629,7 @@ class ReActAgent:
 
                         if camera_error:
                             self._record_action("camera", f"erro: {camera_error}", camera_data or result)
-                            self._append_message({
+                            self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": f"Erro ao capturar imagem: {camera_error}",
@@ -895,18 +656,13 @@ class ReActAgent:
                             if warning:
                                 render_desc += f" Aviso: {warning}"
 
-                            visual_summary = (
-                                f"Observacao visual recente em modo {observation_mode or render_method}."
-                                f"{pos_text} Use o reticulo central para decidir alinhamento antes de usar front_cm como distancia ao alvo."
-                            )
-                            self._set_visual_summary(visual_summary)
                             self._record_action(
                                 "camera",
                                 f"captura ok em modo {observation_mode or render_method}",
                                 camera_data,
                             )
 
-                            self._append_message({
+                            self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": "Imagem capturada com sucesso.",
@@ -917,17 +673,13 @@ class ReActAgent:
                                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}},
                             ]
 
-                            self._pending_camera_message = {
+                            self._messages.append({
                                 "role": "user",
                                 "content": image_content,
-                            }
-                            self._append_message({
-                                "role": "user",
-                                "content": f"Aqui está a observação visual mais recente do robô.{render_desc}{pos_text} [imagem da câmera disponível apenas nesta rodada]",
                             })
                         else:
                             self._record_action("camera", "imagem invalida", camera_data or result)
-                            self._append_message({
+                            self._messages.append({
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": "Erro: a imagem capturada não pôde ser processada (dados de imagem inválidos ou ausentes).",
@@ -948,7 +700,7 @@ class ReActAgent:
                                 f"erro: {(structured_result or {}).get('error', result)}",
                                 structured_result or result,
                             )
-                        self._append_message({
+                        self._messages.append({
                             "role": "tool",
                             "tool_call_id": tc.id,
                             "content": result,
@@ -959,14 +711,13 @@ class ReActAgent:
                             status = structured_result.get("status", "unknown")
                             summary = structured_result.get("summary") or status
                             self._record_action("move", summary, structured_result)
-                            self._clear_pending_camera_message()
                         else:
                             self._record_action(
                                 "move",
                                 f"erro: {(structured_result or {}).get('error', result)}",
                                 structured_result or result,
                             )
-                        self._append_message({
+                        self._messages.append({
                             "role": "tool",
                             "tool_call_id": tc.id,
                             "content": result,
@@ -985,21 +736,21 @@ class ReActAgent:
                                 f"erro: {(structured_result or {}).get('error', result)}",
                                 structured_result or result,
                             )
-                        self._append_message({
+                        self._messages.append({
                             "role": "tool",
                             "tool_call_id": tc.id,
                             "content": result,
                         })
                     else:
                         self._record_action(tool_name, "resultado recebido", structured_result or result)
-                        self._append_message({
+                        self._messages.append({
                             "role": "tool",
                             "tool_call_id": tc.id,
                             "content": result,
                         })
             else:
                 if message.content:
-                    self._append_message({"role": "assistant", "content": message.content})
+                    self._messages.append({"role": "assistant", "content": message.content})
                     self._emit("final_answer", {"step": step, "content": message.content})
                     return message.content
                 return "Não consegui processar sua solicitação."

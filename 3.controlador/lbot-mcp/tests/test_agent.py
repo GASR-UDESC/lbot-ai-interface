@@ -3,7 +3,6 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from harness.agent import ReActAgent, _summarize_messages
-from harness.personality import SYSTEM_PROMPT
 
 
 @pytest.fixture
@@ -43,21 +42,6 @@ class TestSummarizeMessages:
         result = _summarize_messages(msgs)
         assert len(result) == 3
         assert result[0]["role"] == "system"
-
-
-class TestSystemPrompt:
-    def test_mentions_reticle_and_sensor_alignment(self):
-        assert "retículo" in SYSTEM_PROMPT
-        assert "sensor de proximidade frontal" in SYSTEM_PROMPT
-        assert "retículo central" in SYSTEM_PROMPT
-
-    def test_mentions_recovery_when_target_is_lost(self):
-        assert "perder de vista" in SYSTEM_PROMPT
-        assert "90 em 90 graus" in SYSTEM_PROMPT
-
-    def test_mentions_strict_centering_before_forward_motion(self):
-        assert "estritamente centralizado" in SYSTEM_PROMPT
-        assert "totalmente dentro do retículo" in SYSTEM_PROMPT or "totalmente dentro do reticulo" in SYSTEM_PROMPT
 
 
 class TestReActAgentEvents:
@@ -316,29 +300,6 @@ class TestReActAgentCameraTool:
         assert result == "Foto tirada."
         assert "tool_call" in [e[0] for e in events]
         assert "tool_result" in [e[0] for e in events]
-        assert agent._pending_camera_message is None
-        assert all(
-            not isinstance(msg.get("content"), list)
-            for msg in agent.history
-        )
-
-    def test_pending_camera_message_is_only_injected_once(self, mock_mcp_client):
-        with patch("harness.agent.OpenAI"):
-            agent = ReActAgent(mock_mcp_client)
-            agent._pending_camera_message = {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "imagem recente"},
-                    {"type": "image_url", "image_url": {"url": "data:image/png;base64,abc"}},
-                ],
-            }
-
-            first_messages = agent._messages_for_llm()
-            second_messages = agent._messages_for_llm()
-
-        assert isinstance(first_messages[-1]["content"], list)
-        assert all(not isinstance(msg.get("content"), list) for msg in second_messages)
-        assert agent._pending_camera_message is None
 
 
 class TestReActAgentOperationalState:
@@ -444,143 +405,3 @@ class TestReActAgentOperationalState:
         assert "Resumo operacional atual" in messages[0]["content"]
         assert "20 cm" in messages[0]["content"]
         assert "desatualizadas" in messages[0]["content"]
-
-    @pytest.mark.asyncio
-    async def test_blocks_rotation_when_it_contradicts_visual_side(self, mock_mcp_client):
-        with patch("harness.agent.OpenAI") as MockOpenAI:
-            mock_llm = MagicMock()
-
-            msg1 = MagicMock()
-            msg1.content = (
-                "A esfera azul esta a esquerda da imagem e ainda nao esta centralizada. "
-                "Vou girar 10 graus para a direita."
-            )
-            tc = MagicMock()
-            tc.id = "tc-1"
-            tc.function.name = "move"
-            tc.function.arguments = json.dumps({"command": "vire 10 graus para direita"})
-            msg1.tool_calls = [tc]
-            choice1 = MagicMock()
-            choice1.message = msg1
-            choice1.finish_reason = "tool_calls"
-
-            msg2 = MagicMock()
-            msg2.content = "Corrigi o sentido do giro."
-            msg2.tool_calls = None
-            choice2 = MagicMock()
-            choice2.message = msg2
-            choice2.finish_reason = "stop"
-
-            mock_llm.chat.completions.create.side_effect = [
-                MagicMock(choices=[choice1]),
-                MagicMock(choices=[choice2]),
-            ]
-            MockOpenAI.return_value = mock_llm
-
-            agent = ReActAgent(mock_mcp_client)
-            result = await agent.run("centralize a esfera azul")
-
-        assert result == "Corrigi o sentido do giro."
-        mock_mcp_client.call_tool.assert_not_called()
-        tool_message = next(msg for msg in agent.history if msg.get("role") == "tool")
-        assert "guardrail_blocked" in tool_message["content"]
-        assert "esquerda" in tool_message["content"]
-
-    @pytest.mark.asyncio
-    async def test_continues_when_finish_reason_is_length(self, mock_mcp_client):
-        with patch("harness.agent.OpenAI") as MockOpenAI:
-            mock_llm = MagicMock()
-
-            msg1 = MagicMock()
-            msg1.content = "Encontrei a esfera azul! Está visível à esquerda"
-            msg1.tool_calls = None
-            choice1 = MagicMock()
-            choice1.message = msg1
-            choice1.finish_reason = "length"
-
-            msg2 = MagicMock()
-            msg2.content = "Vou continuar a tarefa."
-            tc = MagicMock()
-            tc.id = "tc-1"
-            tc.function.name = "camera"
-            tc.function.arguments = "{}"
-            msg2.tool_calls = [tc]
-            choice2 = MagicMock()
-            choice2.message = msg2
-            choice2.finish_reason = "tool_calls"
-
-            msg3 = MagicMock()
-            msg3.content = "Conclui a tarefa."
-            msg3.tool_calls = None
-            choice3 = MagicMock()
-            choice3.message = msg3
-            choice3.finish_reason = "stop"
-
-            mock_mcp_client.call_tool = AsyncMock(return_value=json.dumps({
-                "image": "iVBORw0KGgo=" + "A" * 200,
-                "render_method": "webgl",
-                "robot_position": {"x": 0, "z": 0, "rotation": 0},
-                "observation_mode": "first_person",
-            }))
-
-            mock_llm.chat.completions.create.side_effect = [
-                MagicMock(choices=[choice1]),
-                MagicMock(choices=[choice2]),
-                MagicMock(choices=[choice3]),
-            ]
-            MockOpenAI.return_value = mock_llm
-
-            agent = ReActAgent(mock_mcp_client)
-            result = await agent.run("procure a esfera azul e chegue nela")
-
-        assert result == "Conclui a tarefa."
-        assert mock_llm.chat.completions.create.call_count == 3
-        continuation_messages = [
-            msg for msg in agent.history
-            if msg.get("role") == "user" and "Continue exatamente de onde parou" in str(msg.get("content"))
-        ]
-        assert len(continuation_messages) == 1
-        assert any(
-            msg.get("role") == "user" and "Continue exatamente de onde parou" in str(msg.get("content"))
-            for msg in agent.history
-        )
-
-    @pytest.mark.asyncio
-    async def test_blocks_forward_motion_without_strict_centering(self, mock_mcp_client):
-        with patch("harness.agent.OpenAI") as MockOpenAI:
-            mock_llm = MagicMock()
-
-            msg1 = MagicMock()
-            msg1.content = (
-                "A esfera azul esta mais proxima do centro, mas ainda nao esta totalmente dentro do reticulo. "
-                "Vou andar 10 cm para frente."
-            )
-            tc = MagicMock()
-            tc.id = "tc-1"
-            tc.function.name = "move"
-            tc.function.arguments = json.dumps({"command": "ande 10 cm para frente"})
-            msg1.tool_calls = [tc]
-            choice1 = MagicMock()
-            choice1.message = msg1
-            choice1.finish_reason = "tool_calls"
-
-            msg2 = MagicMock()
-            msg2.content = "Vou recentralizar antes de avancar."
-            msg2.tool_calls = None
-            choice2 = MagicMock()
-            choice2.message = msg2
-            choice2.finish_reason = "stop"
-
-            mock_llm.chat.completions.create.side_effect = [
-                MagicMock(choices=[choice1]),
-                MagicMock(choices=[choice2]),
-            ]
-            MockOpenAI.return_value = mock_llm
-
-            agent = ReActAgent(mock_mcp_client)
-            result = await agent.run("chegue perto da esfera azul")
-
-        assert result == "Vou recentralizar antes de avancar."
-        mock_mcp_client.call_tool.assert_not_called()
-        tool_message = next(msg for msg in agent.history if msg.get("role") == "tool")
-        assert "Avanco bloqueado por seguranca visual" in tool_message["content"]
