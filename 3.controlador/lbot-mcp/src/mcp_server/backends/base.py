@@ -5,7 +5,7 @@ from typing import Any
 class LBotBackend(ABC):
 
     @abstractmethod
-    async def get_camera(self) -> str:
+    async def get_camera(self) -> dict:
         ...
 
     @abstractmethod

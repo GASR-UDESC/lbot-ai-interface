@@ -75,7 +75,7 @@ class TestSimulatorBackend:
         resp = _make_response(json_data={"connected": True, "image": "iVBORbase64fake"})
         _mock_async_client(backend, get_return=resp)
         result = await backend.get_camera()
-        assert result == "iVBORbase64fake"
+        assert result == {"image": "iVBORbase64fake", "render_method": "unknown", "robot_position": None}
 
     @pytest.mark.asyncio
     async def test_get_camera_unavailable(self, backend):

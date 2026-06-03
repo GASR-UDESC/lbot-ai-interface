@@ -7,11 +7,29 @@ import type { SimulatorSnapshot, StatusMessage } from './types.js';
 const ROBOT_SPEED = 30;
 const ROTATION_SPEED = 90;
 
+type AnimationKind = 'movement' | 'rotation';
+
+interface ActiveAnimation {
+  kind: AnimationKind;
+  startTime: number;
+  duration: number;
+  startPosX: number;
+  startPosZ: number;
+  targetPosX: number;
+  targetPosY: number;
+  targetPosZ: number;
+  startRotation: number;
+  targetRotation: number;
+  resolve: (completed: boolean) => void;
+  runToken: number;
+}
+
 export class SimulatorEngine {
   private readonly world: CANNON.World;
   private readonly robotBody: CANNON.Body;
   private readonly robotGroup: THREE.Group;
   private executionToken = 0;
+  private activeAnimation: ActiveAnimation | null = null;
   private readonly state: SimulatorSnapshot = {
     x: 0,
     z: 0,
@@ -40,7 +58,6 @@ export class SimulatorEngine {
     this.robotBody.angularDamping = 0.99;
     this.world.addBody(this.robotBody);
 
-    // Add arena objects physical bodies
     for (const obj of ARENA_OBJECTS) {
       let shape: CANNON.Shape;
       let yPos: number;
@@ -65,7 +82,6 @@ export class SimulatorEngine {
       this.world.addBody(body);
     }
 
-    // Add physical walls
     for (const wall of PHYSICAL_WALLS) {
       const body = new CANNON.Body({ mass: 0 });
       body.addShape(new CANNON.Box(new CANNON.Vec3(wall.width / 2, wall.height / 2, wall.depth / 2)));
@@ -84,12 +100,59 @@ export class SimulatorEngine {
     this.world.step(1 / 60);
     this.robotBody.angularVelocity.x = 0;
     this.robotBody.angularVelocity.z = 0;
+
+    if (this.activeAnimation) {
+      const anim = this.activeAnimation;
+      const elapsed = performance.now() - anim.startTime;
+      const progress = Math.min(elapsed / anim.duration, 1);
+      const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+      if (anim.runToken !== this.executionToken) {
+        this.activeAnimation = null;
+        anim.resolve(false);
+      } else if (progress >= 1) {
+        this.activeAnimation = null;
+
+        if (anim.kind === 'movement') {
+          this.robotBody.position.x = anim.targetPosX;
+          this.robotBody.position.z = anim.targetPosZ;
+          this.robotBody.velocity.x = 0;
+          this.robotBody.velocity.z = 0;
+        } else {
+          this.state.rotation = anim.targetRotation;
+          const quaternion = new CANNON.Quaternion();
+          quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (anim.targetRotation * Math.PI) / 180);
+          this.robotBody.quaternion.copy(quaternion);
+        }
+
+        this.syncVisual();
+        this.updateStateFromBody();
+        anim.resolve(true);
+      } else {
+        if (anim.kind === 'movement') {
+          this.robotBody.position.x = anim.startPosX + (anim.targetPosX - anim.startPosX) * eased;
+          this.robotBody.position.z = anim.startPosZ + (anim.targetPosZ - anim.startPosZ) * eased;
+          this.robotBody.velocity.x = 0;
+          this.robotBody.velocity.z = 0;
+        } else {
+          const currentRotation = anim.startRotation + (anim.targetRotation - anim.startRotation) * eased;
+          const quaternion = new CANNON.Quaternion();
+          quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (currentRotation * Math.PI) / 180);
+          this.robotBody.quaternion.copy(quaternion);
+        }
+
+        this.syncVisual();
+        this.updateStateFromBody();
+      }
+    }
+
     this.syncVisual();
     this.updateStateFromBody();
   }
 
   reset(): void {
     this.executionToken += 1;
+    this.activeAnimation = null;
     this.robotBody.position.set(0, 6, 0);
     this.robotBody.velocity.set(0, 0, 0);
     this.robotBody.angularVelocity.set(0, 0, 0);
@@ -194,71 +257,39 @@ export class SimulatorEngine {
     runToken: number,
   ): Promise<boolean> {
     return new Promise((resolve) => {
-      const startTime = performance.now();
-      const duration = (distance / ROBOT_SPEED) * 1000;
-      const startPos = this.robotBody.position.clone();
-      const targetPos = new CANNON.Vec3(targetX, this.robotBody.position.y, targetZ);
-
-      const animate = () => {
-        if (runToken !== this.executionToken) {
-          resolve(false);
-          return;
-        }
-
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-        this.robotBody.position.x = startPos.x + (targetPos.x - startPos.x) * eased;
-        this.robotBody.position.z = startPos.z + (targetPos.z - startPos.z) * eased;
-        this.robotBody.velocity.x = 0;
-        this.robotBody.velocity.z = 0;
-        this.syncVisual();
-        this.updateStateFromBody();
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-          return;
-        }
-
-        resolve(true);
+      this.activeAnimation = {
+        kind: 'movement',
+        startTime: performance.now(),
+        duration: (distance / ROBOT_SPEED) * 1000,
+        startPosX: this.robotBody.position.x,
+        startPosZ: this.robotBody.position.z,
+        targetPosX: targetX,
+        targetPosY: this.robotBody.position.y,
+        targetPosZ: targetZ,
+        startRotation: this.state.rotation,
+        targetRotation: this.state.rotation,
+        resolve,
+        runToken,
       };
-
-      requestAnimationFrame(animate);
     });
   }
 
   private animateRotation(targetRotation: number, angle: number, runToken: number): Promise<boolean> {
     return new Promise((resolve) => {
-      const duration = (Math.abs(angle) / ROTATION_SPEED) * 1000;
-      const startTime = performance.now();
-      const startRotation = this.state.rotation;
-
-      const animate = () => {
-        if (runToken !== this.executionToken) {
-          resolve(false);
-          return;
-        }
-
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const currentRotation = startRotation + (targetRotation - startRotation) * progress;
-        const quaternion = new CANNON.Quaternion();
-        quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (currentRotation * Math.PI) / 180);
-        this.robotBody.quaternion.copy(quaternion);
-        this.syncVisual();
-        this.updateStateFromBody();
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-          return;
-        }
-
-        this.state.rotation = targetRotation;
-        resolve(true);
+      this.activeAnimation = {
+        kind: 'rotation',
+        startTime: performance.now(),
+        duration: (Math.abs(angle) / ROTATION_SPEED) * 1000,
+        startPosX: this.robotBody.position.x,
+        startPosZ: this.robotBody.position.z,
+        targetPosX: this.robotBody.position.x,
+        targetPosY: this.robotBody.position.y,
+        targetPosZ: this.robotBody.position.z,
+        startRotation: this.state.rotation,
+        targetRotation,
+        resolve,
+        runToken,
       };
-
-      requestAnimationFrame(animate);
     });
   }
 

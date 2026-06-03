@@ -18,6 +18,7 @@ export interface CameraHandle {
 export function createCameraController({ canvas, camera, robotGroup }: CameraController): CameraHandle {
   const mouse = { x: 0, y: 0, isDown: false };
   const state = { isThirdPersonView: false };
+  let animationFrameId = 0;
 
   const onMouseDown = () => {
     mouse.isDown = true;
@@ -43,6 +44,7 @@ export function createCameraController({ canvas, camera, robotGroup }: CameraCon
 
   return {
     dispose() {
+      cancelAnimationFrame(animationFrameId);
       canvas.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       canvas.removeEventListener('mousemove', onMouseMove);
@@ -78,6 +80,8 @@ export function createCameraController({ canvas, camera, robotGroup }: CameraCon
       camera.lookAt(robotGroup.position);
     },
     animateToDefault() {
+      cancelAnimationFrame(animationFrameId);
+
       const target = getDefaultCameraPosition();
       const start = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
       const startTime = performance.now();
@@ -92,11 +96,11 @@ export function createCameraController({ canvas, camera, robotGroup }: CameraCon
         camera.lookAt(0, 0, 0);
 
         if (progress < 1) {
-          requestAnimationFrame(tick);
+          animationFrameId = requestAnimationFrame(tick);
         }
       };
 
-      requestAnimationFrame(tick);
+      animationFrameId = requestAnimationFrame(tick);
     },
   };
 }

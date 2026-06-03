@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { ServerEvent, SimulatorStateSnapshot } from '../../shared/protocol.js';
 import { createArenaWalls, createGridHelper, createGround } from '../simulator/arena.js';
@@ -8,6 +8,10 @@ import { SimulatorEngine } from '../simulator/engine.js';
 import { createRobot } from '../simulator/robot.js';
 import { createScene, resizeScene } from '../simulator/scene.js';
 import type { SimulatorSnapshot, StatusMessage } from '../simulator/types.js';
+
+const PREVIEW_WIDTH = 400;
+const PREVIEW_HEIGHT = 300;
+const PREVIEW_THROTTLE_MS = 66;
 
 export interface SimulatorCanvasHandle {
   toggleCamera: () => boolean;
@@ -24,6 +28,12 @@ interface SimulatorCanvasProps {
 
 export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+  const onSnapshotChangeRef = useRef(onSnapshotChange);
+  onSnapshotChangeRef.current = onSnapshotChange;
+
+  const [webglError, setWebglError] = useState<string | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -32,7 +42,23 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
       return;
     }
 
-    const { scene, camera, renderer } = createScene(container);
+    let scene: THREE.Scene;
+    let camera: THREE.PerspectiveCamera;
+    let renderer: THREE.WebGLRenderer;
+
+    try {
+      const setup = createScene(container);
+      scene = setup.scene;
+      camera = setup.camera;
+      renderer = setup.renderer;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido ao criar WebGL.';
+      setWebglError(message);
+      console.error('Falha ao criar cena WebGL:', err);
+      return;
+    }
+
+    setWebglError(null);
     const cleanupList: Array<() => void> = [];
 
     scene.add(createGround());
@@ -56,24 +82,34 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
     });
 
     const publishSnapshot = () => {
-      onSnapshotChange(engine.getSnapshot());
+      onSnapshotChangeRef.current(engine.getSnapshot());
     };
 
     publishSnapshot();
 
-    // Preview camera (first-person view)
-    let previewRenderer: THREE.WebGLRenderer | null = null;
+    let previewRenderTarget: THREE.WebGLRenderTarget | null = null;
     let previewCamera: THREE.PerspectiveCamera | null = null;
+    let previewCtx: CanvasRenderingContext2D | null = null;
+    let previewPixelBuffer: Uint8Array | null = null;
 
     let animationFrame = 0;
+    let lastPreviewTime = 0;
+
     const animate = () => {
       animationFrame = requestAnimationFrame(animate);
       engine.step();
       cameraController.update();
       renderer.render(scene, camera);
 
-      // Render first-person preview if bound
-      if (previewRenderer && previewCamera) {
+      const now = performance.now();
+      if (
+        previewRenderTarget &&
+        previewCamera &&
+        previewCtx &&
+        now - lastPreviewTime >= PREVIEW_THROTTLE_MS
+      ) {
+        lastPreviewTime = now;
+
         const wasVisible = robotGroup.visible;
         robotGroup.visible = false;
 
@@ -95,7 +131,32 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
           robotGroup.position.z + frontZ * 200,
         );
 
-        previewRenderer.render(scene, previewCamera);
+        renderer.setRenderTarget(previewRenderTarget);
+        renderer.render(scene, previewCamera);
+        renderer.setRenderTarget(null);
+
+        const buffer = previewPixelBuffer!;
+        renderer.readRenderTargetPixels(
+          previewRenderTarget,
+          0,
+          0,
+          PREVIEW_WIDTH,
+          PREVIEW_HEIGHT,
+          buffer,
+        );
+
+        const imageData = previewCtx.createImageData(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+        const data = imageData.data;
+        const stride = PREVIEW_WIDTH * 4;
+        for (let y = 0; y < PREVIEW_HEIGHT; y++) {
+          const srcRow = PREVIEW_HEIGHT - 1 - y;
+          const srcOffset = srcRow * stride;
+          const dstOffset = y * stride;
+          for (let x = 0; x < stride; x++) {
+            data[dstOffset + x] = buffer[srcOffset + x];
+          }
+        }
+        previewCtx.putImageData(imageData, 0, 0);
 
         robotGroup.visible = wasVisible;
       }
@@ -142,35 +203,52 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
         };
       },
       bindPreviewCanvas(canvas: HTMLCanvasElement) {
-        if (previewRenderer) {
-          previewRenderer.dispose();
+        if (previewRenderTarget) {
+          previewRenderTarget.dispose();
+          previewRenderTarget = null;
         }
-        previewRenderer = new THREE.WebGLRenderer({ antialias: true, canvas });
-        previewRenderer.setSize(400, 300, false);
-        previewRenderer.setPixelRatio(1);
-        previewRenderer.shadowMap.enabled = true;
-        previewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        previewRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-        previewRenderer.toneMappingExposure = 1.2;
 
-        previewCamera = new THREE.PerspectiveCamera(100, 400 / 300, 0.1, 1500);
+        previewCtx = canvas.getContext('2d');
+        if (!previewCtx) {
+          console.error('Falha ao obter contexto 2D para preview.');
+          return;
+        }
+
+        previewCamera = new THREE.PerspectiveCamera(100, PREVIEW_WIDTH / PREVIEW_HEIGHT, 0.1, 1500);
+        previewRenderTarget = new THREE.WebGLRenderTarget(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+        previewPixelBuffer = new Uint8Array(PREVIEW_WIDTH * PREVIEW_HEIGHT * 4);
       },
       unbindPreviewCanvas() {
-        previewRenderer?.dispose();
-        previewRenderer = null;
+        if (previewRenderTarget) {
+          previewRenderTarget.dispose();
+          previewRenderTarget = null;
+        }
         previewCamera = null;
+        previewCtx = null;
+        previewPixelBuffer = null;
       },
     };
 
-    onReady(handle);
+    onReadyRef.current(handle);
 
     cleanupList.push(() => cancelAnimationFrame(animationFrame));
     cleanupList.push(() => cameraController.dispose());
-    cleanupList.push(() => renderer.dispose());
     cleanupList.push(() => {
-      previewRenderer?.dispose();
-      previewRenderer = null;
+      renderer.dispose();
+      const gl = renderer.getContext();
+      const loseCtxExt = gl.getExtension('WEBGL_lose_context');
+      if (loseCtxExt) {
+        loseCtxExt.loseContext();
+      }
+    });
+    cleanupList.push(() => {
+      if (previewRenderTarget) {
+        previewRenderTarget.dispose();
+        previewRenderTarget = null;
+      }
       previewCamera = null;
+      previewCtx = null;
+      previewPixelBuffer = null;
     });
     cleanupList.push(() => {
       for (const child of [...scene.children]) {
@@ -188,9 +266,20 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
 
     return () => {
       cleanupList.forEach((cleanup) => cleanup());
-      container.removeChild(renderer.domElement);
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
     };
-  }, [onReady, onSnapshotChange]);
+  }, []);
+
+  if (webglError) {
+    return (
+      <div className="simulator-canvas simulator-canvas--error">
+        <p>Falha ao inicializar WebGL: {webglError}</p>
+        <p>Tente recarregar a pagina ou use um navegador com suporte a WebGL.</p>
+      </div>
+    );
+  }
 
   return <div ref={containerRef} className="simulator-canvas" />;
 }

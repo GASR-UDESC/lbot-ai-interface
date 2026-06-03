@@ -21,7 +21,8 @@ const require = createRequire(import.meta.url);
 let HeadlessSceneRenderer: typeof import('./scene-renderer.js').HeadlessSceneRenderer | null = null;
 try {
   HeadlessSceneRenderer = require('./scene-renderer.js').HeadlessSceneRenderer as typeof import('./scene-renderer.js').HeadlessSceneRenderer;
-} catch {
+} catch (e) {
+  console.error('Falha ao carregar HeadlessSceneRenderer:', e instanceof Error ? e.message : e);
   HeadlessSceneRenderer = null;
 }
 
@@ -132,6 +133,7 @@ app.get('/api/camera', (_request, response: Response<CameraResponse>) => {
       image: base64,
       format: 'png',
       encoding: 'base64',
+      renderMethod: r.renderMethod,
       robotPosition: { x, z, rotation },
     });
   } catch (err) {
@@ -271,7 +273,7 @@ app.listen(port, () => {
 
   const r = getRenderer();
   if (r?.available) {
-    console.log('Headless renderer inicializado.');
+    console.log(`Headless renderer inicializado (modo: ${r.renderMethod}).`);
   } else {
     console.log('Headless renderer nao disponivel.');
   }

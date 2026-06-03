@@ -87,6 +87,7 @@ export interface CameraResponse {
   image: string | null;
   format: 'png';
   encoding: 'base64';
+  renderMethod?: 'webgl' | '2d' | 'none';
   error?: string;
   robotPosition?: { x: number; z: number; rotation: number };
 }

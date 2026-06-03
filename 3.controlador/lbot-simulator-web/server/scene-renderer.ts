@@ -83,7 +83,7 @@ function render2DScene(
 }
 
 export class HeadlessSceneRenderer {
-  private renderMethod: 'webgl' | '2d' | 'none' = 'none';
+  renderMethod: 'webgl' | '2d' | 'none' = 'none';
   private width: number;
   private height: number;
   private glCtx: GLContext | null = null;
@@ -103,15 +103,15 @@ export class HeadlessSceneRenderer {
     let createGL: ((w: number, h: number, opts?: Record<string, unknown>) => unknown) | null = null;
     try {
       createGL = require('gl') as (w: number, h: number, opts?: Record<string, unknown>) => unknown;
-    } catch {
-      // gl not available
+    } catch (e) {
+      console.error('gl (headless-webgl) not available:', e instanceof Error ? e.message : e);
     }
 
     let THREE: typeof import('three') | null = null;
     try {
       THREE = require('three') as typeof import('three');
-    } catch {
-      // three not available via require
+    } catch (e) {
+      console.error('three not available:', e instanceof Error ? e.message : e);
     }
 
     if (createGL && THREE) {
@@ -237,7 +237,8 @@ export class HeadlessSceneRenderer {
         this.renderMethod = 'webgl';
         this.available = true;
         return;
-      } catch {
+      } catch (e) {
+        console.error('WebGL initialization failed, falling back to 2D renderer:', e instanceof Error ? e.message : e);
         // WebGL initialization failed
       }
     }

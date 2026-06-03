@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 @pytest.fixture
 def mock_backend():
     backend = MagicMock()
-    backend.get_camera = AsyncMock(return_value="iVBORbase64test")
+    backend.get_camera = AsyncMock(return_value={
+        "image": "iVBORbase64test", "render_method": "2d",
+        "robot_position": {"x": 0, "z": 0, "rotation": 0},
+    })
     backend.get_proximity = AsyncMock(return_value={"frente": 50.0, "tras": 200.0})
     backend.execute_lbml = AsyncMock(
         return_value={"accepted": True, "command": "D30F;", "status": "executado"}
@@ -28,12 +31,16 @@ class TestCameraTool:
     @pytest.mark.asyncio
     async def test_camera_returns_base64(self, setup_context, mock_backend):
         from mcp_server.tools.camera import camera
+        import json
 
         result = await camera()
-        assert "iVBOR" in result
+        data = json.loads(result)
+        assert "image" in data
+        assert "iVBOR" in data["image"]
 
     @pytest.mark.asyncio
     async def test_camera_backend_unavailable(self, mock_backend):
+        import json
         import mcp_server.context as ctx
 
         mock_backend.get_camera = AsyncMock(side_effect=RuntimeError("camera indisponivel"))
@@ -44,12 +51,14 @@ class TestCameraTool:
             from mcp_server.tools.camera import camera
 
             result = await camera()
-            assert "Erro" in result
+            data = json.loads(result)
+            assert "error" in data
         finally:
             ctx.backend = original
 
     @pytest.mark.asyncio
     async def test_camera_timeout(self, mock_backend):
+        import json
         import httpx
         import mcp_server.context as ctx
 
@@ -61,7 +70,8 @@ class TestCameraTool:
             from mcp_server.tools.camera import camera
 
             result = await camera()
-            assert "timeout" in result.lower()
+            data = json.loads(result)
+            assert "timeout" in data["error"].lower()
         finally:
             ctx.backend = original
 

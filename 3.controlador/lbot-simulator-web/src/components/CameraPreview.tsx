@@ -15,6 +15,8 @@ export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) 
   const [state, setState] = useState<PreviewState>({ kind: 'idle' });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const onCanvasReadyRef = useRef(onCanvasReady);
+  onCanvasReadyRef.current = onCanvasReady;
 
   useEffect(() => {
     if (!connected) {
@@ -34,8 +36,9 @@ export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) 
 
     setState({ kind: 'loading' });
 
-    if (onCanvasReady) {
-      const cleanup = onCanvasReady(canvas);
+    const callback = onCanvasReadyRef.current;
+    if (callback) {
+      const cleanup = callback(canvas);
       if (cleanup) {
         cleanupRef.current = cleanup;
       }
@@ -49,7 +52,7 @@ export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) 
         cleanupRef.current = null;
       }
     };
-  }, [connected, onCanvasReady]);
+  }, [connected]);
 
   return (
     <div className="camera-preview-card">
@@ -79,12 +82,9 @@ export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) 
 
         <canvas
           ref={canvasRef}
-          className="camera-preview-canvas"
+          className={`camera-preview-canvas ${state.kind !== 'ready' ? 'camera-preview-canvas--hidden' : ''}`}
           width={400}
           height={300}
-          style={{
-            display: state.kind === 'ready' ? 'block' : 'none',
-          }}
         />
       </div>
     </div>

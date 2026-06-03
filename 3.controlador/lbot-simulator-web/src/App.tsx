@@ -3,6 +3,7 @@ import { parseLbmlSequence } from '../shared/lbml.js';
 import type { ServerEvent } from '../shared/protocol.js';
 import { CameraPreview } from './components/CameraPreview.js';
 import { CommandPanel } from './components/CommandPanel.js';
+import { ErrorBoundary } from './components/ErrorBoundary.js';
 import { SimulatorCanvas, type SimulatorCanvasHandle } from './components/SimulatorCanvas.js';
 import { StatusPanel } from './components/StatusPanel.js';
 import { getState, getStatus, pushState, sendCommand, sendReset } from './lib/api.js';
@@ -203,6 +204,15 @@ export default function App() {
     }
   }, [refreshServerSummary]);
 
+  const handlePreviewCanvasReady = useCallback((canvas: HTMLCanvasElement) => {
+    const handle = simulatorHandleRef.current;
+    if (handle) {
+      handle.bindPreviewCanvas(canvas);
+      return () => handle.unbindPreviewCanvas();
+    }
+    return undefined;
+  }, []);
+
   const toggleCamera = useCallback(() => {
     const handle = simulatorHandleRef.current;
 
@@ -245,14 +255,7 @@ export default function App() {
 
           <CameraPreview
             connected={connected}
-            onCanvasReady={(canvas) => {
-              const handle = simulatorHandleRef.current;
-              if (handle) {
-                handle.bindPreviewCanvas(canvas);
-                return () => handle.unbindPreviewCanvas();
-              }
-              return undefined;
-            }}
+            onCanvasReady={handlePreviewCanvasReady}
           />
 
           <CommandPanel
@@ -268,10 +271,12 @@ export default function App() {
         </section>
 
         <section className="canvas-column">
-          <SimulatorCanvas
-            onReady={handleCanvasReady}
-            onSnapshotChange={handleSnapshotChange}
-          />
+          <ErrorBoundary>
+            <SimulatorCanvas
+              onReady={handleCanvasReady}
+              onSnapshotChange={handleSnapshotChange}
+            />
+          </ErrorBoundary>
         </section>
       </main>
     </div>

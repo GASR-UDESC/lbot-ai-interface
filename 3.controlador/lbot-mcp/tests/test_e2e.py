@@ -42,9 +42,12 @@ async def test_e2e_camera_via_backend():
 
     backend = SimulatorBackend(base_url=E2E_SIMULATOR_URL)
     try:
-        image = await backend.get_camera()
-        assert isinstance(image, str)
-        assert len(image) > 0
+        result = await backend.get_camera()
+        assert isinstance(result, dict)
+        assert "image" in result
+        assert isinstance(result["image"], str)
+        assert len(result["image"]) > 0
+        assert "render_method" in result
     finally:
         await backend.close()
 

@@ -28,7 +28,7 @@ class SimulatorBackend(LBotBackend):
             await self._client.aclose()
             self._client = None
 
-    async def get_camera(self) -> str:
+    async def get_camera(self) -> dict:
         try:
             response = await self.client.get(f"{self.base_url}/api/camera")
             response.raise_for_status()
@@ -40,7 +40,11 @@ class SimulatorBackend(LBotBackend):
             error = data.get("error", ERROR_CAMERA_UNAVAILABLE)
             raise RuntimeError(error)
 
-        return data["image"]
+        return {
+            "image": data["image"],
+            "render_method": data.get("renderMethod", "unknown"),
+            "robot_position": data.get("robotPosition"),
+        }
 
     async def get_proximity(self) -> dict:
         try:
