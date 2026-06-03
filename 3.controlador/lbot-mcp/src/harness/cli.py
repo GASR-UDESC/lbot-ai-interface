@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import logging
 import signal
@@ -51,17 +52,123 @@ o agente e voltar ao prompt.
 """
 
 
+def _color(text: str, color: str) -> str:
+    colors = {
+        "reset": "\033[0m",
+        "bold": "\033[1m",
+        "dim": "\033[2m",
+        "red": "\033[31m",
+        "green": "\033[32m",
+        "yellow": "\033[33m",
+        "blue": "\033[34m",
+        "magenta": "\033[35m",
+        "cyan": "\033[36m",
+        "gray": "\033[90m",
+    }
+    return f"{colors.get(color, '')}{text}{colors['reset']}"
+
+
+def _print_event(event: str, data: dict) -> None:
+    if event == "goal":
+        print(f"  {_color('▶', 'cyan')} { _color('Objetivo:', 'bold')} {data.get('goal', '')}")
+        print()
+    elif event == "llm_request":
+        step = data.get("step", 0)
+        print(f"  {_color('─' * 50, 'gray')}")
+        print(f"  {_color('▶', 'blue')} { _color(f'Passo {step}', 'bold')} – Requisição à IA")
+        for msg in data.get("messages", []):
+            role = msg.get("role", "?")
+            content = msg.get("content", "")
+            if role == "system":
+                print(f"     {_color('sys:', 'gray')} {content[:120]}")
+            elif role == "user":
+                print(f"     {_color('user:', 'green')} {content[:200]}")
+            elif role == "assistant":
+                print(f"     {_color('assistant:', 'magenta')} {content[:200]}")
+            elif role == "tool":
+                print(f"     {_color('tool:', 'yellow')} {content[:200]}")
+            else:
+                print(f"     {_color(role + ':', 'gray')} {content[:200]}")
+    elif event == "llm_request_retry":
+        step = data.get("step", 0)
+        reason = data.get("reason", "")
+        print(f"     {_color('↻', 'yellow')} Passo {step}: tentando novamente – {reason}")
+    elif event == "llm_response":
+        step = data.get("step", 0)
+        finish = data.get("finish_reason", "")
+        content = data.get("content", "")
+        tool_calls = data.get("tool_calls", [])
+        print(f"  {_color('◀', 'blue')} { _color(f'Resposta da IA (passo {step})', 'bold')} – finish_reason={finish}")
+        if content:
+            print(f"     {_color('pensamento:', 'cyan')} {content.strip()}")
+        if tool_calls:
+            for tc in tool_calls:
+                name = tc.get("name", "?")
+                args = tc.get("arguments", "")
+                print(f"     {_color('▸', 'yellow')} tool: { _color(name, 'bold')}({args})")
+    elif event == "tool_call":
+        step = data.get("step", 0)
+        tool = data.get("tool", "?")
+        args = data.get("arguments", {})
+        print(f"  {_color('▶', 'yellow')} { _color(f'Passo {step}', 'bold')} – Executando: { _color(tool, 'bold')}({args})")
+    elif event == "tool_result":
+        step = data.get("step", 0)
+        tool = data.get("tool", "?")
+        result = data.get("result", "")
+        print(f"  {_color('◀', 'yellow')} { _color(f'Resultado de {tool} (passo {step})', 'bold')}")
+        print(f"     {result}")
+    elif event == "final_answer":
+        step = data.get("step", 0)
+        content = data.get("content", "")
+        print(f"  {_color('─' * 50, 'gray')}")
+        print(f"  {_color('✓', 'green')} { _color(f'Resposta final (passo {step})', 'bold')}")
+        print(f"     {content}")
+        print()
+    elif event == "error":
+        step = data.get("step", 0)
+        error = data.get("error", "")
+        print(f"  {_color('✗', 'red')} { _color(f'Erro no passo {step}', 'bold')}: {error}")
+    elif event == "cancelled":
+        print(f"  {_color('✗', 'red')} { _color('Interrompido pelo usuário', 'bold')}")
+    elif event == "max_steps_reached":
+        max_steps = data.get("max_steps", 0)
+        print(f"  {_color('⚠', 'yellow')} { _color(f'Máximo de passos atingido ({max_steps})', 'bold')}")
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="lbot-harness",
+        description="LBot Harness – Interface CLI para o robô E-Puck agêntico.",
+    )
+    parser.add_argument(
+        "--show-thinking",
+        action="store_true",
+        default=True,
+        dest="show_thinking",
+        help="Mostra o raciocínio passo a passo da IA no terminal (padrão: ativado)",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        default=False,
+        help="Não mostra o raciocínio, apenas 'Pensando...' e a resposta final",
+    )
+    return parser
+
+
 def main():
-    asyncio.run(_async_main())
+    args = _build_parser().parse_args()
+    show_thinking = not args.quiet and args.show_thinking
+    asyncio.run(_async_main(show_thinking))
 
 
-async def _async_main():
+async def _async_main(show_thinking: bool):
     print(BANNER)
     print("Conectando ao corpo do robô...")
 
     try:
         async with MCPClient() as client:
-            await _run_repl(client)
+            await _run_repl(client, show_thinking)
     except ConnectionError as e:
         print(f"\n  Erro: {e}")
         print("  Verifique se o MCP Server está disponível.")
@@ -70,7 +177,7 @@ async def _async_main():
         print("\nAté logo!")
 
 
-async def _run_repl(client: MCPClient):
+async def _run_repl(client: MCPClient, show_thinking: bool):
     try:
         tools = await client.list_tools()
     except Exception:
@@ -83,7 +190,10 @@ async def _run_repl(client: MCPClient):
     else:
         print("\nNenhuma ferramenta disponível.")
 
-    agent = ReActAgent(client)
+    agent = ReActAgent(
+        client,
+        on_event=_print_event if show_thinking else None,
+    )
     print("\nPronto! Digite seu comando ou /help para ajuda.\n")
 
     loop = asyncio.get_running_loop()
@@ -145,11 +255,13 @@ async def _run_repl(client: MCPClient):
                 print(f"Comando desconhecido: {user_input}. Use /help para ajuda.")
             continue
 
-        print(f"\n🤖 Pensando...")
+        if not show_thinking:
+            print("\n🤖 Pensando...")
         try:
             running_task = asyncio.create_task(agent.run(user_input))
             result = await running_task
-            print(f"\n🤖 {result}\n")
+            if not show_thinking:
+                print(f"\n🤖 {result}\n")
         except asyncio.CancelledError:
             print("\n  Interrompido.")
         except Exception as e:

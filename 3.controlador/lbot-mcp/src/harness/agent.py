@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Any
+from typing import Any, Callable
 
 from openai import OpenAI
 
@@ -16,6 +16,39 @@ _BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+=*$')
 
 _MAX_CONTEXT_TOKENS = int(os.environ.get("LBOT_MAX_CONTEXT_TOKENS", "4000"))
 _APPROX_CHARS_PER_TOKEN = 4
+
+EventCallback = Callable[[str, dict[str, Any]], None] | None
+
+
+def _summarize_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return a copy of messages with base64 images truncated for display."""
+    summarized: list[dict[str, Any]] = []
+    for msg in messages:
+        role = msg.get("role", "?")
+        content = msg.get("content")
+        if isinstance(content, list):
+            parts: list[str] = []
+            for part in content:
+                if isinstance(part, dict):
+                    if part.get("type") == "text":
+                        text = part.get("text", "")
+                        if len(text) > 200:
+                            text = text[:200] + "..."
+                        parts.append(text)
+                    elif part.get("type") == "image_url":
+                        url = part.get("image_url", {}).get("url", "")
+                        if url.startswith("data:image"):
+                            parts.append("[imagem]")
+                        else:
+                            parts.append(url[:80])
+            summarized.append({"role": role, "content": " | ".join(parts) if parts else "(empty)"})
+        elif isinstance(content, str):
+            if len(content) > 200:
+                content = content[:200] + "..."
+            summarized.append({"role": role, "content": content})
+        else:
+            summarized.append({"role": role, "content": str(content)[:200]})
+    return summarized
 
 
 def _is_valid_base64(s: str) -> bool:
@@ -74,6 +107,17 @@ def _estimate_tokens(messages: list[dict[str, Any]]) -> int:
     return total
 
 
+def _collect_tool_call_ids(messages: list[dict[str, Any]]) -> set[str]:
+    ids = set()
+    for msg in messages:
+        if msg.get("role") == "assistant" and msg.get("tool_calls"):
+            for tc in msg["tool_calls"]:
+                tc_id = tc.get("id")
+                if tc_id:
+                    ids.add(tc_id)
+    return ids
+
+
 def _trim_messages(messages: list[dict[str, Any]], max_tokens: int) -> list[dict[str, Any]]:
     if not messages:
         return messages
@@ -82,14 +126,95 @@ def _trim_messages(messages: list[dict[str, Any]], max_tokens: int) -> list[dict
         rest = messages[1:]
     else:
         system_msg = None
-        rest = messages
+        rest = list(messages)
 
     while rest and _estimate_tokens([system_msg] + rest if system_msg else rest) > max_tokens:
-        rest = rest[1:]
+        cut = 1
+        while cut < len(rest):
+            r = rest[cut]
+            if r.get("role") == "user" and not isinstance(r.get("content"), list):
+                break
+            if r.get("role") == "user" and isinstance(r.get("content"), list):
+                break
+            cut += 1
+            if cut >= len(rest):
+                break
+        if cut >= len(rest):
+            break
+        rest = rest[cut:]
 
     if system_msg:
-        return [system_msg] + rest
-    return rest
+        rest = [system_msg] + rest
+
+    return _sanitize_messages(rest)
+
+
+def _sanitize_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not messages:
+        return messages
+
+    result: list[dict[str, Any]] = []
+    valid_tool_call_ids = _collect_tool_call_ids(messages)
+
+    for msg in messages:
+        role = msg.get("role")
+
+        if role == "system":
+            if not any(m.get("role") == "system" for m in result):
+                result.append(msg)
+            continue
+
+        if role == "tool":
+            tc_id = msg.get("tool_call_id", "")
+            if tc_id not in valid_tool_call_ids:
+                continue
+
+            has_matching_assistant = False
+            for prev in reversed(result):
+                if prev.get("role") == "assistant" and prev.get("tool_calls"):
+                    for tc in prev["tool_calls"]:
+                        if tc.get("id") == tc_id:
+                            has_matching_assistant = True
+                            break
+                    break
+                if prev.get("role") in ("user", "system", "assistant"):
+                    break
+            if not has_matching_assistant:
+                continue
+
+        if role == "user" and isinstance(msg.get("content"), list):
+            has_camera_context = False
+            for prev in reversed(result):
+                if prev.get("role") == "tool" and "imagem" in prev.get("content", ""):
+                    has_camera_context = True
+                    break
+                if prev.get("role") in ("user", "system"):
+                    break
+            if not has_camera_context:
+                text_parts = []
+                for part in msg["content"]:
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        text_parts.append(part.get("text", ""))
+                    elif isinstance(part, dict) and part.get("type") == "image_url":
+                        text_parts.append("[imagem da câmera]")
+                if text_parts:
+                    msg = {"role": "user", "content": " ".join(text_parts)}
+
+        if role == "assistant" and result and result[-1].get("role") == "assistant":
+            prev_had_calls = bool(result[-1].get("tool_calls"))
+            curr_has_calls = bool(msg.get("tool_calls"))
+            if prev_had_calls and not curr_has_calls:
+                result.pop()
+            elif not prev_had_calls and not curr_has_calls:
+                continue
+
+        result.append(msg)
+
+    has_user = any(m.get("role") == "user" for m in result)
+    if not has_user:
+        result.append({"role": "user", "content": "Continuando a conversa."})
+
+    return result
 
 
 class ReActAgent:
@@ -101,11 +226,13 @@ class ReActAgent:
         model: str | None = None,
         max_steps: int = 20,
         verbose: bool = False,
+        on_event: EventCallback = None,
     ):
         self._mcp = mcp_client
         self._max_steps = max_steps
         self._verbose = verbose
         self._cancelled = False
+        self._on_event = on_event
         self._messages: list[dict[str, Any]] = [
             {"role": "system", "content": SYSTEM_PROMPT},
         ]
@@ -119,6 +246,13 @@ class ReActAgent:
         self._llm = OpenAI(base_url=base_url, api_key=api_key)
         self._model = model
         self._tools = get_tools_description()
+
+    def _emit(self, event: str, data: dict[str, Any]) -> None:
+        if self._on_event is not None:
+            try:
+                self._on_event(event, data)
+            except Exception:
+                pass
 
     def cancel(self):
         self._cancelled = True
@@ -171,13 +305,21 @@ class ReActAgent:
         self._messages.append({"role": "user", "content": goal})
         self._messages = _trim_messages(self._messages, _MAX_CONTEXT_TOKENS)
 
+        self._emit("goal", {"goal": goal})
+
         step = 0
         while step < max_steps:
             if self._cancelled:
+                self._emit("cancelled", {})
                 return "Interrompido."
 
             step += 1
             messages = self._messages
+
+            self._emit(
+                "llm_request",
+                {"step": step, "messages": _summarize_messages(messages)},
+            )
 
             try:
                 response = self._llm.chat.completions.create(
@@ -191,6 +333,10 @@ class ReActAgent:
                 if "does not support image" in error_msg.lower() or "image input" in error_msg.lower():
                     logger.warning("Modelo não suporta imagem, removendo conteúdo de imagem e tentando novamente: %s", error_msg)
                     messages_no_image = _strip_images(messages)
+                    self._emit(
+                        "llm_request_retry",
+                        {"step": step, "reason": "modelo não suporta imagem"},
+                    )
                     try:
                         response = self._llm.chat.completions.create(
                             model=self._model,
@@ -200,24 +346,45 @@ class ReActAgent:
                         )
                     except Exception as e2:
                         logger.error("Erro ao chamar LLM (tentativa sem imagem): %s", e2)
+                        self._emit("error", {"step": step, "error": str(e2)})
                         return f"Erro ao processar sua solicitação: {e2}"
                 else:
                     logger.error("Erro ao chamar LLM: %s", e)
+                    self._emit("error", {"step": step, "error": str(e)})
                     return f"Erro ao processar sua solicitação: {e}"
 
             message = response.choices[0].message
+            finish_reason = response.choices[0].finish_reason
+
+            self._emit(
+                "llm_response",
+                {
+                    "step": step,
+                    "finish_reason": finish_reason,
+                    "content": message.content,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "name": tc.function.name,
+                            "arguments": tc.function.arguments,
+                        }
+                        for tc in (message.tool_calls or [])
+                    ],
+                },
+            )
 
             if self._verbose:
                 logger.info(
                     "[Step %d] finish_reason=%s, tool_calls=%s, content=%s",
                     step,
-                    response.choices[0].finish_reason,
+                    finish_reason,
                     bool(message.tool_calls),
                     message.content[:100] if message.content else None,
                 )
 
             if message.content and not message.tool_calls:
                 self._messages.append({"role": "assistant", "content": message.content})
+                self._emit("final_answer", {"step": step, "content": message.content})
                 return message.content
 
             if message.tool_calls:
@@ -244,6 +411,10 @@ class ReActAgent:
                     except json.JSONDecodeError:
                         raw_args = {}
 
+                    self._emit(
+                        "tool_call",
+                        {"step": step, "tool": tool_name, "arguments": raw_args},
+                    )
                     logger.info("[Step %d] Chamando tool: %s(%s)", step, tool_name, raw_args)
 
                     try:
@@ -256,6 +427,19 @@ class ReActAgent:
                     except Exception as e:
                         result = f"Erro: {e}"
                         logger.warning("[Step %d] Tool error: %s", step, e)
+
+                    display_result = result
+                    if isinstance(result, str) and len(result) > 200:
+                        display_result = result[:200] + "..."
+
+                    self._emit(
+                        "tool_result",
+                        {
+                            "step": step,
+                            "tool": tool_name,
+                            "result": display_result,
+                        },
+                    )
 
                     if self._verbose:
                         logger.info("[Step %d] Tool result: %s", step, result[:200])
@@ -330,9 +514,11 @@ class ReActAgent:
             else:
                 if message.content:
                     self._messages.append({"role": "assistant", "content": message.content})
+                    self._emit("final_answer", {"step": step, "content": message.content})
                     return message.content
                 return "Não consegui processar sua solicitação."
 
+        self._emit("max_steps_reached", {"max_steps": max_steps})
         return (
             "Atingi o número máximo de passos sem concluir o objetivo. "
             "Tente reformular o pedido ou verificar se o ambiente está funcionando."
