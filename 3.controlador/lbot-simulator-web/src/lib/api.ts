@@ -1,4 +1,5 @@
 import type {
+  CameraResponse,
   CommandResponse,
   ExecuteCommandRequest,
   ResetRequest,
@@ -45,6 +46,11 @@ export async function getStatus(): Promise<SimulatorStatusResponse> {
 export async function getState(): Promise<SimulatorStateResponse> {
   const response = await fetch('/api/state');
   return parseJson<SimulatorStateResponse>(response);
+}
+
+export async function getCamera(): Promise<CameraResponse> {
+  const response = await fetch('/api/camera');
+  return parseJson<CameraResponse>(response);
 }
 
 export async function pushState(clientId: string, state: SimulatorStateSnapshot): Promise<void> {

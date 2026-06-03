@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parseLbmlSequence } from '../shared/lbml.js';
 import type { ServerEvent } from '../shared/protocol.js';
+import { CameraPreview } from './components/CameraPreview.js';
 import { CommandPanel } from './components/CommandPanel.js';
 import { SimulatorCanvas, type SimulatorCanvasHandle } from './components/SimulatorCanvas.js';
 import { StatusPanel } from './components/StatusPanel.js';
@@ -241,6 +242,8 @@ export default function App() {
             serverStateSummary={serverStateSummary}
             message={message}
           />
+
+          <CameraPreview connected={connected} />
 
           <CommandPanel
             value={command}
