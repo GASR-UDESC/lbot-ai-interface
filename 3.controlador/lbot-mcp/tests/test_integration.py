@@ -160,7 +160,163 @@ class TestMoveTool:
             data = json.loads(result)
             assert data["accepted"] is True
             assert data["translated_lbml"] == "D30F;"
+            assert data["executed_lbml_steps"] == ["D30F;"]
             assert data["status"] == "completed"
+            mock_backend.get_proximity.assert_awaited_once()
+            mock_backend.execute_lbml.assert_awaited_once_with("D30F;")
+
+    @pytest.mark.asyncio
+    async def test_move_blocks_when_forward_step_is_not_safe(self, setup_context, mock_backend):
+        from unittest.mock import MagicMock
+
+        mock_translator = MagicMock()
+        mock_translator.translate_verbose.return_value = (
+            "ande 40 centimetros para frente",
+            "ande 40 cm frente",
+            "D40F;",
+        )
+
+        mock_backend.get_proximity = AsyncMock(
+            return_value={
+                "front_cm": 45.0,
+                "rear_cm": 200.0,
+                "safe_to_move_forward": True,
+                "safe_to_move_backward": True,
+                "minimum_safe_distance_cm": 20,
+                "robot_position": {"x": 0, "z": 0, "rotation": 0},
+            }
+        )
+
+        with patch("mcp_server.tools.movement.get_translator", return_value=mock_translator):
+            from mcp_server.tools.movement import move
+
+            result = await move("ande 40 centimetros para frente")
+            data = json.loads(result)
+            assert data["accepted"] is False
+            assert data["completed"] is False
+            assert data["status"] == "blocked_by_proximity"
+            assert data["blocked_lbml_step"] == "D40F;"
+            assert data["executed_lbml_steps"] == []
+            assert data["proximity"]["max_safe_travel_cm"] == 25.0
+            mock_backend.execute_lbml.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_move_rotates_then_blocks_implicit_right_step_when_sensor_is_not_safe(self, setup_context, mock_backend):
+        from unittest.mock import MagicMock
+
+        mock_translator = MagicMock()
+        mock_translator.translate_verbose.return_value = (
+            "ande 30 centimetros para direita",
+            "ande 30 cm direita",
+            "D30R;",
+        )
+
+        mock_backend.get_proximity = AsyncMock(
+            return_value={
+                "front_cm": 35.0,
+                "rear_cm": 200.0,
+                "safe_to_move_forward": True,
+                "safe_to_move_backward": True,
+                "minimum_safe_distance_cm": 20,
+                "robot_position": {"x": 0, "z": 0, "rotation": -90},
+            }
+        )
+        mock_backend.execute_lbml = AsyncMock(
+            side_effect=[
+                {
+                    "accepted": True,
+                    "command": "R90R;",
+                    "status": "completed",
+                    "completed": True,
+                    "request_id": "req-1",
+                    "target_client_id": "sim-123",
+                    "final_state": {"x": 0, "z": 0, "rotation": -90},
+                    "message": "Rotacao executada com sucesso.",
+                }
+            ]
+        )
+
+        with patch("mcp_server.tools.movement.get_translator", return_value=mock_translator):
+            from mcp_server.tools.movement import move
+
+            result = await move("ande 30 centimetros para direita")
+            data = json.loads(result)
+            assert data["accepted"] is True
+            assert data["completed"] is False
+            assert data["status"] == "blocked_by_proximity"
+            assert data["blocked_lbml_step"] == "D30F;"
+            assert data["executed_lbml_steps"] == ["R90R;"]
+            assert data["final_state"] == {"x": 0, "z": 0, "rotation": -90}
+            assert mock_backend.execute_lbml.await_args_list[0].args == ("R90R;",)
+
+    @pytest.mark.asyncio
+    async def test_move_executes_sequence_step_by_step_with_prechecks(self, setup_context, mock_backend):
+        from unittest.mock import MagicMock
+
+        mock_translator = MagicMock()
+        mock_translator.translate_verbose.return_value = (
+            "ande 30 centimetros para frente e depois 20 para tras",
+            "ande 30 cm frente e 20 cm tras",
+            "D30F;D20B;",
+        )
+
+        mock_backend.get_proximity = AsyncMock(
+            side_effect=[
+                {
+                    "front_cm": 60.0,
+                    "rear_cm": 200.0,
+                    "safe_to_move_forward": True,
+                    "safe_to_move_backward": True,
+                    "minimum_safe_distance_cm": 20,
+                    "robot_position": {"x": 0, "z": 0, "rotation": 0},
+                },
+                {
+                    "front_cm": 200.0,
+                    "rear_cm": 60.0,
+                    "safe_to_move_forward": True,
+                    "safe_to_move_backward": True,
+                    "minimum_safe_distance_cm": 20,
+                    "robot_position": {"x": 0, "z": 30, "rotation": 0},
+                },
+            ]
+        )
+        mock_backend.execute_lbml = AsyncMock(
+            side_effect=[
+                {
+                    "accepted": True,
+                    "command": "D30F;",
+                    "status": "completed",
+                    "completed": True,
+                    "request_id": "req-1",
+                    "target_client_id": "sim-123",
+                    "final_state": {"x": 0, "z": 30, "rotation": 0},
+                    "message": "Primeiro movimento concluido.",
+                },
+                {
+                    "accepted": True,
+                    "command": "D20B;",
+                    "status": "completed",
+                    "completed": True,
+                    "request_id": "req-2",
+                    "target_client_id": "sim-123",
+                    "final_state": {"x": 0, "z": 10, "rotation": 0},
+                    "message": "Segundo movimento concluido.",
+                },
+            ]
+        )
+
+        with patch("mcp_server.tools.movement.get_translator", return_value=mock_translator):
+            from mcp_server.tools.movement import move
+
+            result = await move("ande 30 centimetros para frente e depois 20 para tras")
+            data = json.loads(result)
+            assert data["accepted"] is True
+            assert data["completed"] is True
+            assert data["status"] == "completed"
+            assert data["executed_lbml_steps"] == ["D30F;", "D20B;"]
+            assert data["final_state"] == {"x": 0, "z": 10, "rotation": 0}
+            assert mock_backend.get_proximity.await_count == 2
+            assert [call.args[0] for call in mock_backend.execute_lbml.await_args_list] == ["D30F;", "D20B;"]
 
     @pytest.mark.asyncio
     async def test_move_invalid_input(self, setup_context, mock_backend):
@@ -189,6 +345,16 @@ class TestMoveTool:
         )
 
         mock_backend.execute_lbml = AsyncMock(side_effect=RuntimeError("falha na execucao"))
+        mock_backend.get_proximity = AsyncMock(
+            return_value={
+                "front_cm": 80.0,
+                "rear_cm": 200.0,
+                "safe_to_move_forward": True,
+                "safe_to_move_backward": True,
+                "minimum_safe_distance_cm": 20,
+                "robot_position": {"x": 0, "z": 0, "rotation": 0},
+            }
+        )
 
         with patch("mcp_server.tools.movement.get_translator", return_value=mock_translator):
             from mcp_server.tools.movement import move

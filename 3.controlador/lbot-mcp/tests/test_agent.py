@@ -47,17 +47,17 @@ class TestSummarizeMessages:
 
 class TestSystemPrompt:
     def test_mentions_reticle_and_sensor_alignment(self):
-        assert "retículo" in SYSTEM_PROMPT
-        assert "sensor de proximidade frontal" in SYSTEM_PROMPT
-        assert "retículo central" in SYSTEM_PROMPT
+        assert "cruz de referência" in SYSTEM_PROMPT
+        assert "proximidade" in SYSTEM_PROMPT
 
     def test_mentions_recovery_when_target_is_lost(self):
         assert "perder de vista" in SYSTEM_PROMPT
         assert "90 em 90 graus" in SYSTEM_PROMPT
 
-    def test_mentions_strict_centering_before_forward_motion(self):
-        assert "muito criterioso com centralização" in SYSTEM_PROMPT or "muito criterioso com centralizacao" in SYSTEM_PROMPT
-        assert "sensor frontal esteja apontando para ele" in SYSTEM_PROMPT
+    def test_mentions_search_phases(self):
+        assert "FASE 1: VARREDURA" in SYSTEM_PROMPT
+        assert "FASE 2: AJUSTE FINO" in SYSTEM_PROMPT
+        assert "90 graus" in SYSTEM_PROMPT
 
 
 class TestReActAgentEvents:
@@ -444,47 +444,6 @@ class TestReActAgentOperationalState:
         assert "Resumo operacional atual" in messages[0]["content"]
         assert "20 cm" in messages[0]["content"]
         assert "desatualizadas" in messages[0]["content"]
-
-    @pytest.mark.asyncio
-    async def test_blocks_rotation_when_it_contradicts_visual_side(self, mock_mcp_client):
-        with patch("harness.agent.OpenAI") as MockOpenAI:
-            mock_llm = MagicMock()
-
-            msg1 = MagicMock()
-            msg1.content = (
-                "A esfera azul esta a esquerda da imagem e ainda nao esta centralizada. "
-                "Vou girar 10 graus para a direita."
-            )
-            tc = MagicMock()
-            tc.id = "tc-1"
-            tc.function.name = "move"
-            tc.function.arguments = json.dumps({"command": "vire 10 graus para direita"})
-            msg1.tool_calls = [tc]
-            choice1 = MagicMock()
-            choice1.message = msg1
-            choice1.finish_reason = "tool_calls"
-
-            msg2 = MagicMock()
-            msg2.content = "Corrigi o sentido do giro."
-            msg2.tool_calls = None
-            choice2 = MagicMock()
-            choice2.message = msg2
-            choice2.finish_reason = "stop"
-
-            mock_llm.chat.completions.create.side_effect = [
-                MagicMock(choices=[choice1]),
-                MagicMock(choices=[choice2]),
-            ]
-            MockOpenAI.return_value = mock_llm
-
-            agent = ReActAgent(mock_mcp_client)
-            result = await agent.run("centralize a esfera azul")
-
-        assert result == "Corrigi o sentido do giro."
-        mock_mcp_client.call_tool.assert_not_called()
-        tool_message = next(msg for msg in agent.history if msg.get("role") == "tool")
-        assert "guardrail_blocked" in tool_message["content"]
-        assert "esquerda" in tool_message["content"]
 
     @pytest.mark.asyncio
     async def test_continues_when_finish_reason_is_length(self, mock_mcp_client):

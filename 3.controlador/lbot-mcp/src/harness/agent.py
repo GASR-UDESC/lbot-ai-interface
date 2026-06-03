@@ -436,6 +436,7 @@ class ReActAgent:
         return {
             "current_goal": None,
             "safety_distance_cm": _MINIMUM_SAFE_DISTANCE_CM,
+            "goal_requires_vision": False,
             "last_pose": None,
             "last_proximity": None,
             "last_camera": None,
@@ -586,7 +587,8 @@ class ReActAgent:
 
         stale_text = (
             "Observacoes anteriores podem estar desatualizadas porque houve movimento recente. "
-            "Reobserve com proximity() e camera() antes de decidir novo deslocamento."
+            "Reavalie com proximity() antes de decidir novo deslocamento. "
+            "Use camera() apenas se a tarefa depender de visao ou se houver duvida sobre o ambiente."
             if state.get("observations_stale")
             else "Observacoes atuais estao frescas ou nao ha movimento recente."
         )
@@ -661,10 +663,27 @@ class ReActAgent:
                 lines.append(f"  [{i}] {role}: {content}")
         return "\n".join(lines)
 
-    async def run(self, goal: str, max_steps: int | None = None) -> str:
+    def _goal_requires_vision(self, goal: str) -> bool:
+        normalized = _normalize_text(goal)
+        vision_keywords = (
+            "procure", "encontre", "ache", "camera", "olhe", "descreva",
+            "foto", "aproxime", "chegue perto", "va ate", "va para",
+            "o que ha", "qual a distancia", "identifique", "reconheca",
+            "localize", "centralize", "alinhe", "objeto", "esfera",
+            "cubo", "cone", "parede", "alvo", "cor ", "cor:",
+            "amarelo", "azul", "vermelho", "verde", "laranja", "roxo",
+        )
+        return any(keyword in normalized for keyword in vision_keywords)
+
+    async def run(
+        self, goal: str, max_steps: int | None = None, requires_vision: bool | None = None
+    ) -> str:
         max_steps = max_steps if max_steps is not None else self._max_steps
         self._cancelled = False
         self._operational_state["current_goal"] = goal
+        if requires_vision is None:
+            requires_vision = self._goal_requires_vision(goal)
+        self._operational_state["goal_requires_vision"] = requires_vision
 
         self._append_message({"role": "user", "content": goal})
 
@@ -802,23 +821,9 @@ class ReActAgent:
 
                     try:
                         if tool_name == "move":
-                            visual_direction = _extract_visual_direction(message.content)
-                            rotation_direction = _extract_rotation_direction(
-                                raw_args.get("command", "")
+                            result = await self._mcp.call_tool(
+                                "move", {"command": raw_args.get("command", "")}
                             )
-                            if (
-                                visual_direction is not None
-                                and rotation_direction is not None
-                                and visual_direction != rotation_direction
-                            ):
-                                result = _build_alignment_guardrail_error(
-                                    visual_direction,
-                                    raw_args.get("command", ""),
-                                )
-                            else:
-                                result = await self._mcp.call_tool(
-                                    "move", {"command": raw_args.get("command", "")}
-                                )
                         else:
                             result = await self._mcp.call_tool(tool_name, raw_args)
                     except Exception as e:
@@ -894,10 +899,16 @@ class ReActAgent:
                             if warning:
                                 render_desc += f" Aviso: {warning}"
 
-                            visual_summary = (
-                                f"Observacao visual recente em modo {observation_mode or render_method}."
-                                f"{pos_text} Use o reticulo central para decidir alinhamento antes de usar front_cm como distancia ao alvo."
-                            )
+                            if self._operational_state.get("goal_requires_vision"):
+                                visual_summary = (
+                                    f"Observacao visual recente em modo {observation_mode or render_method}."
+                                    f"{pos_text} Use a cruz de referencia para decidir alinhamento antes de usar front_cm como distancia ao objeto de interesse."
+                                )
+                            else:
+                                visual_summary = (
+                                    f"Observacao visual recente em modo {observation_mode or render_method}."
+                                    f"{pos_text}"
+                                )
                             self._set_visual_summary(visual_summary)
                             self._record_action(
                                 "camera",
