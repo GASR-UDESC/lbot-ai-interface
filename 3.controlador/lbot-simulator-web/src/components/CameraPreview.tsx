@@ -89,9 +89,7 @@ export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) 
 
         {state.kind === 'ready' && (
           <div className="camera-preview-reticle" aria-hidden="true">
-            <span className="camera-preview-reticle-ring" />
-            <span className="camera-preview-reticle-line camera-preview-reticle-line--horizontal" />
-            <span className="camera-preview-reticle-line camera-preview-reticle-line--vertical" />
+            <span className="camera-preview-reticle-dot" />
           </div>
         )}
       </div>

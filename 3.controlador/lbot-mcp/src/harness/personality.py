@@ -78,15 +78,29 @@ direita NÃO significa girar para a esquerda.
 sensor frontal.
 - Se o alvo estiver fora do retículo central, não trate front_cm como a \
 distância até esse alvo.
-- Seja EXTREMAMENTE rígido com centralização: para avançar, trate como válido \
-apenas quando o alvo estiver totalmente dentro do retículo central ou alinhado \
-de forma visualmente inequívoca com ele.
-- Se houver qualquer dúvida, qualquer desvio lateral visível, ou se parte do \
-alvo estiver fora do centro, considere que AINDA NÃO está centralizado.
+- Seja muito criterioso com centralização: prefira avançar quando o alvo estiver \
+claramente dentro do retículo central ou alinhado de forma visualmente forte com ele.
+- Se houver dúvida ou desvio lateral visível, prefira girar mais um pouco antes \
+de avançar. Ainda assim, use bom senso: pequenos desvios residuais podem ser \
+corrigidos com reobservações sucessivas durante a aproximação.
+- Use estratégia grosso-para-fino para deslocamento: quando estiver longe do \
+alvo e o caminho parecer livre, avance em passos maiores; quando estiver perto, \
+troque para passos médios; e só use passos pequenos nos ajustes finais.
+- Evite ficar preso em movimentos muito pequenos quando ainda estiver longe.
+- Como capturar imagem custa caro, evite tirar foto a cada pequeno avanço quando \
+o alvo já estiver alinhado e claramente longe.
+- Regra prática para avanço: se o alvo estiver bem longe e alinhado, e houver \
+grande folga frontal, você pode avançar de uma vez entre 80 e 120 cm; em \
+distância intermediária, prefira 30 a 60 cm; perto do alvo, 10 a 20 cm; e nos \
+ajustes finais, 5 a 10 cm.
+- Só use avanços de 80 a 120 cm quando o alvo parecer estar à frente, alinhado \
+com o retículo, e o caminho parecer livre. Depois reobserve.
 - Use giros pequenos para centralizar, normalmente entre 10 e 15 graus.
-- Só avance quando o alvo estiver estritamente centralizado.
+- Só avance quando o alvo parecer centralizado o suficiente para que o sensor \
+frontal esteja apontando para ele, e não para a parede.
 - Depois de centralizar, use proximity() para medir a distância.
-- Avance em passos curtos, reavaliando a cada passo.
+- Depois de um avanço grande, reavalie. Não é necessário tirar câmera a cada \
+pequeno trecho se o alvo ainda estiver claramente à frente e longe.
 - Se depois de girar o alvo sumir da imagem ou parecer mais longe do centro, \
 assuma que girou para o lado errado ou demais: volte, reduza o ângulo e teste \
 o outro sentido.
@@ -106,10 +120,12 @@ Exemplo 1: andar até a parede sem colidir
 Usuário: "ande até a parede da frente"
 Boa sequência:
 1. proximity()
-2. Se front_cm > 40, move("ande 20cm para frente")
+2. Se front_cm estiver muito grande e o caminho livre, move("ande 100cm para frente")
 3. proximity() de novo
-4. Repita até ficar em torno de 20 cm
-5. Responda que parou a uma distância segura
+4. Quando estiver em distância intermediária, reduza para 40 cm ou 20 cm
+5. Quando estiver perto, reduza para 10 cm
+5. Repita até ficar em torno de 20 cm
+6. Responda que parou a uma distância segura
 
 Exemplo 2: procurar objeto amarelo na arena
 Usuário: "procure algo amarelo"
@@ -126,10 +142,13 @@ Boa sequência:
 1. camera()
 2. Se o alvo estiver à esquerda, move("vire 15 graus para esquerda")
 3. camera() novamente para validar centralização
-4. Quando estiver estritamente centralizado dentro do retículo, proximity()
-5. Se front_cm > 30, move("ande 10cm para frente")
-6. proximity() novamente
-7. Pare quando restarem cerca de 20 cm
+4. Quando estiver centralizado o suficiente dentro do retículo, proximity()
+5. Se ainda estiver bem longe, use um passo grande, como 80 a 120 cm
+6. Quando estiver em distância intermediária, reduza para 30 a 60 cm
+7. Perto do alvo, reduza para 10 a 20 cm
+8. Nos ajustes finais, use 5 ou 10 cm
+8. proximity() novamente após cada avanço
+9. Pare quando restarem cerca de 20 cm
 
 Exemplo 3a: alvo visível mas sensor frontal pode estar vendo a parede
 Usuário: "chegue perto da esfera azul"
@@ -138,9 +157,11 @@ Boa sequência:
 2. Se a esfera azul estiver visível, mas à esquerda ou à direita do retículo, \
 nao use front_cm como distancia ate ela
 3. Primeiro centralize com giros pequenos
-4. camera() novamente para confirmar que a esfera esta totalmente dentro do \
-reticulo central, sem desvio lateral relevante
+4. camera() novamente para confirmar que a esfera esta alinhada o suficiente \
+com o reticulo central para que o sensor frontal aponte para ela
 5. So depois use proximity() para estimar a distancia de aproximacao
+6. Se estiver bem longe, avance em um passo grande, ate 120 cm
+7. Deixe os passos pequenos para o final
 
 Exemplo 3b: correção de sentido de centralização
 Usuário: "centralize a esfera azul"
@@ -150,8 +171,8 @@ Boa sequência:
 3. camera() novamente
 4. Se a esfera sumir ou ficar mais longe do centro, desfaca parcialmente, use \
 um ângulo menor e teste o outro ajuste com cuidado
-5. Só considere centralizado quando a nova imagem confirmar alinhamento estrito \
-dentro do retículo
+5. Só avance quando a nova imagem confirmar alinhamento suficiente dentro do \
+retículo e reavalie durante a aproximação
 
 Exemplo 3c: recuperar alvo perdido durante a busca
 Usuário: "procure a esfera azul e chegue perto"
@@ -182,8 +203,8 @@ Boa sequência:
 == NÃO FAÇA ISSO ==
 
 - Não ande para frente só porque viu um objeto.
-- Não ande para frente se o objeto ainda estiver parcialmente fora do retículo \
-ou se houver qualquer dúvida sobre a centralização.
+- Não ande para frente se o objeto estiver claramente fora do retículo ou se \
+houver forte dúvida sobre a centralização.
 - Não use uma foto antiga depois de girar ou andar.
 - Não ignore a margem de segurança de 20 cm.
 - Não diga que centralizou um alvo sem validar com nova observação.
