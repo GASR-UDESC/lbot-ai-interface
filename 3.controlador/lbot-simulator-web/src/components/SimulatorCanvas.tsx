@@ -13,6 +13,8 @@ export interface SimulatorCanvasHandle {
   toggleCamera: () => boolean;
   handleRemoteEvent: (event: ServerEvent) => Promise<StatusMessage | null>;
   getSnapshot: () => SimulatorStateSnapshot;
+  bindPreviewCanvas: (canvas: HTMLCanvasElement) => void;
+  unbindPreviewCanvas: () => void;
 }
 
 interface SimulatorCanvasProps {
@@ -59,12 +61,45 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
 
     publishSnapshot();
 
+    // Preview camera (first-person view)
+    let previewRenderer: THREE.WebGLRenderer | null = null;
+    let previewCamera: THREE.PerspectiveCamera | null = null;
+
     let animationFrame = 0;
     const animate = () => {
       animationFrame = requestAnimationFrame(animate);
       engine.step();
       cameraController.update();
       renderer.render(scene, camera);
+
+      // Render first-person preview if bound
+      if (previewRenderer && previewCamera) {
+        const wasVisible = robotGroup.visible;
+        robotGroup.visible = false;
+
+        const snapshot = engine.getSnapshot();
+        const rad = (snapshot.rotation * Math.PI) / 180;
+        const frontX = Math.sin(rad);
+        const frontZ = Math.cos(rad);
+        const camHeight = 3;
+        const camForward = 12;
+
+        previewCamera.position.set(
+          robotGroup.position.x + frontX * camForward,
+          camHeight,
+          robotGroup.position.z + frontZ * camForward,
+        );
+        previewCamera.lookAt(
+          robotGroup.position.x + frontX * 200,
+          camHeight,
+          robotGroup.position.z + frontZ * 200,
+        );
+
+        previewRenderer.render(scene, previewCamera);
+
+        robotGroup.visible = wasVisible;
+      }
+
       publishSnapshot();
     };
     animate();
@@ -106,6 +141,25 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
           updatedAt: new Date().toISOString(),
         };
       },
+      bindPreviewCanvas(canvas: HTMLCanvasElement) {
+        if (previewRenderer) {
+          previewRenderer.dispose();
+        }
+        previewRenderer = new THREE.WebGLRenderer({ antialias: true, canvas });
+        previewRenderer.setSize(400, 300, false);
+        previewRenderer.setPixelRatio(1);
+        previewRenderer.shadowMap.enabled = true;
+        previewRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        previewRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        previewRenderer.toneMappingExposure = 1.2;
+
+        previewCamera = new THREE.PerspectiveCamera(100, 400 / 300, 0.1, 1500);
+      },
+      unbindPreviewCanvas() {
+        previewRenderer?.dispose();
+        previewRenderer = null;
+        previewCamera = null;
+      },
     };
 
     onReady(handle);
@@ -113,6 +167,11 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
     cleanupList.push(() => cancelAnimationFrame(animationFrame));
     cleanupList.push(() => cameraController.dispose());
     cleanupList.push(() => renderer.dispose());
+    cleanupList.push(() => {
+      previewRenderer?.dispose();
+      previewRenderer = null;
+      previewCamera = null;
+    });
     cleanupList.push(() => {
       for (const child of [...scene.children]) {
         if (child instanceof THREE.Mesh) {

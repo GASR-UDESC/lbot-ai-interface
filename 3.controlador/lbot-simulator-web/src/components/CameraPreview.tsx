@@ -1,63 +1,55 @@
 import { useEffect, useRef, useState } from 'react';
-import { getCamera } from '../lib/api.js';
 
 interface CameraPreviewProps {
   connected: boolean;
+  onCanvasReady?: (canvas: HTMLCanvasElement) => (() => void) | void;
 }
 
 type PreviewState =
   | { kind: 'idle' }
   | { kind: 'loading' }
-  | { kind: 'image'; src: string }
+  | { kind: 'ready' }
   | { kind: 'error'; text: string };
 
-const POLL_MS = 2000;
-
-export function CameraPreview({ connected }: CameraPreviewProps) {
+export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) {
   const [state, setState] = useState<PreviewState>({ kind: 'idle' });
-  const timerRef = useRef<number | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    const fetchImage = async () => {
-      setState((prev) => (prev.kind === 'image' ? prev : { kind: 'loading' }));
-
-      try {
-        const response = await getCamera();
-
-        if (!response.connected || !response.image) {
-          setState({
-            kind: 'error',
-            text: response.error ?? 'Camera do robo indisponivel',
-          });
-          return;
-        }
-
-        setState({ kind: 'image', src: `data:image/png;base64,${response.image}` });
-      } catch {
-        setState({ kind: 'error', text: 'Falha ao buscar imagem da camera.' });
-      }
-    };
-
     if (!connected) {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-        timerRef.current = null;
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
       }
-
       setState({ kind: 'idle' });
       return;
     }
 
-    void fetchImage();
-    timerRef.current = window.setInterval(() => void fetchImage(), POLL_MS);
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      setState({ kind: 'error', text: 'Canvas indisponivel.' });
+      return;
+    }
+
+    setState({ kind: 'loading' });
+
+    if (onCanvasReady) {
+      const cleanup = onCanvasReady(canvas);
+      if (cleanup) {
+        cleanupRef.current = cleanup;
+      }
+    }
+
+    setState({ kind: 'ready' });
 
     return () => {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-        timerRef.current = null;
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
       }
     };
-  }, [connected]);
+  }, [connected, onCanvasReady]);
 
   return (
     <div className="camera-preview-card">
@@ -85,13 +77,15 @@ export function CameraPreview({ connected }: CameraPreviewProps) {
           </div>
         )}
 
-        {state.kind === 'image' && (
-          <img
-            className="camera-preview-image"
-            src={state.src}
-            alt="Visao do robo"
-          />
-        )}
+        <canvas
+          ref={canvasRef}
+          className="camera-preview-canvas"
+          width={400}
+          height={300}
+          style={{
+            display: state.kind === 'ready' ? 'block' : 'none',
+          }}
+        />
       </div>
     </div>
   );

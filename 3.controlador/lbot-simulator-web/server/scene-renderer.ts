@@ -210,7 +210,7 @@ export class HeadlessSceneRenderer {
         ));
         scene.add(robot);
 
-        const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1500);
+        const camera = new THREE.PerspectiveCamera(100, width / height, 0.1, 1500);
 
         this.glCtx = gl;
         this.threeRenderer = renderer;
@@ -273,19 +273,25 @@ export class HeadlessSceneRenderer {
     robot.position.set(robotX, 0, robotZ);
     robot.rotation.y = rad;
 
-    const camOffset = 20;
+    const wasVisible = ((robot as unknown) as { visible: boolean }).visible;
+    ((robot as unknown) as { visible: boolean }).visible = false;
+
+    const camHeight = 3;
+    const camForward = 12;
     camera.position.set(
-      robotX + frontX * camOffset,
-      10,
-      robotZ + frontZ * camOffset,
+      robotX + frontX * camForward,
+      camHeight,
+      robotZ + frontZ * camForward,
     );
     camera.lookAt(
-      robotX + frontX * 100,
-      0,
-      robotZ + frontZ * 100,
+      robotX + frontX * 200,
+      camHeight,
+      robotZ + frontZ * 200,
     );
 
     renderer.render(scene, camera);
+
+    ((robot as unknown) as { visible: boolean }).visible = wasVisible;
 
     const pixels = new Uint8Array(this.width * this.height * 4);
     this.glCtx.readPixels(

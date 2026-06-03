@@ -243,7 +243,17 @@ export default function App() {
             message={message}
           />
 
-          <CameraPreview connected={connected} />
+          <CameraPreview
+            connected={connected}
+            onCanvasReady={(canvas) => {
+              const handle = simulatorHandleRef.current;
+              if (handle) {
+                handle.bindPreviewCanvas(canvas);
+                return () => handle.unbindPreviewCanvas();
+              }
+              return undefined;
+            }}
+          />
 
           <CommandPanel
             value={command}
