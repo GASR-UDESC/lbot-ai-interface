@@ -1,25 +1,7 @@
-:root {
-  --gap-desktop: 24px;
-  --gap-mobile: 16px;
-  --page-pad-desktop: 24px;
-  --page-pad-mobile: 12px;
-  --phone-bg: #0f0f12;
-  --color-primary: #2d7a3a;
-  --color-primary-dark: #1e5c2a;
-  --color-bg-dark: #101114;
-  --color-bg-darker: #0a0a0d;
-  --color-text-light: #e8e8e8;
-  --color-text-muted: #888;
-  --color-border: rgba(255, 255, 255, 0.1);
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html, body {
-  height: 100%;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+:host {
+  display: block;
+  height: 100dvh;
+  width: 100vw;
+  background-color: var(--color-canvas);
+  font-family: 'Inter', -apple-system, system-ui, Roboto, 'Helvetica Neue', sans-serif;
 }

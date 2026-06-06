@@ -1,0 +1,20 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+  "command": {
+    "sdd:business-spec": {
+      "description": "Inicia a especificacao de regra de negocio a partir do brainstorm da tarefa",
+      "template": "Carregue a skill 'sdd' e execute a Fase 1 (business-spec). O brainstorm/requisitos da tarefa sao os seguintes:\n\n$ARGUMENTS\n\nSiga TODAS as instrucoes da skill para a fase business-spec. Analise a codebase, faca perguntas usando a tool question, e ao final salve o documento em task/business-spec.md."
+    },
+    "sdd:tech-spec": {
+      "description": "Cria o planejamento tecnico e fases de implementacao a partir da business-spec",
+      "template": "Carregue a skill 'sdd' e execute a Fase 2 (tech-spec). Leia o arquivo task/business-spec.md que ja foi consolidado na sessao anterior. Siga TODAS as instrucoes da skill para a fase tech-spec. Analise profundamente a codebase, faca perguntas tecnicas usando a tool question, e ao final crie task/tech-spec.md e os arquivos task/phase-XX.md."
+    },
+    "sdd:loop": {
+      "description": "Executa a proxima fase pendente do plano de implementacao",
+      "template": "Carregue a skill 'sdd' e execute a Fase 3 (loop). Leia task/tech-spec.md e encontre a proxima fase PENDENTE nos arquivos task/phase-XX.md. Execute APENAS essa fase seguindo todas as instrucoes. Ao finalizar, atualize o status da fase e pare."
+    }
+  }
+}

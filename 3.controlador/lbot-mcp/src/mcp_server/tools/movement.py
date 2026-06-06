@@ -10,22 +10,30 @@ LBML_SEQUENCE_RE = re.compile(r"^(D\d+[FBLR];|R\d+[LR];)+$")
 
 @mcp.tool()
 async def move(command: str) -> str:
-    """Move o robô de acordo com um comando em linguagem natural. O robô entende comandos como 'ande 30cm para frente', 'vire 90 graus para direita', ou sequências como 'ande 40cm para frente, depois vire 90 graus para esquerda'."""
-    try:
-        translator = get_translator()
-        original, preprocessed, lbml = translator.translate_verbose(command)
-    except TranslationError as e:
-        return f"Erro: não entendi o comando '{command}'. Pode reformular? ({e})"
+    """Move o robô de acordo com um comando. Aceita tanto linguagem natural (ex: 'ande 30cm para frente') quanto LBML direto (ex: 'D30F;R90L;')."""
+    is_lbml_direct = bool(LBML_SEQUENCE_RE.match(command))
 
-    if lbml == "ERRO" or not LBML_SEQUENCE_RE.match(lbml):
-        return f"Erro: não entendi o comando '{command}'. Pode reformular?"
+    if is_lbml_direct:
+        lbml = command
+    else:
+        try:
+            translator = get_translator()
+            original, preprocessed, lbml = translator.translate_verbose(command)
+        except TranslationError as e:
+            return f"Erro: não entendi o comando '{command}'. Pode reformular? ({e})"
+
+        if lbml == "ERRO" or not LBML_SEQUENCE_RE.match(lbml):
+            return f"Erro: não entendi o comando '{command}'. Pode reformular?"
 
     try:
         backend = get_backend()
         result = await backend.execute_lbml(lbml)
 
         if result.get("accepted"):
-            return f"Comando executado: {lbml} ({preprocessed})"
+            if is_lbml_direct:
+                return f"Comando executado: {command} (LBML direto)"
+            else:
+                return f"Comando executado: {lbml} ({preprocessed})"
         else:
             error_msg = result.get("error", "falha na execução")
             return f"Erro: falha na execução — {error_msg}"

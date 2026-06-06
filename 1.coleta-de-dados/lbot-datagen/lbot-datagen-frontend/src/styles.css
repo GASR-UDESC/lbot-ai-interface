@@ -1,4 +1,97 @@
-/* Reset completo */
+:root {
+  --color-primary: #ff385c;
+  --color-primary-active: #e00b41;
+  --color-primary-disabled: #ffd1da;
+  --color-primary-error-text: #c13515;
+  --color-ink: #222222;
+  --color-body: #3f3f3f;
+  --color-muted: #6a6a6a;
+  --color-muted-soft: #929292;
+  --color-hairline: #dddddd;
+  --color-hairline-soft: #ebebeb;
+  --color-border-strong: #c1c1c1;
+  --color-canvas: #ffffff;
+  --color-surface-soft: #f7f7f7;
+  --color-surface-strong: #f2f2f2;
+  --color-on-primary: #ffffff;
+  --color-star-rating: #222222;
+  --color-scrim: #000000;
+  --color-legal-link: #428bff;
+
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-base: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-section: 64px;
+
+  --rounded-none: 0;
+  --rounded-xs: 4px;
+  --rounded-sm: 8px;
+  --rounded-md: 14px;
+  --rounded-lg: 20px;
+  --rounded-xl: 32px;
+  --rounded-full: 9999px;
+
+  --shadow-card-hover-float: rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.1) 0 4px 8px 0;
+
+  --typography-display-xl-size: 28px;
+  --typography-display-xl-weight: 700;
+  --typography-display-xl-line-height: 1.43;
+  --typography-display-lg-size: 22px;
+  --typography-display-lg-weight: 500;
+  --typography-display-lg-line-height: 1.18;
+  --typography-display-md-size: 21px;
+  --typography-display-md-weight: 700;
+  --typography-display-md-line-height: 1.43;
+  --typography-display-sm-size: 20px;
+  --typography-display-sm-weight: 600;
+  --typography-display-sm-line-height: 1.20;
+  --typography-title-md-size: 16px;
+  --typography-title-md-weight: 600;
+  --typography-title-md-line-height: 1.25;
+  --typography-title-sm-size: 16px;
+  --typography-title-sm-weight: 500;
+  --typography-title-sm-line-height: 1.25;
+  --typography-body-md-size: 16px;
+  --typography-body-md-weight: 400;
+  --typography-body-md-line-height: 1.5;
+  --typography-body-sm-size: 14px;
+  --typography-body-sm-weight: 400;
+  --typography-body-sm-line-height: 1.43;
+  --typography-caption-size: 14px;
+  --typography-caption-weight: 500;
+  --typography-caption-line-height: 1.29;
+  --typography-caption-sm-size: 13px;
+  --typography-caption-sm-weight: 400;
+  --typography-caption-sm-line-height: 1.23;
+  --typography-uppercase-tag-size: 8px;
+  --typography-uppercase-tag-weight: 700;
+  --typography-uppercase-tag-line-height: 1.25;
+  --typography-uppercase-tag-letter-spacing: 0.32px;
+  --typography-button-md-size: 16px;
+  --typography-button-md-weight: 500;
+  --typography-button-md-line-height: 1.25;
+  --typography-button-sm-size: 14px;
+  --typography-button-sm-weight: 500;
+  --typography-button-sm-line-height: 1.29;
+  --typography-rating-display-size: 64px;
+  --typography-rating-display-weight: 700;
+  --typography-rating-display-line-height: 1.1;
+  --typography-nav-link-size: 16px;
+  --typography-nav-link-weight: 600;
+  --typography-nav-link-line-height: 1.25;
+  --typography-micro-label-size: 12px;
+  --typography-micro-label-weight: 700;
+  --typography-micro-label-line-height: 1.33;
+
+  --transition-fade-in: opacity 0.3s ease;
+  --transition-scale-in: transform 0.3s ease;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,10 +103,17 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
+  font-family: 'Inter', -apple-system, system-ui, Roboto, 'Helvetica Neue', sans-serif;
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
+}
+
+body {
+  min-height: 100dvh;
 }
 
 app-root {
   display: block;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
