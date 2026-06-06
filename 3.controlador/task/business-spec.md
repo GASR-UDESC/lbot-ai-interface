@@ -1,197 +1,240 @@
-# Especificacao de Negocio: Melhoria de Aproximacao do Robo a Objetos
+# Especificação de Negócio: Refatoração Completa do Harness
 
 ## Contexto
 
-O robo E-Puck controlado por IA (via MCP + LLM) apresenta um problema critico ao se aproximar de objetos-alvo. Analisando os logs de execucao, o robo:
+O harness é o módulo de orquestração do robô E-Puck — um agente ReAct que conecta uma LLM a ferramentas MCP (câmera, sensores, movimento). Atualmente o código está concentrado em arquivos muito grandes (`agent.py` com 909 linhas, `personality.py` com 235 linhas), com validações programáticas que deveriam ser delegadas à LLM, protocolos rígidos de busca, geração de LBML pela própria LLM (ignorando o tradutor Seq2Seq existente), e testes que consomem tokens desnecessariamente.
 
-1. **Se aproxima demais** — chega a 13cm do objeto quando a regra diz 20cm, depois tenta avancar mais 5cm e "perde" o objeto de vista (a distancia salta de 13cm para 50cm+)
-2. **Entra em loop infinito de rotacoes** — ao perder o objeto, fica girando R5L repetidamente sem progresso, consumindo dezenas de passos sem resultado
-3. **Nao sabe quando parar** — nao ha mecanismo automatico que declare sucesso quando o robo chega perto o suficiente do objeto
-4. **Nao respeita a distancia de seguranca** — a regra de 20cm existe apenas no prompt, sem enforcement no codigo, e o LLM frequentemente a ignora
+O objetivo é refatorar completamente o harness aplicando princípios de Clean Code, simplificando sua arquitetura, delegando responsabilidades corretamente, e otimizando o prompt para um modelo de linguagem pequeno (~8B parâmetros).
 
-A tarefa e corrigir esses problemas melhorando o prompt do robo E adicionando validacoes automaticas no agent loop (camada de controle), sem modificar o simulador web.
+---
 
 ## Requisitos Funcionais
 
-### RF01 - Parada automatica por proximidade alvo
+### RF01 — Arquivos com responsabilidade única (~150-200 linhas cada)
 
-O robo deve parar automaticamente e declarar sucesso quando a proximidade frontal estiver na faixa de 15cm a 25cm de um objeto a frente, apos ter o objeto centralizado na camera.
-
-**Regras:**
-- A verificacao acontece no agent loop (codigo Python), nao apenas no prompt
-- Quando `frente <= 25cm` E `frente >= 15cm` apos o objeto estar centralizado na camera, o robo declara que alcancou o objetivo
-- O agente insere uma mensagem no contexto informando que o objetivo foi alcancado, forçando o LLM a parar de se mover
-- O robo informa ao usuario que chegou ao objeto com sucesso
-
-**Cenarios de erro:**
-- Proximidade frontal < 15cm sem objeto centralizado: o robo recuou automaticamente (ver RF05)
-- Proximidade frontal entre 15-25cm mas objeto nao centralizado na camera: o robo tenta centralizar primeiro antes de declarar sucesso
-
-### RF02 - Bloqueio de avanco por proximidade minima
-
-O robo nunca deve executar um comando de avanco (DXXF) se a leitura de proximidade frontal ja estiver a <= 20cm de um obstaculo. O bloqueio ocorre no agent Python antes de enviar o comando ao simulador.
+O harness atual tem arquivos grandes (`agent.py` 909 linhas, `personality.py` 235 linhas) que misturam múltiplas responsabilidades. Após a refatoração, cada arquivo deve ter uma única responsabilidade bem definida e tamanho máximo de ~150-200 linhas.
 
 **Regras:**
-- Antes de executar qualquer comando `D<dist>F;`, o agente verifica a ultima leitura de proximidade frontal
-- Se `frente <= 20cm`, o comando de avanco e bloqueado e substituido por uma mensagem informando que o robo ja esta proximo o suficiente
-- Comandos de recuo (`D<dist>B;`) e rotacao (`R<ang>L/R;`) nao sao bloqueados
-- O bloqueio retorna uma mensagem clara ao LLM: "Bloqueado: distancia frontal e de Xcm, ja esta dentro da faixa de aproximacao (15-25cm). Objetivo alcancado."
+- Cada classe ou função pública deve ter um único motivo para mudar (SRP)
+- Agrupar funcionalidades coesas: loop ReAct, prompt, gerenciamento de ferramentas, tradução NL→LBML, parsers LBML, comunicação MCP
+- Nenhum arquivo deve ultrapassar ~200 linhas
+- Seguir os princípios do Clean Code: nomes significativos, funções pequenas, poucos argumentos, evitar efeitos colaterais
 
-**Cenarios de erro:**
-- Proximidade frontal exatamente 20cm: bloqueado (<= 20cm)
-- Proximidade frontal 21cm: permitido, mas com passo reduzido (ver RF06)
+### RF02 — Remoção de todos os testes
 
-### RF03 - Prompt melhorado para aproximacao
-
-O system prompt do robo (personality.py) deve ser atualizado com instrucoes mais fortes e especificas sobre:
+Todos os testes existentes (Python e TypeScript) devem ser removidos do repositório, incluindo arquivos de configuração de teste e dependências associadas.
 
 **Regras:**
-- Enfatizar que o sensor de proximidade mede o objeto mais proximo naquela direcao, nao necessariamente o alvo — sempre centralizar o alvo na camera ANTES de confiar na leitura
-- Adicionar instrucao explicita de que quando estiver a <= 40cm do objeto, os passos devem ser de no maximo 10cm (nao 20cm)
-- Adicionar instrucao explicita de que quando estiver a <= 25cm do objeto, NAO avancar mais — ja esta na distancia correta, declarar sucesso
-- Adicionar instrucao para NUNCA usar R5L/R5R repetidamente quando o objeto estiver visivel — se nao centralizar apos 2-3 rotacoes de 5 graus, tentar estrategia diferente (voltar 10 graus, ou recuar)
-- Atualizar o protocolo de "aproximacao gradual" para usar passos de 20cm quando > 80cm, 15cm quando 40-80cm, e 10cm quando < 40cm
+- Remover toda a pasta `lbot-mcp/tests/` e seu conteúdo
+- Remover toda a pasta `lbot-simulator-web/tests/` e seu conteúdo
+- Remover configurações de teste do `pyproject.toml` (seção `[tool.pytest.ini_options]`)
+- Remover `vitest.config.ts` do `lbot-simulator-web/`
+- Remover `.pytest_cache/` e quaisquer outros artefatos de teste
+- Remover dependências de teste dos `package.json` e `pyproject.toml`
 
-**Cenarios de erro:**
-- LLM ignora as instrucoes: mitigado por RF02 (bloqueio automatico de avanco)
-- LLM fica em loop de rotacoes: mitigado por RF04 (deteccao de loop)
+### RF03 — Remoção de validações programáticas
 
-### RF04 - Deteccao de loop e limite de passos
+Todas as validações de segurança atualmente implementadas em código devem ser removidas. A LLM é responsável por decidir o que é seguro, guiada pelo system prompt.
 
-O agent deve detectar quando o robo esta em loop (sem progresso) e cancelar a tarefa apos 50 passos de observe+move sem conclusao.
-
-**Regras:**
-- Limite maximo de 50 passos (chamadas de observe + move) por tarefa
-- A cada passo, o agente rastreia o numero de passos executados
-- Ao atingir 50 passos, o agente interrompe o loop e informa ao usuario: "Nao consegui completar a tarefa apos 50 passos. Tente reformular o pedido ou verificar se o ambiente esta funcionando."
-- Alem do limite fixo, detectar loops mais curtos: se a posicao do robo (x, z, rotacao) nao mudar signficativamente apos 10 passos consecutivos de rotacao, inserir mensagem no contexto alertando o LLM que esta em loop
-
-**Cenarios de erro:**
-- Robo em loop de rotacao (posicao nao muda): alerta apos 10 passos de rotacao sem mudanca de posicao
-- Robo atingiu 50 passos: cancelamento automatico
-
-### RF05 - Protocolo de recuperacao de perda de objeto
-
-Quando o robo perde o objeto de vista durante a aproximacao (a distancia frontal salta de < 25cm para > 30cm, ou o objeto desaparece da imagem), o agente inicia um protocolo automatico de recuperacao.
+**Validações a remover:**
+- `_validate_and_adjust_move()` — bloqueio de movimento frontal se <20cm de obstáculo, ajuste de step size
+- `_check_proximity_goal()` — verificação de distância alvo (15-25cm)
+- `_check_rotation_loop()` — detecção de loops de rotação excessiva
+- `_detect_object_loss()` — detecção de perda de objeto (spike de distância)
+- `_is_valid_base64()` — validação de formato base64 de imagens
 
 **Regras:**
-- Executar automaticamente um recuo de 20cm (`D20B;`) via move
-- Apos o recuo, usar observe() para re-localizar o objeto
-- Se encontrar o objeto, centralizar e retomar a aproximacao com passos menores (max 10cm)
-- Se nao encontrar apos 360 graus de busca, informar que o objeto foi perdido
-- Este protocolo e executado no agent Python de forma transparente para o LLM: o agente detecta a perda e injeta uma mensagem no contexto instruindo o LLM a recuar
+- A LLM recebe no system prompt as regras de segurança para auto-regular seu comportamento
+- O harness não intervém nas decisões de movimento da LLM
+- Se houver colisão real, o backend/simulador retorna erro e o harness repassa à LLM
 
-**Cenarios de erro:**
-- Recuo falha (simulador desconectado): informar erro ao usuario
-- Objeto nao reencontrado apos busca completa: informar que o objeto foi perdido
+### RF04 — Remoção da funcionalidade de busca
 
-### RF06 - Reducao automatica de passo por proximidade
-
-O agente modifica automaticamente comandos de avanco quando o robo esta perto do alvo, para evitar overshooting.
+O protocolo de busca (girar 360°, andar em zigue-zague para encontrar objetos) deve ser removido do system prompt e de qualquer lógica codificada.
 
 **Regras:**
-- Se a ultima leitura de proximidade frontal estiver entre 20cm e 40cm, qualquer comando `D<dist>F;` com `dist > 10` e automaticamente reduzido para `D10F;`
-- Se a ultima leitura estiver entre 40cm e 80cm, qualquer comando `D<dist>F;` com `dist > 15` e automaticamente reduzido para `D15F;`
-- Acima de 80cm, nao ha modificacao (passos de ate 20cm sao aceitos)
-- A modificacao e feita no agent Python antes de enviar ao simulador
-- O agente informa ao LLM que o passo foi reduzido: "Comando ajustado: D20F reduzido para D10F (proximo ao alvo, passo reduzido por seguranca)"
+- Remover seções do prompt que descrevem protocolos de busca/navegação
+- A LLM decide livremente como explorar o ambiente usando as ferramentas disponíveis (camera + proximity)
+- Nenhum comportamento de busca é imposto pelo harness
 
-**Cenarios de erro:**
-- Sem leitura de proximidade disponivel: nao modificar o comando (manter original)
-- Comando e de recuo ou rotacao: nao modificar
+### RF05 — Tradutor como único gerador de LBML
 
-## Requisitos Nao-Funcionais
+A LLM NUNCA deve gerar LBML. O tradutor Seq2Seq (`LBotTranslatorV7`) é a única fonte de geração de comandos LBML.
 
-- **Performance**: As modificacoes no agent loop (verificacao de proximidade, ajuste de comandos) nao devem adicionar latencia perceptivel (< 100ms por passo)
-- **Compatibilidade**: Nenhuma mudanca no simulador web — apenas no lbot-mcp
-- **Transparencia**: O LLM deve ser informado quando seus comandos sao modificados (mensagens claras no contexto)
-- **Robustez**: Se o sensor de proximidade estiver indisponivel, o sistema deve funcionar no modo fallback (apenas prompt, sem bloqueios automaticos)
+**Regras:**
+- A ferramenta `move()` recebe linguagem natural (ex: "ande 30cm para frente, vire 90 graus para direita")
+- O harness chama o tradutor automaticamente para converter NL → LBML antes de executar o movimento
+- Se o tradutor falhar, a missão é abortada com mensagem de erro
+- A LLM nunca vê o formato LBML nem recebe instruções sobre como gerá-lo
+- O system prompt deve instruir a LLM a usar `move()` com linguagem natural clara e direta
 
-## Glossario / Definicoes
+**Cenários de erro:**
+- Tradutor falha na tradução: abortar a missão, informar o usuário que o comando não pôde ser traduzido
 
-- **Proximidade frontal**: Distancia em cm ate o obstaculo mais proximo na direcao frontal do robo, medida pelo sensor de proximidade
-- **Proximidade traseira**: Distancia em cm ate o obstaculo mais proximo na direcao traseira do robo
-- **Objeto centralizado**: Objeto alvo aparece no centro da imagem da camera (o LLM confirma visualmente)
-- **Overshooting**: O robo avanca alem do ponto desejado e perde o objeto de vista, geralmente porque passos sao grandes demais perto do alvo
-- **Loop de rotacao**: O robo gira repetidamente (R5L/R5R) sem mudanca significativa de posica, tentando centralizar um objeto que nao esta mais visivel
-- **Agent loop**: O loop ReAct no agent.py que coordena chamadas LLM → tool_calls → resultados
-- **LBML**: Linguagem de comandos do robo (ex: D20F;R90L;)
+### RF06 — System prompt otimizado para modelo pequeno
+
+O system prompt deve ser reescrito para:
+- Ser curto e direto (~30-50 linhas)
+- Ser em português
+- Ser autoexplicativo e adequado a um modelo ~8B parâmetros
+
+**Regras:**
+- Sem classificações complexas de ações (remover "Movimento Bem Definido / Ambíguo / Tarefa")
+- Sem protocolos rígidos (busca, zonas de segurança)
+- Sem formato LBML — o modelo nunca deve ver LBML
+- Explicar de forma clara e simples as ferramentas disponíveis: `camera()`, `proximity()`, `move()`
+- Incluir regras de segurança essenciais para auto-regulação da LLM
+- Máximo de 50 linhas de system prompt
+
+### RF07 — Conjunto simplificado de ferramentas MCP
+
+As ferramentas expostas à LLM devem ser simplificadas.
+
+**Ferramentas mantidas:**
+- `camera()` — retorna a imagem da câmera frontal (base64 PNG)
+- `proximity()` — retorna leituras dos sensores de proximidade
+- `move(comando_nl)` — executa movimento a partir de linguagem natural (tradução interna para LBML)
+
+**Ferramentas removidas:**
+- `observe()` — removida; a LLM usa `camera()` e `proximity()` separadamente
+
+**Regras:**
+- Imagens continuam sendo enviadas como base64 inline, sem alteração de qualidade
+- O modelo multimodal (~8B) deve conseguir interpretar as imagens
+
+### RF08 — Remoção de anti-loop detection e context trimming
+
+Funcionalidades de proteção que limitam a autonomia da LLM devem ser removidas.
+
+**A remover:**
+- `_check_rotation_loop()` — detecção de loops de rotação
+- `_trim_messages()` — corte de mensagens antigas para caber no contexto
+- `_sanitize_messages()` — validação de integridade da conversa
+- `_estimate_tokens()` — estimativa de tokens para trimming
+- Variável de ambiente `LBOT_MAX_CONTEXT_TOKENS`
+
+**Regras:**
+- A LLM gerencia seu próprio contexto (modelo ~8B decide o que é relevante)
+- O harness não descarta mensagens automaticamente
+- Se o contexto estourar, o erro da LLM é repassado ao usuário
+
+### RF09 — CLI simplificado
+
+A interface de linha de comando deve ser enxuta.
+
+**A manter:**
+- Loop REPL básico (entrada do usuário → output)
+- Comando `/exit` para sair
+
+**A remover:**
+- Cores e formatação ANSI no terminal
+- Banner de boas-vindas
+- Comandos `/help`, `/history`, `/reset`
+- Estilização visual dos outputs
+
+**Regras:**
+- Output mostra cada step do loop de forma concisa: tool chamada + resultado resumido
+- Sem cores ou formatação especial
+
+---
+
+## Requisitos Não-Funcionais
+
+- **Tamanho de arquivos:** máximo ~150-200 linhas por arquivo
+- **Princípios Clean Code:** SRP, nomes significativos, funções pequenas, poucos argumentos
+- **Compatibilidade:** manter arquitetura MCP existente (client-server via stdio)
+- **Backend:** manter abstração de backend (`SimulatorBackend`) para suportar futuros backends
+- **Limite de iterações:** manter máximo de 50 steps no loop ReAct
+- **Sem testes:** zero arquivos ou configurações de teste no repositório
+
+---
+
+## Glossário / Definições
+
+- **Harness:** módulo de orquestração do robô (`lbot-mcp/src/harness/`) que implementa o loop ReAct conectando LLM → ferramentas MCP
+- **LLM:** Large Language Model, o "cérebro" do robô. Neste contexto, modelo ~8B parâmetros rodando via LM Studio com capacidade multimodal (visão)
+- **MCP:** Model Context Protocol — arquitetura client-server via stdio para expor ferramentas do robô
+- **LBML:** LBot Markup Language — formato de comando para movimentos do robô. Ex: `D30F;R90L;` (andar 30cm frente, rotacionar 90° esquerda)
+- **Tradutor / TranslatorWrapper:** modelo Seq2Seq `LBotTranslatorV7` que converte linguagem natural em LBML
+- **ReAct:** padrão Reasoning + Acting — a LLM alterna entre pensar e executar ferramentas
+- **System prompt:** instrução inicial enviada à LLM que define personalidade, ferramentas e regras do robô
+- **Backend:** camada de abstração que conecta o MCP server ao simulador web (HTTP)
+
+---
 
 ## Premissas
 
-- O simulador web (lbot-simulator-web) nao sera modificado nesta tarefa
-- O sensor de proximidade retorna distancia ao objeto mais proximo na direcao, sem distinguir qual objeto
-- O LLM as vezes ignora instrucoes do prompt — por isso as validacoes no codigo sao essenciais
-- O sistema pode depender de uma ultima leitura de proximidade para tomar decisoes, que pode estar desatualizada se o robo se moveu desde a ultima leitura
-- A deteccao de "objeto centralizado" depende da interpretacao visual do LLM — nao ha validacao automatica disso
+- O tradutor Seq2Seq (`LBotTranslatorV7`) pode ser invocado diretamente do harness (atualmente está no MCP server)
+- O modelo pequeno (~8B multimodal) é capaz de interpretar imagens base64
+- O modelo pequeno consegue operar com o system prompt simplificado de ~30-50 linhas
+- O simulador web (`lbot-simulator-web`) continua funcionando e não será alterado nesta tarefa
+- O backend `SimulatorBackend` e sua API HTTP permanecem inalterados
+- A arquitetura MCP (client-server via stdio com FastMCP) é mantida como está
+- O tradutor Seq2Seq em si não será modificado — apenas seu ponto de invocação muda
+
+---
 
 ## Fora de escopo
 
-- Modificacoes no simulador web (lbot-simulator-web)
-- Adicionar identificacao de objeto no sensor de proximidade (ex: informar cor/tipo do objeto detectado)
-- Adicionar sensores direcionais multi-feixe (simular sensores reais do E-Puck)
-- Modificar o tradutor de linguagem natural para LBML
-- Adicionar colisao fisica no simulador (obstaculos nao bloqueiam movimento)
-- Criar novos tipos de tarefas alem de busca/aproximacao
+- Alterações no simulador web (`lbot-simulator-web/`)
+- Modificações no modelo Seq2Seq do tradutor
+- Alterações na API HTTP do backend/simulador
+- Alterações no servidor MCP além da remoção da ferramenta `observe()`
+- Novas funcionalidades para o robô (câmera, sensores, movimento)
+- Correção de bugs existentes (a menos que surjam como consequência direta da refatoração)
+- Otimização de performance do tradutor ou da comunicação MCP
+- Criação de documentação ou README
 
-## Cenarios de Aceite
+---
 
-### CA01 - Robo para ao atingir distancia alvo
-**Dado** o robo esta se aproximando de um objeto com o objeto centralizado na camera
-**Quando** a leitura de proximidade frontal estiver entre 15cm e 25cm
-**Entao** o robo para de se mover e informa ao usuario que alcancou o objeto com sucesso
+## Cenários de Aceite
 
-### CA02 - Bloqueio de avanco por proximidade minima
-**Dado** a ultima leitura de proximidade frontal e <= 20cm
-**Quando** o LLM envia um comando D<dist>F
-**Entao** o comando e bloqueado pelo agent e uma mensagem e retornada ao LLM informando que o robo ja esta perto o suficiente
+### CA01 — Estrutura de arquivos limpa
+**Dado** o código do harness refatorado
+**Quando** inspeciono os arquivos em `lbot-mcp/src/harness/`
+**Então** nenhum arquivo ultrapassa ~200 linhas e cada arquivo tem uma única responsabilidade clara
 
-### CA03 - Reducao de passo perto do alvo
-**Dado** a ultima leitura de proximidade frontal e de 35cm
-**Quando** o LLM envia um comando D20F
-**Entao** o agent modifica o comando para D10F e informa o LLM que o passo foi reduzido
+### CA02 — Testes removidos
+**Dado** o repositório após a refatoração
+**Quando** busco por arquivos ou configurações de teste
+**Então** não existem pastas `tests/`, nem configurações de pytest/vitest, nem dependências de teste
 
-### CA04 - Reducao de passo em zona intermediaria
-**Dado** a ultima leitura de proximidade frontal e de 60cm
-**Quando** o LLM envia um comando D20F
-**Entao** o agent modifica o comando para D15F e informa o LLM que o passo foi reduzido
+### CA03 — LLM gera movimento em linguagem natural
+**Dado** o system prompt simplificado
+**Quando** a LLM decide executar um movimento
+**Então** ela chama `move()` com linguagem natural (ex: "ande 30cm para frente"), nunca com LBML
 
-### CA05 - Aproximacao normal fora de zona de reducao
-**Dado** a ultima leitura de proximidade frontal e de 100cm
-**Quando** o LLM envia um comando D20F
-**Entao** o comando e executado sem modificacao
+### CA04 — Tradutor converte NL para LBML
+**Dado** um comando de movimento em linguagem natural (ex: "ande 50cm para frente e vire 90 graus para direita")
+**Quando** o harness processa a chamada `move()`
+**Então** o tradutor Seq2Seq é chamado, gera o LBML correspondente (ex: `D50F;R90R;`), e o movimento é executado
 
-### CA06 - Recuperacao de perda de objeto
-**Dado** o robo esta a < 25cm do objeto e perde o objeto de vista (distancia salta para > 30cm ou objeto desaparece da camera)
-**Quando** o agente detecta a perda
-**Entao** o agent recua automaticamente 20cm, observa novamente, e reinsere instrucao no contexto do LLM para re-centralizar o objeto
+### CA05 — Tradutor falha → missão abortada
+**Dado** um comando NL que o tradutor não consegue processar
+**Quando** o harness chama o tradutor e recebe erro
+**Então** a missão é abortada e o usuário recebe uma mensagem de erro clara
 
-### CA07 - Limite de passos atingido
-**Dado** o robo executou 50 passos (observe + move) sem concluir a tarefa
-**Quando** o agente atinge o limite
-**Entao** o loop e interrompido e o usuario e informado que a tarefa nao pode ser concluida
+### CA06 — Sem validações programáticas
+**Dado** qualquer chamada de movimento
+**Quando** o harness processa a ação
+**Então** nenhuma validação de proximidade, loop ou distância é aplicada — a LLM decide livremente
 
-### CA08 - Deteccao de loop de rotacao
-**Dado** o robo executou 10 passos de rotacao consecutivos sem mudanca significativa de posicao (x, z)
-**Quando** o agente detecta o loop
-**Entao** uma mensagem e inserida no contexto do LLM alertando que esta em loop e sugerindo estrategia diferente
+### CA07 — Prompt curto e adequado para modelo pequeno
+**Dado** o system prompt
+**Quando** verifico seu conteúdo
+**Então** tem no máximo ~50 linhas, está em português, não contém formato LBML, não contém protocolo de busca, não contém classificação de ações, e explica as 3 ferramentas de forma clara
 
-### CA09 - Comandos de recuo e rotacao nao sao bloqueados
-**Dado** a ultima leitura de proximidade frontal e <= 20cm
-**Quando** o LLM envia um comando de recuo (D<dist>B) ou rotacao (R<ang>L/R)
-**Entao** o comando e executado normalmente sem bloqueio
+### CA08 — Ferramenta observe() removida
+**Dado** as ferramentas disponíveis para a LLM
+**Quando** a LLM precisa de informação do ambiente
+**Então** ela usa `camera()` e/ou `proximity()` separadamente — `observe()` não existe mais
 
-### CA10 - Funcionamento sem sensor de proximidade
-**Dado** o sensor de proximidade esta indisponivel
-**Quando** o robo tenta executar uma tarefa de busca/aproximacao
-**Entao** o sistema funciona em modo fallback (apenas prompt, sem bloqueios ou ajustes automaticos de passo)
+### CA09 — CLI simplificado
+**Dado** o CLI do harness
+**Quando** inicio uma sessão interativa
+**Então** não há cores, banner, comandos `/help`, `/history` ou `/reset` — apenas loop REPL básico com `/exit`
 
-### CA11 - Prompt orienta centralizacao antes de confiar no sensor
-**Dado** o robo esta realizando uma tarefa de aproximacao
-**Quando** o robo verifica a distancia ao objeto
-**Entao** o prompt instrucao explicitamente o LLM a centralizar o objeto na camera ANTES de confiar na leitura do sensor de proximidade
-
-### CA12 - Passos reduzidos na zona de aproximacao
-**Dado** o robo esta a < 40cm do objeto e com o objeto centralizado
-**Quando** o LLM envia um comando de avanco
-**Entao** o prompt instrui o LLM a usar passos de no maximo 10cm nesta zona
+### CA10 — Output de steps conciso
+**Dado** o harness em execução
+**Quando** a LLM executa cada step do loop ReAct
+**Então** o terminal mostra de forma concisa qual ferramenta foi chamada e o resultado resumido, sem formatação especial

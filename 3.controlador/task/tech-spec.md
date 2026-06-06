@@ -1,62 +1,77 @@
-# Plano Tecnico: Melhoria de Aproximacao do Robo a Objetos
+# Plano Técnico: Refatoração Completa do Harness
 
-## Visao Geral
+## Visão Geral
 
-O plano implementa 6 requisitos funcionais (RF01-RF06) em 4 fases incrementais, todas com escopo limitado ao `lbot-mcp` (sem modificar o `lbot-simulator-web`).
+Refatoração do harness (`lbot-mcp/src/harness/`) aplicando Clean Code (SRP, arquivos ~150-200 linhas), removendo validações programáticas, simplificando o system prompt para modelo ~8B, e limpando testes. As alterações no MCP server são mínimas e pontuais (adicionar translate tool, remover observe tool).
 
-A abordagem tecnica consiste em:
-1. **Melhorar o prompt** (personality.py) com instrucoes mais fortes de aproximacao
-2. **Adicionar validacoes no agent loop** (agent.py) que interceptam comandos `move()` ANTES do envio ao simulador, usando a ultima leitura de proximidade parseada do historico de mensagens
-3. **Adicionar rastreadores de estado** como atributos do `ReActAgent` para detectar loops, perda de objeto, e condicoes de parada
+O tradutor Seq2Seq (`TranslatorWrapper` / `LBotTranslatorV7`) permanece carregado no processo do MCP server. O harness obtém tradução NL→LBML chamando uma nova MCP tool `translate()` internamente (não exposta à LLM).
 
-As funcoes helper de parse/modificacao de LBML ficam como helpers no proprio `agent.py`.
+## Módulos Envolvidos
 
-## Modulos Envolvidos
-
-- **harness/agent.py**: Loop ReAct — recebe validacoes de proximidade, modificacao de comandos, rastreadores de estado (loop, step counter, last position), e condicoes de parada automatica
-- **harness/personality.py**: SYSTEM_PROMPT — recebe instrucoes atualizadas de aproximacao, zonas de distancia, anti-loop
-- **tests/test_agent.py**: Testes novos para parsing de proximidade, modificacao de comandos, deteccao de loop, limite de passos
-- **tests/test_personality.py**: Validacao das novas secoes do prompt
+- **harness** (`lbot-mcp/src/harness/`): Refatoração completa. Arquivos grandes (`agent.py` 910L, `personality.py` 235L) são divididos em módulos com responsabilidade única.
+- **mcp_server** (`lbot-mcp/src/mcp_server/`): Alterações pontuais — adicionar `translate` tool, remover `observe` tool, simplificar `move` tool.
+- **lbot-simulator-web**: Apenas remoção de testes e configs de teste. Código fonte inalterado.
 
 ## Arquivos Impactados
 
+### Novos
+- `lbot-mcp/src/harness/prompt.py` — System prompt (~30-50 linhas, português) + definições das 3 ferramentas MCP (camera, proximity, move)
+- `lbot-mcp/src/harness/messages.py` — Formatação de mensagens: injeção de imagens, construção de tool results, sumarização para display
+- `lbot-mcp/src/harness/tool_handler.py` — Handlers para cada tool call: camera_handler, proximity_handler, move_handler (com tradução NL→LBML via translate tool)
+- `lbot-mcp/src/mcp_server/tools/translate.py` — Nova ferramenta MCP `translate(command_nl) -> str` que expõe o TranslatorWrapper
+
 ### Alterados
-- `lbot-mcp/src/harness/agent.py` — +~200 linhas (helpers de LBML, metodos de validacao, rastreadores, injecao de mensagens)
-- `lbot-mcp/src/harness/personality.py` — +~40 linhas no SYSTEM_PROMPT (instrucoes de aproximacao por zona, anti-loop)
-- `lbot-mcp/tests/test_agent.py` — +~300 linhas (novas classes de teste)
-- `lbot-mcp/tests/test_personality.py` — +~20 linhas (validacao de novas secoes)
+- `lbot-mcp/src/harness/agent.py` — Reescrito para ~150 linhas: apenas o loop ReAct (`run()`), sem validações, sem trimming, sem parsing LBML
+- `lbot-mcp/src/harness/cli.py` — Simplificado para ~80 linhas: REPL básico com `/exit`, flag `--show-thinking`, sem cores/banner/help/history/reset
+- `lbot-mcp/src/mcp_server/server.py` — Remover import de `observe`, adicionar import de `translate`
+- `lbot-mcp/src/mcp_server/tools/movement.py` — Remover branch de tradução NL→LBML (passa a aceitar apenas LBML, pois o harness traduz antes)
+- `lbot-mcp/pyproject.toml` — Remover `[tool.pytest.ini_options]`, seção `dev` de dependências (pytest, pytest-asyncio), seção `[tool.uv]` de dev-dependencies
+- `lbot-simulator-web/package.json` — Remover script `"test"`, remover devDependencies de teste (`vitest`, `jsdom`, `@testing-library/*`)
+- `lbot-simulator-web/tsconfig.app.json` — Remover `"tests"` e `"vitest.config.ts"` do `include`
 
-### Nao alterados
-- `mcp_server/tools/movement.py` (sem mudancas — validacoes ficam no agent)
-- `mcp_server/tools/proximity.py`
-- `mcp_server/tools/observe.py`
-- `mcp_server/tools/camera.py`
-- `mcp_server/backends/*`
-- `mcp_client.py`, `cli.py`
+### Removidos
+- `lbot-mcp/src/harness/personality.py` — Substituído por `prompt.py`
+- `lbot-mcp/src/mcp_server/tools/observe.py` — Ferramenta removida (RF07)
+- `lbot-mcp/tests/` — Diretório completo (8 arquivos Python de teste)
+- `lbot-simulator-web/tests/` — Diretório completo (5 arquivos TypeScript de teste)
+- `lbot-simulator-web/vitest.config.ts` — Config do Vitest
+- `lbot-mcp/.pytest_cache/`, `3.controlador/.pytest_cache/`, `.pytest_cache/` — Caches de pytest
 
-## Decisoes Tecnicas
+## Decisões Técnicas
 
-| Decisao | Opcao escolhida | Justificativa |
+| Decisão | Opção escolhida | Justificativa |
 |---------|-----------------|---------------|
-| Local das validacoes | Dentro de agent.py (ReActAgent) | O agent loop ja orquestra tool calls, tem acesso ao historico de mensagens e pode injetar mensagens no contexto do LLM. Centralizar aqui evita acoplamento com o MCP server. |
-| Acesso a proximidade | Parse do historico de mensagens | Varredura reversa em `self._messages` para extrair a ultima leitura de proximidade. Zero latencia extra de rede. Leitura pode estar levemente desatualizada mas e suficiente para os checks de seguranca. |
-| Estado dos rastreadores | Atributos no ReActAgent | `self._last_proximity`, `self._last_position`, `self._consecutive_rotations`, `self._step_counter`. Simples e direto, sem novos arquivos. |
-| Funcoes LBML | Helpers no agent.py | Funcoes puras `_parse_lbml_distance()`, `_reduce_step()`, `_is_forward_command()`, `_is_rotation_command()` definidas no nivel do modulo (nao como metodos). Testaveis isoladamente. |
-| Limite de passos | Default alterado para 50 | `ReActAgent.__init__(max_steps=50)`. Alinhado com o business spec RF04. |
-| Testes | No test_agent.py existente | Segue o padrao de mock do OpenAI ja estabelecido. Novas classes: TestProximityParsing, TestCommandModification, TestLoopDetection, TestProximityGoal. |
+| Local do tradutor | MCP server (mantido) | Mantém PyTorch isolado no processo servidor; harness permanece leve |
+| Mecanismo de tradução | Nova MCP tool `translate()` | Harness traduz NL→LBML antes de chamar `move()`. Se tradução falhar, missão é abortada (RF05). A tool `translate` não é exposta à LLM (uso interno do harness) |
+| Divisão do agent.py | 4 arquivos: `agent.py`, `prompt.py`, `messages.py`, `tool_handler.py` | Cada arquivo com responsabilidade única, ~80-150 linhas. `agent.py` fica apenas com o loop ReAct |
+| System prompt + tools | Mesmo arquivo `prompt.py` | Coesão: prompt e tools são a "personalidade" do agente. Arquivo ~80 linhas no total |
+| Remoção do observe() | Deletar código fonte | Código morto não deve permanecer. Ferramenta obsoleta após refatoração |
+| CLI --show-thinking | Mantido como padrão | Mostra steps sem cores. Flag permite ocultar para debugging silencioso |
+| move() no MCP server | Aceitar apenas LBML | Responsabilidade de tradução fica no harness (via translate tool). move() é somente executor |
 
-## Dependencias entre Fases
+## Dependências entre Fases
 
-- Fase 01 (Prompt) → Independente, pode rodar primeiro
-- Fase 02 (Core Safety) → Depende da Fase 01 para o prompt mencionar as regras que serao enforced no codigo
-- Fase 03 (Loop Control) → Depende da Fase 02 (usa os helpers de parse LBML e extracao de proximidade)
-- Fase 04 (Recovery) → Depende da Fase 03 (usa os rastreadores de estado: last_proximity, step counter)
+```
+Phase 01 (prompt + messages + tool_handler)
+    │
+    ▼
+Phase 02 (MCP server: translate tool, remove observe, simplify move)
+    │
+    ▼
+Phase 03 (refatorar agent.py — depende dos módulos da Phase 01 + translate tool da Phase 02)
+    │
+    ▼
+Phase 04 (simplificar CLI — depende do agent refatorado)
+    
+Phase 05 (remover testes — independente, pode rodar em paralelo com qualquer fase)
+```
 
 ## Mapa de Fases
 
-| Fase | Descricao | Modulo | RFs |
-|------|-----------|--------|-----|
-| 01 | Prompt melhorado para aproximacao | personality.py | RF03 |
-| 02 | Bloqueio de avanco + reducao de passo | agent.py | RF02, RF06 |
-| 03 | Parada automatica + deteccao de loop + limite de passos | agent.py | RF01, RF04 |
-| 04 | Protocolo de recuperacao de perda de objeto | agent.py | RF05 |
+| Fase | Descrição | Módulo |
+|------|-----------|--------|
+| 01 | Criar prompt.py, messages.py, tool_handler.py | harness |
+| 02 | Adicionar translate tool, remover observe, simplificar move | mcp_server |
+| 03 | Refatorar agent.py (loop ReAct limpo) | harness |
+| 04 | Simplificar CLI (REPL + /exit) | harness |
+| 05 | Remover todos os testes e configs de teste | ambos |

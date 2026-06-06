@@ -1,130 +1,121 @@
-# Fase 02: Bloqueio de avanco + reducao de passo
+# Fase 02: Alterações no MCP server (translate tool + remover observe + simplificar move)
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Implementar no `agent.py`:
-- **RF02**: Bloqueio de comandos de avanco quando a distancia frontal <= 20cm
-- **RF06**: Reducao automatica do passo conforme zonas de proximidade
-
-Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando tool calls do tipo `move`.
+Fazer alterações pontuais no MCP server:
+1. Adicionar nova ferramenta `translate` que expõe o `TranslatorWrapper` como MCP tool
+2. Remover a ferramenta `observe` (deletar arquivo e limpar imports)
+3. Simplificar a ferramenta `move` para aceitar apenas LBML (remover branch de tradução NL→LBML)
 
 ## Pre-requisitos
 
-- Fase 01 concluida (prompt atualizado com as zonas de distancia e regras de aproximacao)
+- Fase 01 concluída (tool_handler.py referencia `translate` tool, mas não depende dela para build)
 
 ## Tarefas
 
-- [x] Tarefa 1: Criar funcoes helper de parse e modificacao de LBML
-  - Arquivo: `lbot-mcp/src/harness/agent.py`
-  - O que fazer: Adicionar NO TOPO do arquivo (abaixo dos imports e constantes existentes, antes da classe `ReActAgent`) as seguintes funcoes:
-    - `_parse_lbml_command(command_str: str) -> list[dict]` — parseia string LBML (ex: "D30F;R90L;") em lista de `{"type": "D"|"R", "value": int, "direction": str}`. Usar regex similar ao `LBML_SEQUENCE_RE` em `movement.py`.
-    - `_is_forward_command(parsed: list[dict]) -> bool` — retorna True se algum comando na lista for do tipo "D" com direcao "F"
-    - `_is_rotation_command(parsed: list[dict]) -> bool` — retorna True se TODOS os comandos forem do tipo "R"
-    - `_reduce_step(parsed: list[dict], max_distance: int) -> list[dict]` — modifica todos os comandos "D"+"F" com `value > max_distance` para `max_distance`, retorna nova lista
-    - `_parsed_to_lbml(parsed: list[dict]) -> str` — reconstroi string LBML a partir da lista parseada
-    - `_extract_proximity_from_messages(messages: list[dict]) -> dict | None` — varre `messages` de tras pra frente e procura a ultima leitura de proximidade. A leitura pode estar em:
-      - Resultado de `observe()` como JSON: `{"proximity": {"frente": 50.0, "tras": 200.0}}`
-      - Resultado de `proximity()` como texto: `"Frente: 50 cm | Trás: 200 cm"`
-      - Retorna `{"frente": float, "tras": float}` ou `None` se nao encontrar
+- [ ] Tarefa 1: Criar `translate.py` (nova MCP tool)
+  - Arquivo: `lbot-mcp/src/mcp_server/tools/translate.py`
+  - O que fazer: Criar tool `translate` que:
+    - Registra com `@mcp.tool()` do FastMCP
+    - Assinatura: `async def translate(command: str) -> str`
+    - Importa `get_translator()` de `mcp_server.context`
+    - Chama `get_translator().translate(command)`
+    - Se resultado for `"ERRO"`, retorna `"ERRO"`
+    - Caso contrário retorna a string LBML
+    - Docstring descrevendo a ferramenta
 
-- [x] Tarefa 2: Implementar metodo `_validate_and_adjust_move()` no ReActAgent
-  - Arquivo: `lbot-mcp/src/harness/agent.py`
-  - O que fazer: Adicionar metodo `_validate_and_adjust_move(self, command: str) -> tuple[str, str | None]` que:
-    1. Extrai a ultima leitura de proximidade do historico via `_extract_proximity_from_messages(self._messages)`
-    2. Se nao ha leitura (sensor indisponivel): retorna `(command, None)` — modo fallback, sem modificacao (RF Nao-Funcional: robustez)
-    3. Faz parse do comando original via `_parse_lbml_command(command)`
-    4. Se NAO for LBML mas linguagem natural: retorna `(command, None)` — o tradutor cuidara depois, nao conseguimos modificar comandos NL
-    5. **RF02 — Bloqueio de avanco:**
-       - Se `frente <= 20` E `_is_forward_command(parsed)`:
-         - Retorna `(None, "Bloqueado: distancia frontal e de Xcm, ja esta dentro da faixa de aproximacao (15-25cm). Objetivo alcancado.")`
-    6. **RF06 — Reducao de passo:**
-       - Se `20 < frente <= 40`: reduz passos F > 10 para 10 via `_reduce_step(parsed, 10)`, reconstroi LBML
-       - Se `40 < frente <= 80`: reduz passos F > 15 para 15 via `_reduce_step(parsed, 15)`
-       - Se `frente > 80`: sem reducao
-       - Retorna `(lbml_modificado, mensagem_informativa)` onde a mensagem diz "Comando ajustado: D20F reduzido para D10F (proximo ao alvo, passo reduzido por seguranca)"
-    7. Comandos de recuo (D*B) e rotacao (R*) NAO sao modificados
+- [ ] Tarefa 2: Deletar `observe.py`
+  - Arquivo: `lbot-mcp/src/mcp_server/tools/observe.py`
+  - O que fazer: Deletar o arquivo completamente
 
-- [x] Tarefa 3: Integrar validacao no loop principal
-  - Arquivo: `lbot-mcp/src/harness/agent.py`
-  - O que fazer: No metodo `run()`, dentro do loop que processa tool_calls (linhas 407-430), modificar o tratamento da tool `"move"`:
-    - ANTES de chamar `self._mcp.call_tool("move", ...)`, chamar `adjusted_command, block_msg = self._validate_and_adjust_move(raw_args.get("command", ""))`
-    - Se `block_msg` (comando bloqueado):
-      - NAO executar o movimento
-      - Adicionar `block_msg` como resultado da tool (como se fosse tool_result), inserindo mensagem no `self._messages` com role "tool" e o `block_msg` como content
-      - Emitir evento `tool_result` com o `block_msg`
-    - Se `adjusted_command != command_original` (comando modificado):
-      - Usar `adjusted_command` em vez do comando original na chamada `call_tool`
-      - Apos a execucao, adicionar a mensagem informativa ao resultado OU como tool_result adicional
-    - Se nenhuma modificacao: executar normalmente como ja faz hoje
+- [ ] Tarefa 3: Simplificar `movement.py` (remover tradução NL→LBML)
+  - Arquivo: `lbot-mcp/src/mcp_server/tools/movement.py`
+  - O que fazer: 
+    - Remover a lógica de detecção de formato NL vs LBML
+    - Remover a chamada a `translator.translate_verbose()`
+    - `move()` passa a aceitar apenas LBML puro (formato `D30F;R90R;`)
+    - Validar que o input casa com regex LBML: `^(D\d+[FBLR];|R\d+[LR];)+$`
+    - Se não casar, retornar erro informando formato esperado
+    - Manter a chamada a `backend.execute_lbml(lbml)`
 
-- [x] Tarefa 4: Adicionar testes
-  - Arquivo: `lbot-mcp/tests/test_agent.py`
-  - O que fazer: Criar novas classes de teste no final do arquivo:
-    - `TestLBMLHelpers` — testa `_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml`
-    - `TestProximityExtraction` — testa `_extract_proximity_from_messages` com observe JSON, proximity texto, mensagens sem proximidade, historico vazio
-    - `TestCommandModification` — testa `_validate_and_adjust_move` via mock do ReActAgent:
-      - Bloqueio quando frente <= 20cm e comando D20F
-      - Passo reduzido para 10cm quando frente = 35cm e comando D20F
-      - Passo reduzido para 15cm quando frente = 60cm e comando D20F
-      - Sem modificacao quando frente = 100cm e comando D20F
-      - Comandos de recuo/rotacao nao sao bloqueados nem modificados
-      - Fallback quando sem leitura de proximidade
+- [ ] Tarefa 4: Atualizar `server.py`
+  - Arquivo: `lbot-mcp/src/mcp_server/server.py`
+  - O que fazer:
+    - Remover `import mcp_server.tools.observe  # noqa: F401`
+    - Adicionar `import mcp_server.tools.translate  # noqa: F401`
 
-## Arquivos Referencia
+- [ ] Tarefa 5: Verificar se há `router.py` residual
+  - Arquivo: `lbot-mcp/src/mcp_server/tools/router.py` (se existir)
+  - O que fazer: Se o arquivo fonte existir, deletar (era referenciado por `.pyc` residual no `__pycache__`). Se apenas `.pyc` existe, deletar o `.pyc`.
 
-- `lbot-mcp/src/harness/agent.py` — loop principal, linhas 407-430 (onde move() e chamado), e estrutura de mensagens
-- `lbot-mcp/src/mcp_server/tools/movement.py` — referencia do regex LBML (`LBML_SEQUENCE_RE`, linha 8), como o parse e feito
-- `lbot-mcp/tests/test_agent.py` — padrao de mock do OpenAI e estrutura de testes existentes
+## Arquivos Referência
 
-## Criterios de Aceite
+- `lbot-mcp/src/mcp_server/tools/movement.py` — Código atual do move tool, para saber o que remover
+- `lbot-mcp/src/mcp_server/tools/observe.py` — Para confirmar o que está sendo deletado
+- `lbot-mcp/src/mcp_server/tools/camera.py` — Padrão de implementação de MCP tool (para seguir na translate tool)
+- `lbot-mcp/src/mcp_server/server.py` — Onde os imports de tools são feitos
+- `lbot-mcp/src/mcp_server/translator/__init__.py` — `TranslatorWrapper` e `get_translator()`
+- `lbot-mcp/src/mcp_server/context.py` — Função `get_translator()`
 
-- [x] CA02: Bloqueio de avanco por proximidade minima
-  - Cenario: Ultima leitura de proximidade frontal <= 20cm, LLM envia D<dist>F → comando bloqueado, mensagem informativa retornada
-- [x] CA03: Reducao de passo perto do alvo (frente ~35cm)
-  - Cenario: Frente = 35cm, LLM envia D20F → modificado para D10F, LLM informado
-- [x] CA04: Reducao de passo em zona intermediaria (frente ~60cm)
-  - Cenario: Frente = 60cm, LLM envia D20F → modificado para D15F, LLM informado
-- [x] CA05: Aproximacao normal fora de zona de reducao (frente > 80cm)
-  - Cenario: Frente = 100cm, LLM envia D20F → executado sem modificacao
-- [x] CA09: Comandos de recuo e rotacao nao sao bloqueados
-  - Cenario: Frente <= 20cm, LLM envia D20B ou R90L → executado normalmente
-- [x] CA10: Funcionamento sem sensor de proximidade
-  - Cenario: Sem leitura de proximidade no historico → comando executado sem modificacao (fallback)
+## Critérios de Aceite
+
+- [ ] CA01: `translate` tool registrada e funcional
+  - Cenario: Dado MCP server rodando / Quando listo tools / Então `translate` aparece na lista com parâmetro `command: string`
+
+- [ ] CA02: `translate` retorna LBML para comando NL válido
+  - Cenario: Dado comando "ande 30cm para frente" / Quando chamo translate / Então retorna algo como "D30F;" (não "ERRO")
+
+- [ ] CA03: `translate` retorna "ERRO" para comando inválido
+  - Cenario: Dado comando nonsense "xyz" / Quando chamo translate / Então retorna "ERRO"
+
+- [ ] CA04: `observe` tool não existe mais
+  - Cenario: Dado MCP server rodando / Quando listo tools / Então `observe` NÃO aparece na lista
+
+- [ ] CA05: `move` tool rejeita linguagem natural
+  - Cenario: Dado comando "ande 30cm para frente" / Quando chamo move / Então retorna erro informando formato LBML esperado
+
+- [ ] CA06: `move` tool aceita LBML válido
+  - Cenario: Dado comando "D30F;R90R;" / Quando chamo move / Então executa normalmente via backend
+
+- [ ] CA07: Nenhum arquivo `.py` de `observe` ou `router` existe
+  - Cenario: Dado o diretório tools/ / Quando listo arquivos / Então observe.py e router.py não existem
 
 ## Testes Esperados
 
-- `TestLBMLHelpers.test_parse_single_forward` — "D30F;" → [{"type":"D","value":30,"direction":"F"}]
-- `TestLBMLHelpers.test_parse_sequence` — "D50F;R90L;D30B;"
-- `TestLBMLHelpers.test_is_forward_true` — comando D tem direcao F
-- `TestLBMLHelpers.test_is_forward_false` — comando D tem direcao B
-- `TestLBMLHelpers.test_is_rotation_true` — so tem R
-- `TestLBMLHelpers.test_reduce_step` — D20F → D10F com max=10
-- `TestLBMLHelpers.test_parsed_to_lbml` — reconstroi LBML
-- `TestProximityExtraction.test_extract_from_observe_json` — observe com proximity:50
-- `TestProximityExtraction.test_extract_from_proximity_text` — "Frente: 50 cm | Trás: 200 cm"
-- `TestProximityExtraction.test_no_proximity_found` — retorna None
-- `TestCommandModification.test_blocks_forward_when_front_lte_20`
-- `TestCommandModification.test_reduces_to_10_when_front_between_20_40`
-- `TestCommandModification.test_reduces_to_15_when_front_between_40_80`
-- `TestCommandModification.test_no_modification_when_front_gt_80`
-- `TestCommandModification.test_backward_and_rotation_not_blocked`
-- `TestCommandModification.test_fallback_when_no_proximity_reading`
+(Não há testes automatizados — RF02. Validação manual via MCP inspector ou listando tools.)
 
-## Comandos pos-fase
+## Comandos pós-fase
 
 ```bash
-cd lbot-mcp && python -m pytest tests/test_agent.py -v
+# Verificar que o servidor MCP inicia e lista as tools corretas
+cd lbot-mcp && python -c "
+import asyncio
+from mcp_server.server import mcp
+async def check():
+    # Listar tools registradas (via FastMCP interno)
+    tools = await mcp._tool_manager.list_tools()
+    names = [t.name for t in tools]
+    print('Tools:', names)
+    assert 'translate' in names, 'translate tool missing'
+    assert 'observe' not in names, 'observe tool should be removed'
+    assert 'camera' in names
+    assert 'proximity' in names
+    assert 'move' in names
+    print('OK')
+asyncio.run(check())
+"
+
+# Verificar que observe.py não existe
+test ! -f lbot-mcp/src/mcp_server/tools/observe.py && echo "observe.py removido"
 ```
 
-## Registro de Execucao
+## Registro de Execução
 
-- Data: 2026-06-06
-- Arquivos criados: Nenhum
+- Data:
+- Arquivos criados:
 - Arquivos alterados:
-  - `lbot-mcp/src/harness/agent.py` — Adicionadas 6 funcoes helper de LBML (`_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml`, `_extract_proximity_from_messages`) e metodo `_validate_and_adjust_move()` no `ReActAgent`. Integrada validacao no loop principal (move tool handling com bloqueio e reducao de passo).
-  - `lbot-mcp/tests/test_agent.py` — Adicionadas 3 novas classes de teste: `TestLBMLHelpers` (13 tests), `TestProximityExtraction` (6 tests), `TestCommandModification` (8 tests). Import atualizado para incluir as novas funcoes helper.
-- Testes executados: `pytest tests/test_agent.py -v` — 47/47 passed
-- Resultado: Todos os testes passaram. Nenhum teste existente quebrado. RF02 (bloqueio de avanco) e RF06 (reducao de passo) implementados.
-- Pendencias: Nenhuma
+- Testes executados:
+- Resultado:
+- Pendências:
