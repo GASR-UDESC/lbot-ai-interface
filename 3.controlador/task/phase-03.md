@@ -1,6 +1,6 @@
 # Fase 03: Refatorar agent.py (loop ReAct limpo)
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ Também deletar `personality.py` (substituído por `prompt.py`).
 
 ## Tarefas
 
-- [ ] Tarefa 1: Reescrever `agent.py`
+- [x] Tarefa 1: Reescrever `agent.py`
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Reescrever completamente o arquivo (~150 linhas) mantendo apenas:
     - **Classe `ReActAgent`** com:
@@ -67,11 +67,11 @@ Também deletar `personality.py` (substituído por `prompt.py`).
     - Tracking de estado: `_last_front_proximity`, `_last_back_proximity`, `_last_position`, `_consecutive_rotations`, `_object_was_centered`, `_goal_achieved`
     - Variável `LBOT_MAX_CONTEXT_TOKENS` (RF08)
 
-- [ ] Tarefa 2: Deletar `personality.py`
+- [x] Tarefa 2: Deletar `personality.py`
   - Arquivo: `lbot-mcp/src/harness/personality.py`
   - O que fazer: Deletar o arquivo completamente (substituído por `prompt.py`)
 
-- [ ] Tarefa 3: Atualizar `__init__.py` do harness (se necessário)
+- [x] Tarefa 3: Atualizar `__init__.py` do harness (se necessário)
   - Arquivo: `lbot-mcp/src/harness/__init__.py`
   - O que fazer: Se houver imports no `__init__.py`, atualizar. Se estiver vazio, manter vazio.
 
@@ -85,22 +85,22 @@ Também deletar `personality.py` (substituído por `prompt.py`).
 
 ## Critérios de Aceite
 
-- [ ] CA01: `agent.py` tem no máximo ~200 linhas
+- [x] CA01: `agent.py` tem no máximo ~200 linhas
   - Cenario: Dado o arquivo agent.py refatorado / Quando conto as linhas / Então ≤ 200 linhas
 
-- [ ] CA02: Nenhuma validação programática existe em agent.py
+- [x] CA02: Nenhuma validação programática existe em agent.py
   - Cenario: Dado o código de agent.py / Quando busco por `_validate_and_adjust_move`, `_check_proximity_goal`, `_check_rotation_loop`, `_detect_object_loss`, `_is_valid_base64`, `_trim_messages`, `_sanitize_messages`, `_estimate_tokens` / Então nenhum desses métodos existe
 
-- [ ] CA03: Nenhuma função de parsing LBML existe em agent.py
+- [x] CA03: Nenhuma função de parsing LBML existe em agent.py
   - Cenario: Dado o código de agent.py / Quando busco por `_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml` / Então nenhuma dessas funções existe
 
-- [ ] CA04: Agente usa `tool_handler.handle_move()` para traduzir e executar movimento
+- [x] CA04: Agente usa `tool_handler.handle_move()` para traduzir e executar movimento
   - Cenario: Dado tool_call com nome "move" e argumentos `{"command": "ande 30cm para frente"}` / Quando o agente processa / Então chama handle_move (que traduz NL→LBML e executa)
 
-- [ ] CA05: `TranslationError` aborta a missão
+- [x] CA05: `TranslationError` aborta a missão
   - Cenario: Dado translate falha / Quando handle_move lança TranslationError / Então agente emite evento de erro e retorna mensagem "Missão abortada: falha na tradução"
 
-- [ ] CA06: `personality.py` não existe mais
+- [x] CA06: `personality.py` não existe mais
   - Cenario: Dado o diretório harness/ / Quando listo arquivos / Então personality.py não existe
 
 ## Testes Esperados
@@ -136,9 +136,19 @@ else:
 
 ## Registro de Execução
 
-- Data:
+- Data: 2026-06-06
 - Arquivos criados:
+  - Nenhum (apenas alterações e remoções)
 - Arquivos alterados:
+  - `lbot-mcp/src/harness/agent.py` — Reescrito completamente: de 910 linhas para 200 linhas. Apenas loop ReAct com `run()`, usando `prompt.py`, `messages.py` e `tool_handler.py`. Removidas todas as validações programáticas, parsing LBML, trimming, sanitization, tracking de estado e `history_summary`.
+- Arquivos removidos:
+  - `lbot-mcp/src/harness/personality.py` — Substituído por `prompt.py`
 - Testes executados:
-- Resultado:
-- Pendências:
+  - `wc -l agent.py`: 200 linhas (dentro do limite ~200)
+  - Import check: `ReActAgent` importa sem erros
+  - Verificação de métodos proibidos: todos os 16 métodos/funções removidos (apenas `__init__`, `_emit`, `cancel`, `reset`, `history`, `run` permanecem)
+  - `personality.py` confirmado removido
+  - Referência a `handle_move` e `TranslationError` confirmada no código
+  - `__init__.py` já estava vazio, sem necessidade de alteração
+- Resultado: Aprovado (todos os critérios de aceite atendidos)
+- Pendências: Nenhuma

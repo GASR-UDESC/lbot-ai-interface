@@ -2,48 +2,44 @@ import re
 import httpx
 
 from ..server import mcp
-from ..context import get_backend, get_translator
-from ..translator import TranslationError
+from ..context import get_backend
 
 LBML_SEQUENCE_RE = re.compile(r"^(D\d+[FBLR];|R\d+[LR];)+$")
 
 
 @mcp.tool()
 async def move(command: str) -> str:
-    """Move o robô de acordo com um comando. Aceita tanto linguagem natural (ex: 'ande 30cm para frente') quanto LBML direto (ex: 'D30F;R90L;')."""
-    is_lbml_direct = bool(LBML_SEQUENCE_RE.match(command))
+    """Executa um comando de movimento em formato LBML.
 
-    if is_lbml_direct:
-        lbml = command
-    else:
-        try:
-            translator = get_translator()
-            original, preprocessed, lbml = translator.translate_verbose(command)
-        except TranslationError as e:
-            return f"Erro: não entendi o comando '{command}'. Pode reformular? ({e})"
-
-        if lbml == "ERRO" or not LBML_SEQUENCE_RE.match(lbml):
-            return f"Erro: não entendi o comando '{command}'. Pode reformular?"
+    Args:
+        command: Comando LBML (ex: 'D30F;R90L;').
+                 D = deslocamento em cm, R = rotacao em graus.
+                 F = frente, B = tras, L = esquerda, R = direita.
+    """
+    if not LBML_SEQUENCE_RE.match(command):
+        return (
+            "Erro: formato LBML invalido. "
+            "Use o formato 'D30F;R90L;' "
+            "(D=deslocamento em cm, R=rotacao em graus; "
+            "F=frente, B=tras, L=esquerda, R=direita)."
+        )
 
     try:
         backend = get_backend()
-        result = await backend.execute_lbml(lbml)
+        result = await backend.execute_lbml(command)
 
         if result.get("accepted"):
-            if is_lbml_direct:
-                return f"Comando executado: {command} (LBML direto)"
-            else:
-                return f"Comando executado: {lbml} ({preprocessed})"
+            return f"Comando executado: {command}"
         else:
-            error_msg = result.get("error", "falha na execução")
-            return f"Erro: falha na execução — {error_msg}"
+            error_msg = result.get("error", "falha na execucao")
+            return f"Erro: falha na execucao — {error_msg}"
 
     except RuntimeError as e:
         error_str = str(e)
         if "409" in error_str:
-            return "Erro: o simulador não está conectado. Abra o simulador no navegador para executar movimentos."
-        return f"Erro: falha na execução — {e}"
+            return "Erro: o simulador nao esta conectado. Abra o simulador no navegador para executar movimentos."
+        return f"Erro: falha na execucao — {e}"
     except httpx.TimeoutException:
         return "Erro: timeout ao executar movimento."
     except Exception as e:
-        return f"Erro: falha na execução — {e}"
+        return f"Erro: falha na execucao — {e}"

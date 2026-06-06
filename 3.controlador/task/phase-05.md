@@ -1,6 +1,6 @@
 # Fase 05: Remover testes e limpar configurações
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Remover todos os arquivos de teste, diretórios de teste, configurações de tes
 
 ## Tarefas
 
-- [ ] Tarefa 1: Remover diretório de testes Python
+- [x] Tarefa 1: Remover diretório de testes Python
   - O que fazer: Deletar completamente `lbot-mcp/tests/` e todo seu conteúdo
   - Itens afetados:
     - `lbot-mcp/tests/__init__.py`
@@ -25,7 +25,7 @@ Remover todos os arquivos de teste, diretórios de teste, configurações de tes
     - `lbot-mcp/tests/test_translator.py`
     - `lbot-mcp/tests/__pycache__/` (bytecode cache)
 
-- [ ] Tarefa 2: Remover diretório de testes TypeScript
+- [x] Tarefa 2: Remover diretório de testes TypeScript
   - O que fazer: Deletar completamente `lbot-simulator-web/tests/` e todo seu conteúdo
   - Itens afetados:
     - `lbot-simulator-web/tests/setup.ts`
@@ -34,12 +34,12 @@ Remover todos os arquivos de teste, diretórios de teste, configurações de tes
     - `lbot-simulator-web/tests/lbml.test.ts`
     - `lbot-simulator-web/tests/sensors.test.ts`
 
-- [ ] Tarefa 3: Remover arquivos de configuração de teste
+- [x] Tarefa 3: Remover arquivos de configuração de teste
   - O que fazer: Deletar:
     - `lbot-simulator-web/vitest.config.ts`
   - No `lbot-simulator-web/tsconfig.app.json`, remover `"tests"` e `"vitest.config.ts"` do array `include`
 
-- [ ] Tarefa 4: Limpar `pyproject.toml`
+- [x] Tarefa 4: Limpar `pyproject.toml`
   - Arquivo: `lbot-mcp/pyproject.toml`
   - O que fazer:
     - Remover seção `[project.optional-dependencies]` inteira (contém `pytest`, `pytest-asyncio`, `mypy`)
@@ -48,7 +48,7 @@ Remover todos os arquivos de teste, diretórios de teste, configurações de tes
     - Remover seção `[tool.pytest.ini_options]` inteira
     - Manter `[tool.mypy]` se ainda quiser type checking (a menos que o usuário queira remover também)
 
-- [ ] Tarefa 5: Limpar `package.json`
+- [x] Tarefa 5: Limpar `package.json`
   - Arquivo: `lbot-simulator-web/package.json`
   - O que fazer:
     - Remover `"test": "vitest run"` da seção `"scripts"`
@@ -59,13 +59,13 @@ Remover todos os arquivos de teste, diretórios de teste, configurações de tes
       - `"jsdom"`
       - `"vitest"`
 
-- [ ] Tarefa 6: Remover caches de pytest
+- [x] Tarefa 6: Remover caches de pytest
   - O que fazer: Deletar diretórios:
     - `lbot-mcp/.pytest_cache/`
     - `3.controlador/.pytest_cache/`
     - `.pytest_cache/` (raiz do repositório)
 
-- [ ] Tarefa 7: Verificar e remover `test_robustness.py` (se aplicável)
+- [x] Tarefa 7: Verificar e remover `test_robustness.py` (se aplicável)
   - Arquivo: `2.treinamento-de-modelo/lbot-natural-language-controller/lbot-v7/test_robustness.py`
   - O que fazer: Este arquivo está fora do `3.controlador/`. Verificar com o contexto da business spec se deve ser removido. A business spec menciona "Fora de escopo: Modificações no modelo Seq2Seq do tradutor", e este teste está no diretório do tradutor. **Não remover** a menos que o usuário confirme.
 
@@ -78,19 +78,19 @@ Remover todos os arquivos de teste, diretórios de teste, configurações de tes
 
 ## Critérios de Aceite
 
-- [ ] CA01: Nenhum diretório `tests/` existe
+- [x] CA01: Nenhum diretório `tests/` existe
   - Cenario: Dado o repositório / Quando busco `lbot-mcp/tests/` e `lbot-simulator-web/tests/` / Então não existem
 
-- [ ] CA02: Nenhum arquivo de configuração de teste existe
+- [x] CA02: Nenhum arquivo de configuração de teste existe
   - Cenario: Dado o repositório / Quando busco `vitest.config.ts`, `.pytest_cache/` / Então não existem
 
-- [ ] CA03: `pyproject.toml` sem referências a pytest
+- [x] CA03: `pyproject.toml` sem referências a pytest
   - Cenario: Dado pyproject.toml / Quando busco por `pytest` / Então não encontro (exceto talvez em comentários)
 
-- [ ] CA04: `package.json` sem scripts ou deps de teste
+- [x] CA04: `package.json` sem scripts ou deps de teste
   - Cenario: Dado package.json / Quando busco por `vitest`, `jsdom`, `@testing-library` / Então não encontro
 
-- [ ] CA05: `tsconfig.app.json` sem referência a tests
+- [x] CA05: `tsconfig.app.json` sem referência a tests
   - Cenario: Dado tsconfig.app.json / Quando verifico `include` / Então não contém `"tests"` nem `"vitest.config.ts"`
 
 ## Testes Esperados
@@ -122,9 +122,26 @@ grep -q '"tests"' lbot-simulator-web/tsconfig.app.json && echo "ERRO: tests em t
 
 ## Registro de Execução
 
-- Data:
+- Data: 2026-06-06
 - Arquivos criados:
+  - Nenhum (apenas remoções e alterações)
 - Arquivos alterados:
+  - `lbot-mcp/pyproject.toml` — Removidas seções `[tool.pytest.ini_options]`, `pytest`/`pytest-asyncio` de `dev` e `dev-dependencies`; mantido `mypy`
+  - `lbot-simulator-web/package.json` — Removido script `"test"` e devDependencies de teste (`vitest`, `jsdom`, `@testing-library/*`)
+  - `lbot-simulator-web/tsconfig.app.json` — Removido `"tests"` e `"vitest.config.ts"` do `include`
+- Arquivos removidos:
+  - `lbot-mcp/tests/` — Diretório completo (9 itens: __init__.py, 7 test files, __pycache__)
+  - `lbot-simulator-web/tests/` — Diretório completo (5 arquivos TypeScript de teste)
+  - `lbot-simulator-web/vitest.config.ts` — Config do Vitest
+  - `lbot-mcp/.pytest_cache/` — Cache de pytest
+  - `.pytest_cache/` (raiz) — Cache de pytest
+  - `3.controlador/.pytest_cache/` — Cache de pytest
 - Testes executados:
-- Resultado:
-- Pendências:
+  - Verificação de diretórios: `lbot-mcp/tests/` e `lbot-simulator-web/tests/` não existem
+  - Verificação de configs: `vitest.config.ts` removido, `.pytest_cache/` limpos
+  - Verificação de pyproject.toml: sem `pytest`
+  - Verificação de package.json: sem `vitest`, `jsdom`, `@testing-library`, script `"test"`
+  - Verificação de tsconfig: sem `"tests"` nem `"vitest.config.ts"`
+  - `test_robustness.py` em `2.treinamento-de-modelo/`: fora de escopo, mantido
+- Resultado: Aprovado (todos os critérios de aceite atendidos)
+- Pendências: Nenhuma

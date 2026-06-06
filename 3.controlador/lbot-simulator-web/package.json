@@ -11,8 +11,7 @@
     "build": "npm run check && vite build",
     "check": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "start": "NODE_ENV=production tsx server/index.ts",
-    "preview": "vite preview",
-    "test": "vitest run"
+    "preview": "vite preview"
   },
   "dependencies": {
     "cannon-es": "^0.20.0",
@@ -25,9 +24,6 @@
     "three": "0.160.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/gl": "^6.0.5",
@@ -38,10 +34,8 @@
     "@types/three": "0.160.0",
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.2.1",
-    "jsdom": "^29.0.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.9",
-    "vitest": "^4.1.5"
+    "vite": "^8.0.9"
   }
 }
