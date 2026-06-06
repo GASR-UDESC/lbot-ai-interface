@@ -1,158 +1,161 @@
-# Fase 05: Leaderboard Cards + Controls Page + Virtual Controls
+# Fase 05: Tipografia Final + Auditoria Border-Radius + Polish
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Redesenhar a pagina Leaderboard de tabela dark para cards estilo Airbnb property-card, e redesenhar a pagina Controls e componente VirtualControls para tema claro Airbnb.
+Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consistente (uppercase labels, weight 300 para body, weight 700 para headings, tracking correto), que todos os border-radius estao em 0 (exceto icones circulares), que a faixa M tricolor esta sendo usada corretamente como divisor de marca, e que a responsividade esta funcionando em todos os breakpoints.
 
 ## Pre-requisitos
 
-- Fase 01 concluida (tokens CSS)
-- Fase 02 concluida (top-nav aparecera em ambas as paginas)
+- Fases 01, 02, 03 e 04 concluidas
 
 ## Tarefas
 
-- [x] Tarefa 1: Redesenhar Leaderboard Page (RF08)
-  - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
-  - O que fazer: Converter a tabela HTML para um layout de cards:
-    - Header: icone de trofeu + titulo display-lg ink "Leaderboard" + subtitulo body-md muted
-    - Cards de ranking: cada jogador como um card independente com fundo canvas, rounded.md, hairline border, hover com card-hover-float shadow
-    - Estrutura do card: rank/posicao em grande (rating-display para top 3, title-md para demais), nickname em title-md ink, tempo em body-md muted com valor monospace tabular-nums, data em caption-sm muted
-    - Top 3 recebe icones de medalha (ouro, prata, bronze)
-    - Grid responsivo: 4-up desktop (>1128px), 2-3 up tablet (744-1128px), 1-up mobile (<744px)
-    - Empty state: icone + mensagem em body-md muted
-    - Error state: icone + mensagem em primary-error-text + botao retry button-primary
-    - Loading state: skeleton cards com surface-soft e animacao pulse
-    - Footer: link "Voltar ao Menu" como button-tertiary-text com underline hover
+- [ ] Tarefa 1: Auditoria de tipografia em TODOS os componentes
+  - Arquivos: Todos os arquivos CSS dos componentes
+  - O que fazer:
+    - **Headings/titulos de pagina**: Devem ser `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: -0.5px` (para display-lg e acima)
+    - **Body text**: Deve ser `font-weight: 300` (Light) para paragrafos e textos descritivos
+    - **Button labels**: Devem ser `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 1.5px`
+    - **Nav links/pills/badges**: Devem ser `font-size: 14px`, `font-weight: 700`, `letter-spacing: 1.5px`, uppercase
+    - **Labels de secao/grupo**: Devem ser uppercase com tracking 1.5px
+    - Verificar cada componente:
+      - `menu.page.css`: titulo uppercase, subtitle weight 300, botoes uppercase tracking 1.5px
+      - `leaderboard.page.css`: titulo uppercase, cards com info correto
+      - `game.page.css`: page-title uppercase, HUD labels uppercase
+      - `controls.page.css`: page-title uppercase, subtitle weight 300
+      - `lbot-chat.css`: header uppercase, button labels uppercase tracking 1.5px
+      - `virtual-controls.css`: labels uppercase tracking 1.5px, body weight 300
+      - `victory-screen.css`: titulo uppercase, labels uppercase, buttons uppercase tracking 1.5px
+      - `level-transition.css`: badge uppercase tracking 1.5px, button uppercase
+      - `confirm-modal.css`: buttons uppercase tracking 1.5px
+    - Auditar hardcoded font-size/weight que nao usam variaveis CSS e substituir por variaveis
 
-  - Arquivo: `src/app/pages/leaderboard/leaderboard.page.css`
-  - O que fazer: Substituir TODOS os estilos dark/neon por tokens Airbnb:
-    - `.lb-page`: fundo canvas, sem gradientes escuros, padding section (64px)
-    - `.lb-header`: centralizado, cor ink
-    - `.lb-title`: display-lg ink
-    - `.lb-subtitle`: body-md muted
-    - Cards: `.lb-card` - fundo canvas, rounded.md, hairline border (#dddddd), hover com shadow card-hover-float
-    - `.lb-card:hover`: elevacao card-hover-float
-    - `.lb-rank`: rating-display para top 3, title-md para demais
-    - `.lb-nickname`: title-md ink
-    - `.lb-time`: body-md muted, font-variant-numeric: tabular-nums
-    - `.lb-date`: caption-sm muted
-    - Medals: manter emojis ou usar icones lucide
-    - Loading: `.lb-skeleton` com surface-soft e animacao pulse
-    - Error state: primary-error-text
-    - `.lb-retry-btn`: button-primary Rausch
-    - `.lb-back-btn`: button-tertiary-text, ink text, underline hover
-    - Grid responsivo com CSS Grid ou Flexbox
-    - Remover: TODAS as cores dark (#0a0a0e, #6a6a8f, etc.), gradientes, bordas neon
+- [ ] Tarefa 2: Auditoria de border-radius em TODOS os componentes
+  - Arquivos: Todos os arquivos CSS dos componentes
+  - O que fazer:
+    - Buscar por TODOS os usos de `border-radius` em todos os CSS
+    - Regra BMW M: `border-radius: 0` para botoes, cards, containers, inputs, modais
+    - Excecao: `border-radius: var(--rounded-full)` ou `9999px` APENAS para:
+      - Botoes circulares de icone: `.end-chat-btn` (chat close), `.remove-btn` (virtual controls)
+      - Pills/badges small: `.level-badge` (level transition)
+    - Verificar NENHUM uso de `border-radius: var(--rounded-md)` (que era 14px, agora 6px) em cards, botoes ou inputs — devem ser 0
+    - Verificar NENHUM uso de `border-radius: var(--rounded-sm)` (que era 8px, agora 4px) em botoes grandes — devem ser 0
+    - Inputs/textareas: `border-radius: 0`
+    - Modals/overlays: `border-radius: 0`
+    - Mensagens de chat: `border-radius: 0`
+    - Menu buttons: `border-radius: 0`
+    - Leaderboard cards: `border-radius: 0`
 
-- [x] Tarefa 2: Redesenhar Controls Page (RF09)
-  - Arquivo: `src/app/pages/controls/controls.page.html`
-  - O que fazer: Ajustar HTML para:
-    - Remover o header atual com fundo dark e substituir por layout que depende da top-nav global
-    - Titulo da pagina display-sm ink "Modo Controle" + subtitulo body-md muted
-    - Layout de duas colunas: simulador a esquerda (flex 1.2) + painel de controles a direita
-    - Simulador: container com rounded.md, hairline border, fundo canvas
-    - Remover `<a routerLink="/menu">` inline (ja esta na top-nav)
+- [ ] Tarefa 3: Auditoria da faixa M tricolor
+  - Arquivos: Todos os templates HTML
+  - O que fazer:
+    - Verificar que a faixa M tricolor aparece:
+      1. Na borda inferior do top-nav (implementado na Fase 01)
+      2. Como divisor entre header contextual e conteudo nas paginas Game e Controls (implementado na Fase 03)
+    - Verificar que a faixa NAO aparece como:
+      - Fundo de botao
+      - Cor de texto
+      - Superficie/card background
+    - Verificar que nao ha uso duplicado ou indevido da faixa
 
-  - Arquivo: `src/app/pages/controls/controls.page.css`
-  - O que fazer: Substituir TODOS os estilos dark por tokens Airbnb:
-    - `.controls-page`: fundo canvas (#ffffff), sem gradientes escuros
-    - Layout header: removido (top-nav global cuida disso)
-    - Titulo e subtitulo em tokens tipograficos Airbnb
-    - `.controls-layout`: grid 2 colunas (1.2fr 1fr) em desktop, 1 coluna em mobile (<768px)
-    - `.simulator-container`: rounded.md, hairline border, fundo canvas
-    - `.controls-panel`: fundo canvas, rounded.md, hairline border, sem sombra dark
-    - Remover: cores dark (#101114, #f5faf5, etc.), gradientes, shadows excessivas
+- [ ] Tarefa 4: Auditoria de responsividade
+  - Arquivos: Todos os arquivos CSS com media queries
+  - O que fazer:
+    - **Mobile (<768px)**:
+      - Top-nav colapsa para hamburger (implementado na Fase 01)
+      - Game layout: simulador e chat empilham verticalmente
+      - Controls layout: simulador e controles empilham verticalmente
+      - Leaderboard: cards em colunaunica
+      - Menu: botoes empilhados verticalmente
+    - **Tablet (768-1024px)**:
+      - Top-nav horizontal
+      - Layouts grid com 2 colunas
+    - **Desktop (1024-1440px)**:
+      - Top-nav horizontal
+      - Layouts completos
+    - **Wide (>1440px)**:
+      - Max-width containers, mais espacamento
+    - Verificar que a top-nav nao sobrepoem conteudo em nenhum breakpoint
+    - Verificar que chat-panel no game page empilha corretamente em mobile
 
-- [x] Tarefa 3: Redesenhar VirtualControls Component (RF10)
-  - Arquivo: `src/app/components/virtual-controls/virtual-controls.html`
-  - O que fazer: Ajustar classes para estilo Airbnb:
-    - Botoes de acao (Frente, Tras, Esquerda, Direita): icon-button-circle com surface-strong fundo, ink icone, rounded.full, 44px min touch target
-    - Botoes de rotacao (Girar Esq., Girar Dir.): mesmo estilo
-    - Timeline: lista vertical com hairline-soft entre itens, rounded.sm
-    - Botao remover (X) por item: icon-button-circle pequeno, surface-strong
-    - Textarea de descricao: text-input estilo Airbnb (56px, rounded.sm)
-    - Botao "Executar": button-primary, rounded.sm, full-width quando mobile
-    - Botao "Limpar Tudo": button-tertiary-text, ink com underline hover
+- [ ] Tarefa 5: Auditoria de cores hardcoded e cleanup final
+  - Arquivos: Todos os arquivos CSS
+  - O que fazer:
+    - Buscar por qualquer valor hex hardcoded (ex: `#222222`, `#3f3f3f`, `#6a6a6a`, `#929292`, `#dddddd`, `#ebebeb`, `#c1c1c1`, `#ffffff`, `#f7f7f7`, `#f2f2f2`, `#ff385c`, `#e00b41`, `#ffd1da`, `#c13515`, `rgba(0, 0, 0, 0.5)`, `rgba(193, 53, 21, 0.08)`, etc.)
+    - Substituir por variaveis CSS do BMW M:
+      - `#222222` (old ink) -> `var(--color-ink)` (agora `#ffffff`)
+      - `#3f3f3f` (old body) -> `var(--color-body)` (agora `#bbbbbb`)
+      - `#6a6a6a` (old muted) -> `var(--color-muted)` (agora `#7e7e7e`)
+      - `#929292` (old muted-soft) -> `var(--color-muted-soft)` (agora `#5e5e5e`)
+      - `#dddddd` (old hairline) -> `var(--color-hairline)` (agora `#3c3c3c`)
+      - `#ffffff` (old canvas) -> `var(--color-canvas)` (agora `#000000`)
+      - `#f7f7f7` (old surface-soft) -> `var(--color-surface-soft)` (agora `#0d0d0d`)
+      - `#f2f2f2` (old surface-strong) -> `var(--color-surface-strong)` (agora `#262626`)
+      - `rgba(0, 0, 0, 0.5)` -> `rgba(0, 0, 0, 0.85)` (overlay escuro)
+      - `rgba(193, 53, 21, 0.08)` -> `rgba(226, 39, 24, 0.1)` (error bg)
+      - `rgba(255, 255, 255, 0.92)` -> `rgba(0, 0, 0, 0.85)` (HUD overlay)
+    - Verificar que componentes que tinham fallbacks inline (ex: `var(--color-canvas, #ffffff)`) agora usam apenas `var(--color-canvas)` sem fallback
+    - Remover shadows remanescentes (`box-shadow`, `--shadow-card-hover-float`)
 
-  - Arquivo: `src/app/components/virtual-controls/virtual-controls.css`
-  - O que fazer: Substituir TODOS os estilos dark por tokens Airbnb:
-    - Fundo geral: canvas (#ffffff)
-    - Botoes direcionais: surface-strong (#f2f2f2) fundo, ink (#222222) icone, rounded.full, min 44px touch target
-    - Botoes de rotacao: mesmo estilo
-    - Timeline: fundo canvas, hairline-soft (#ebebeb) entre itens, rounded.sm
-    - Resumo/LBML: fundo surface-soft (#f7f7f7), caption-sm monospace
-    - Botao executar: button-primary (Rausch bg, on-primary text)
-    - Botao limpar: button-tertiary-text (transparent bg, ink text, underline hover)
-    - Remover: TODAS as cores dark, gradientes, bordas neon
-
-- [x] Tarefa 4: Adicionar estados de loading/error a Leaderboard (RF08)
-  - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
-  - O que fazer: Garantir que os estados de loading, error e empty ja existam no template (eles ja existem, basta estilizar):
-    - Loading: skeleton cards
-    - Error: icone + texto primary-error-text + botao retry button-primary
-    - Empty: icone + texto body-md muted
+- [ ] Tarefa 6: Atualizar jogo HUD overlay (RF03 + RF10)
+  - Arquivo: `src/app/pages/game/game.page.css`
+  - O que fazer:
+    - O HUD ja foi parcialmente atualizado na Fase 03. Verificar:
+    - `.hud`: `background: rgba(0, 0, 0, 0.85)`, `border: 1px solid var(--color-hairline)`, `border-radius: 0`
+    - `.hud-label`: `color: var(--color-ink)`, `text-transform: uppercase`, `letter-spacing: 1.5px`, `font-weight: 700`
+    - `.hud-timer`: `color: var(--color-ink)`, `font-variant-numeric: tabular-nums`
+    - `.hud-reset-btn`: estilo outline BMW (`background: transparent`, `border: 1px solid var(--color-on-dark)`, `color: var(--color-on-dark)`, `border-radius: 0`, `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 1.5px`)
+    - Confirmar que `.hud-nav` foi removido (Fase 03)
 
 ## Arquivos Referencia
 
-- `src/app/pages/leaderboard/leaderboard.page.ts` - Logica (nao alterar)
-- `src/app/pages/leaderboard/leaderboard.page.html` - Template atual com tabela
-- `src/app/pages/leaderboard/leaderboard.page.css` - 224 linhas dark/neon
-- `src/app/pages/controls/controls.page.ts` - Logica (nao alterar)
-- `src/app/pages/controls/controls.page.html` - Template atual
-- `src/app/pages/controls/controls.page.css` - 117 linhas dark/clr
-- `src/app/components/virtual-controls/virtual-controls.ts` - Logica (nao alterar)
-- `src/app/components/virtual-controls/virtual-controls.html` - Template atual
-- `src/app/components/virtual-controls/virtual-controls.css` - 396 linhas dark
-- `task/DESIGN-airbnb.md` - Especificacao de property-card, icon-button-circle, button-primary, button-secondary
+- Todos os arquivos CSS dos componentes (auditados nas fases anteriores)
+- `task/DESIGN-bmw-m.md` - Referencia visual BMW M
+- `task/business-spec.md` - Especificacao de negocio (criterios de aceite CA05-CA16)
 
 ## Criterios de Aceite
 
-- [x] CA07: Leaderboard com Cards Airbnb
-  - Cenario: Cada jogador e exibido como card property-card (rounded.md, hairline border) com rank, nickname, tempo, data
-  - Cenario: Top 3 tem destaque visual com icones de medalha
-  - Cenario: Hover no card aplica elevacao card-hover-float
-- [x] CA08: Leaderboard - Estados Especiais
-  - Cenario: Sem dados exibe empty state com icone + mensagem muted
-  - Cenario: Erro na API exibe error state com primary-error-text e botao retry button-primary
-- [x] CA09: Pagina de Controls Airbnb-style
-  - Cenario: Layout de duas colunas com simulador a esquerda e painel de controles a direita, fundo canvas branco
-  - Cenario: Botoes direcionais em icon-button-circle com surface-strong, ink, rounded.full
-  - Cenario: Botao "Executar" em button-primary Rausch
-- [x] CA10 (parcial): Responsividade Mobile - Leaderboard
-  - Cenario: Cards empilham 1-up em <744px
-- [x] CA11 (parcial): Responsividade Tablet - Leaderboard
-  - Cenario: Cards 2-3 up em 744-1128px
+- [ ] CA05: Layout padronizado do Modo Jogar
+  - Cenario: Header contextual "JOGAR" em uppercase, gap/padding padronizado com Controls.
+- [ ] CA07: Tema escuro BMW M em toda a aplicacao
+  - Cenario: Sem cores hardcoded do tema claro; todas as cores via variaveis CSS BMW M.
+- [ ] CA08: Tipografia BMW M com Inter
+  - Cenario: Headings em uppercase weight 700, body text weight 300, buttons uppercase tracking 1.5px.
+- [ ] CA09: Cantos retos BMW em todos os componentes
+  - Cenario: Nenhum border-radius > 0 em botoes, cards, inputs, containers (exceto icones circulares).
+- [ ] CA10: Faixa tricolor M como acento de marca
+  - Cenario: Faixa M aparece na borda inferior do top-nav e como divisor nas paginas Game e Controls.
+- [ ] CA11: Faixa tricolor nao usada como fundo ou texto
+  - Cenario: A tricolor M nao aparece como background de botoes, cor de texto ou superficie.
+- [ ] CA16: Responsividade mantida em todos os breakpoints
+  - Cenario: Layout se adapta em mobile (<768px), tablet (768-1024px) e desktop (>1024px).
 
 ## Testes Esperados
 
-- Leaderboard carrega com cards visuais corretos
-- Leaderboard exibe loading, error e empty states
-- Hover em cards aplica sombra
-- Controles direcionais funcionam (Frente, Tras, Esquerda, Direita, Girar)
-- Timeline exibe comandos adicionados
-- Botao "Executar" envia comandos ao simulador
-- Botao "Limpar" reseta a timeline
-- Layout responsivo funciona em desktop e mobile
+- `npx ng build` - Build sem erros
+- Verificacao visual completa em todos os breakpoints (mobile, tablet, desktop)
+- Verificacao: nenhum border-radius > 0 (exceto icones circulares e pills)
+- Verificacao: nenhum hardcoded color value do tema claro
+- Verificacao: tipografia consistente (uppercase headings, light body, tracking correto)
+- Verificacao: faixa M aparece apenas como divisor, nunca como fundo/texto
+- Verificacao: responsive hamburger menu funcional em mobile
+- Verificacao: todas as funcionalidades continuam operacionais
 
 ## Comandos pos-fase
 
-```bash
-cd lbot-datagen/lbot-datagen-frontend && ng build --configuration local
-```
+- `npx ng build`
+- `npx ng serve`
+- Verificacao visual manual em todos os breakpoints
 
 ## Registro de Execucao
 
-- Data: 2026-06-06
-- Arquivos criados: Nenhum
+(Preenchido pelo agente durante a execucao)
+
+- Data:
+- Arquivos criados:
 - Arquivos alterados:
-  - `src/app/pages/leaderboard/leaderboard.page.html` - Convertido tabela para card grid Airbnb: header com display-lg, grid responsivo de property-cards com medalhas para top 3, skeleton loading state, estados de error/empty mantidos e reestilizados
-  - `src/app/pages/leaderboard/leaderboard.page.css` - Full redesign: canvas background, property-card grid com CSS Grid auto-fill, card-hover-float no hover, medalhas/ranks em rating-display para top 3, skeleton com animacao pulse, button-primary para retry, button-tertiary-text para back link, breakpoints responsivos (1-up <744px, 2-3-up 744-1128px, 4-up >1128px)
-  - `src/app/pages/controls/controls.page.html` - Removido header dark com back button; adicionado header limpo com titulo display-sm "Modo Controle" + subtitulo body-md muted (navegacao via top-nav global)
-  - `src/app/pages/controls/controls.page.css` - Full redesign: canvas background, grid 2 colunas (1.2fr 1fr) com rounded.md containers, hairline borders, breakpoints responsivos (stack vertical em <768px)
-  - `src/app/pages/controls/controls.page.ts` - Removido import RouterLink nao utilizado
-  - `src/app/components/virtual-controls/virtual-controls.css` - Full redesign: botoes direcionais em icon-button-circle (surface-strong, rounded.full, 64px min-height/44px min-width), titulos em tokens tipograficos Airbnb, timeline com hairline-soft separators, remove-btn em rounded.full surface-strong, inputs estilo text-input Airbnb (56px, rounded.sm, focus border ink 2px), textarea com placeholder muted, LBML display em surface-soft monospace, summary em surface-soft, execute-btn em button-primary Rausch, reset-btn em button-secondary, disabled states com primary-disabled, breakpoints responsivos
-- Testes executados: `ng build --configuration local` - build OK (3 static routes prerendered; erro pre-existente no DatePipe do leaderboard durante SSR, nao relacionado a esta fase)
-- Resultado: Build compilou sem erros de CSS/template. Leaderboard convertido de tabela dark para card grid Airbnb com skeleton loading, hover float e grid responsivo. Controls page com tema canvas claro e header simplificado. VirtualControls redesenhado com icon-button-circles, inputs Airbnb text-input, botoes button-primary/button-secondary, timeline com hairline-soft separators.
-- Pendencias: Nenhuma
+- Testes executados:
+- Resultado:
+- Pendencias:

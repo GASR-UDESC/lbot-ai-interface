@@ -1,123 +1,159 @@
-# Fase 03: Chat Component + Game Page + HUD
+# Fase 03: Layouts de Jogo - Game + Controls
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Redesenhar o componente de chat (lbot-chat) com estilo Airbnb messaging e a pagina de game com layout split estilo Airbnb, incluindo o HUD sobre o simulador.
+Adicionar headers contextuais nas paginas de Game e Controls, padronizar os layouts com gap/padding consistente, remover navegacao redundante do HUD do game, aplicar containers com border-radius 0 e hairline borders, e adicionar faixa M tricolor como divisor entre header e conteudo.
 
 ## Pre-requisitos
 
-- Fase 01 concluida (tokens CSS)
-- Fase 02 concluida (top-nav para navegacao)
+- Fase 01 concluida (variaveis CSS globais e top-nav)
 
 ## Tarefas
 
-- [x] Tarefa 1: Redesenhar o componente LbotChat (RF11)
-  - Arquivo: `src/app/components/lbot-chat/lbot-chat.html`
-  - O que fazer: Ajustar classes CSS e estrutura para estilo Airbnb:
-    - Cabecalho: fundo canvas, hairline inferior, titulo em title-md ink, icone de bot
-    - Area de mensagens: scroll vertical, padding spacing.base (16px)
-    - Mensagens do usuario: bolha com classe `.message.user` - fundo Rausch (#ff385c), texto on-primary (#ffffff), rounded.lg (20px), alinhadas a direita, max-width 70%
-    - Mensagens do bot: bolha com classe `.message.bot` - fundo surface-soft (#f7f7f7), texto ink (#222222), rounded.lg, alinhadas a esquerda, max-width 70%
-    - Mensagens de sistema: centralizadas, caption-sm muted, sem bolha
-    - Mensagens de erro: fundo rgba(193,53,21,0.08), borda primary-error-text, rounded.lg
-    - Estrelas de avaliacao: 5 estrelas ink (#222222), preenchidas em ink, rounded.md nos containers
-    - Indicador de digitacao: caption-sm muted, pontos animados
-    - Input area: text-input estilo Airbnb (56px, rounded.sm, hairline border), botao enviar button-primary
-    - Popup de observacao: scrim + card canvas rounded.md
-    - Botao "Encerrar chat" (X): icon-button-circle com surface-strong
-
-  - Arquivo: `src/app/components/lbot-chat/lbot-chat.css`
-  - O que fazer: Substituir TODOS os estilos por tokens Airbnb:
-    - `.chat-wrapper`: fundo canvas (#ffffff), sem border-radius excessivo
-    - `.chat-header`: fundo canvas, hairline inferior (#dddddd), title-md ink
-    - `.message.user`: background var(--color-primary), color var(--color-on-primary), border-radius var(--rounded-lg)
-    - `.message.bot`: background var(--color-surface-soft), color var(--color-ink)
-    - `.message.error`: background rgba(193,53,21,0.08), color var(--color-primary-error-text)
-    - `.message.system`: color var(--color-muted), sem background
-    - `.star-btn`: color var(--color-star-rating) ink, nao amarelo
-    - `.star-btn.selected`: color var(--color-ink), preenchido
-    - `.chat-input input`: height 56px, border-radius var(--rounded-sm), border 1px var(--color-hairline), focus border var(--color-ink) 2px
-    - `.chat-input button`: background var(--color-primary), color var(--color-on-primary), border-radius var(--rounded-sm)
-    - `.rating-overlay`: background var(--color-scrim) com 50% opacity
-    - `.rating-popup`: background var(--color-canvas), border-radius var(--rounded-md)
-    - Remover TODAS as cores hard-coded (#007bff, #333, #999, etc.)
-    - Remover gradientes e sombras dark
-
-- [x] Tarefa 2: Redesenhar a Game Page layout (RF04)
+- [ ] Tarefa 1: Adicionar header contextual ao Game Page (RF03)
   - Arquivo: `src/app/pages/game/game.page.html`
-  - O que fazer: Ajustar estrutura HTML para:
-    - Manter layout split (simulador a esquerda, chat a direita)
-    - Substituir classes dark por classes Airbnb
-    - O chat panel deve ter fundo canvas (#ffffff), sem background escuro
-    - Separador entre paineis: hairline vertical (#dddddd)
-    - O loading state "Carregando chat..." deve usar caption-sm muted
-
+  - O que fazer:
+    - Adicionar um header contextual acima do `.game-layout`:
+      ```html
+      <div class="page-header">
+        <h1 class="page-title">JOGAR</h1>
+        <p class="page-subtitle">Comande o robô com linguagem natural</p>
+        <div class="m-stripe"></div>
+      </div>
+      ```
+    - Remover a div `<div class="hud-nav">` inteiramente (botoes "← Menu" e "Ranking") pois o top-nav global agora provê navegacao
+    - Manter o `.hud` overlay com nivel, timer e botao reset
   - Arquivo: `src/app/pages/game/game.page.css`
-  - O que fazer: Substituir TODOS os estilos por tokens Airbnb:
-    - `:host`: fundo canvas (#ffffff)
-    - `.game-layout`: flex row, simulador flex 1, chat 380px fixo
-    - `.chat-panel`: fundo canvas, border-left com hairline
-    - `.chat-loading`: cor muted, caption-sm
-    - Responsive: em <744px, `.game-layout` vira `flex-direction: column`, chat abaixo do simulador
-    - Remover todas as cores dark (#0a0e0a, #111411, etc.)
+  - O que fazer:
+    - Adicionar estilos para `.page-header`:
+      ```css
+      .page-header {
+        padding: var(--spacing-base) var(--spacing-xl);
+        flex-shrink: 0;
+      }
+      .page-title {
+        font-size: var(--typography-display-sm-size);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: -0.5px;
+        color: var(--color-ink);
+        margin: 0;
+      }
+      .page-subtitle {
+        font-size: var(--typography-body-md-size);
+        font-weight: 300;
+        color: var(--color-body);
+        margin: 4px 0 0;
+      }
+      ```
+    - Atualizar `.hud`:
+      - Remover `background: rgba(255, 255, 255, 0.92)` -> `background: rgba(0, 0, 0, 0.85)`
+      - Remover `backdrop-filter: blur(6px)` (manter opcionalmente)
+      - `border-radius: 0` (antes var(--rounded-md))
+      - `border: 1px solid var(--color-hairline)` (manter)
+      - Cores: texto branco, icones brancos
+    - Atualizar `.hud-label`: cor `var(--color-ink)` (branco), uppercase
+    - Atualizar `.hud-timer`: cor `var(--color-ink)` (branco)
+    - Atualizar `.hud-reset-btn`:
+      - `background: transparent`, `border: 1px solid var(--color-on-dark)`, `color: var(--color-on-dark)`, `border-radius: 0`,
+      - `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 1.5px`
+    - Remover `.hud-nav` e `.nav-link-btn` (componentes inteiramente removidos do HTML)
+    - Atualizar `:host`: `background: var(--color-canvas)` (preto), `height: calc(100dvh - 64px)` para compensar top-nav
+    - Atualizar `.chat-panel`:
+      - `background: var(--color-surface-soft)` ou `var(--color-canvas)`
+      - `border-left: 1px solid var(--color-hairline)`
+      - Remover border-radius (antes nao tinha, confirmar)
+    - Atualizar `.chat-loading`: cor `var(--color-body)` (body text)
 
-- [x] Tarefa 3: Redesenhar o HUD overlay sobre o simulador (RF04)
+- [ ] Tarefa 2: Adicionar header contextual ao Controls Page (RF02)
+  - Arquivo: `src/app/pages/controls/controls.page.html`
+  - O que fazer:
+    - Atualizar o header existente para estilo BMW M:
+      ```html
+      <div class="page-header">
+        <h1 class="page-title">MODO CONTROLE</h1>
+        <p class="page-subtitle">Geração de dados de treino via controle manual</p>
+        <div class="m-stripe"></div>
+      </div>
+      ```
+    - Remover o botao de voltar (se existir) — o top-nav provê navegacao
+
+  - Arquivo: `src/app/pages/controls/controls.page.css`
+  - O que fazer:
+    - Atualizar `.controls-header`:
+      - Adicionar `.m-stripe` ou um pseudo-elemento como divisor abaixo do header
+      - `.controls-title`: `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: -0.5px`, cor `var(--color-ink)` (branco)
+      - `.controls-subtitle`: `font-weight: 300`, cor `var(--color-body)` (#bbbbbb)
+      - Padding ajustado
+    - Atualizar `.controls-page`: `background: var(--color-canvas)` (preto), `height: calc(100dvh - 64px)` para compensar top-nav
+    - Atualizar `.simulator-container`:
+      - `border-radius: 0` (remover var(--rounded-md))
+      - `border: 1px solid var(--color-hairline)` (#3c3c3c)
+    - Atualizar `.controls-panel`:
+      - `border-radius: 0`
+      - `border: 1px solid var(--color-hairline)`
+      - `background: var(--color-surface-card)` ou `var(--color-canvas)`
+
+- [ ] Tarefa 3: Padronizar gap/padding entre Game e Controls (RF03)
   - Arquivo: `src/app/pages/game/game.page.css`
-  - O que fazer: Redesenhar o HUD com estilo Airbnb:
-    - `.hud`: fundo branco semi-transparente `rgba(255,255,255,0.92)`, `backdrop-filter: blur(6px)`, border 1px hairline, border-radius var(--rounded-md)
-    - `.hud-label`: uppercase-tag ink (8px, 700, uppercase)
-    - `.hud-level-name`: body-md muted
-    - `.hud-timer`: title-md ink, font-variant-numeric: tabular-nums
-    - `.hud-reset-btn`: estilo button-secondary (canvas bg, ink text, rounded.sm, hairline border)
-    - `.nav-link-btn`: estilo button-tertiary-text (transparent bg, ink text, underline hover)
-    - Remover todas as cores dark do HUD (rgba(0,0,0,0.6), rgba(110,186,114,0.2), etc.)
+  - O que fazer: Garantir que o gap entre simulador e chat panel use `var(--spacing-lg)` (24px), o mesmo padrao do Controls. Adicionar padding adequado ao `.page-header`.
+  - Arquivo: `src/app/pages/controls/controls.page.css`
+  - O que fazer: Confirmar que o gap `.controls-layout` usa `var(--spacing-lg)` (24px, ja e esse valor) e que o padding esta consistente
+
+- [ ] Tarefa 4: Aplicar tema escuro ao Simulator Frame (RF04)
+  - Arquivo: `src/app/components/simulator-frame/simulator-frame.css`
+  - O que fazer:
+    - `border-radius: 0` (remover qualquer rounded)
+    - `border: 1px solid var(--color-hairline)` se houver borda
+    - `background: var(--color-canvas)` se houver background
+    - Confirmar que o iframe do simulador nao precisa de mudancas internas (fora de escopo)
 
 ## Arquivos Referencia
 
-- `src/app/components/lbot-chat/lbot-chat.ts` - Logica do chat (nao alterar)
-- `src/app/components/lbot-chat/lbot-chat.html` - Template atual
-- `src/app/components/lbot-chat/lbot-chat.css` - 453 linhas de estilos azul/white
-- `src/app/pages/game/game.page.ts` - Logica do game (nao alterar)
-- `src/app/pages/game/game.page.html` - Template atual com HUD e chat
-- `src/app/pages/game/game.page.css` - 183 linhas de estilos dark
-- `task/DESIGN-airbnb.md` - Especificacao de components: button-primary, button-secondary, text-input, icon-button-circle
+- `src/app/pages/game/game.page.ts` - Logica do componente game
+- `src/app/pages/game/game.page.html` - Template atual com HUD e nav-links
+- `src/app/pages/game/game.page.css` - Estilos atuais
+- `src/app/pages/controls/controls.page.ts` - Logica do componente controls
+- `src/app/pages/controls/controls.page.html` - Template atual com header
+- `src/app/pages/controls/controls.page.css` - Estilos atuais
+- `src/app/components/simulator-frame/simulator-frame.css` - Container do iframe
 
 ## Criterios de Aceite
 
-- [x] CA03: Pagina de Game com Visual Airbnb
-  - Cenario: Layout split com simulador a esquerda e chat a direita, separados por hairline, fundo canvas branco
-  - Cenario: HUD sobre o simulador tem fundo branco semi-transparente com tipografia ink, sem escuridao
-  - Cenario: Chat tem mensagens do usuario em bolhas Rausch com texto branco e mensagens do bot em bolhas surface-soft com texto ink
-- [x] CA13: Chat com Estilo Airbnb Messaging
-  - Cenario: Mensagem do usuario: bolha Rausch, texto branco, alinhada a direita
-  - Cenario: Mensagem do bot: bolha surface-soft, texto ink, alinhada a esquerda
-  - Cenario: Estrelas de avaliacao em ink (#222222), nao amarelo
-  - Cenario: Input de texto estilo Airbnb (56px, rounded.sm, hairline border)
-- [x] CA10 (parcial): Responsividade Mobile do Game
-  - Cenario: Em <744px, game empilha verticalmente com chat abaixo do simulador
+- [ ] CA04: Layout padronizado do Modo Controle
+  - Cenario: Dado que o usuario navega para /controls / Quando a pagina carrega / Entao o top-nav global aparece no topo e abaixo dele o header contextual "MODO CONTROLE" em uppercase com subtitulo, seguido do grid com gap/padding entre simulador e painel de controles.
+- [ ] CA05: Layout padronizado do Modo Jogar
+  - Cenario: Dado que o usuario navega para /game / Quando a pagina carrega / Entao o top-nav global aparece no topo e abaixo dele o header contextual "JOGAR" em uppercase com subtitulo, seguido do layout com gap/padding entre simulador e chat panel.
+- [ ] CA06: Navegacao redundante removida do HUD
+  - Cenario: Dado que o usuario esta na pagina de jogo / Quando a partida esta em andamento / Entao o HUD mostra apenas nivel, timer e botao de reset, SEM os links "← Menu" e "Ranking".
+- [ ] CA07: Tema escuro nas paginas de jogo e controle
+  - Cenario: Fundo preto, texto branco, borders hairline #3c3c3c, border-radius 0 nos containers.
+- [ ] CA10: Faixa tricolor M como divisor
+  - Cenario: A faixa M tricolor aparece como divisor entre o header e o conteudo nas paginas Game e Controls.
 
 ## Testes Esperados
 
-- Chat envia e recebe mensagens corretamente
-- Estrelas de avaliacao funcionam (click e reevaluation popup)
-- HUD exibe nivel e timer corretamente
-- Botao "Reiniciar Posicao" funciona
-- Layout split funciona em desktop (>744px)
-- Layout stack funciona em mobile (<744px)
+- `npx ng build` - Build sem erros
+- Verificar visualmente: pagina game com header contextual "JOGAR" e faixa M
+- Verificar visualmente: pagina controls com header "MODO CONTROLE" e faixa M
+- Verificar: HUD do game sem botoes "← Menu" e "Ranking"
+- Verificar: top-nav funcional em ambas as paginas
+- Verificar: layout responsivo (mobile, tablet, desktop)
 
 ## Comandos pos-fase
 
-```bash
-cd lbot-datagen/lbot-datagen-frontend && ng build --configuration local
-```
+- `npx ng build`
+- `npx ng serve`
 
 ## Registro de Execucao
 
-- Data: 2026-06-06
-- Arquivos criados: Nenhum
-- Arquivos alterados: `src/app/components/lbot-chat/lbot-chat.css`, `src/app/pages/game/game.page.css`
-- Testes executados: `ng build --configuration local` - build OK (erro pre-existente no DatePipe do leaderboard durante SSR, nao relacionado a esta fase)
-- Resultado: Build compilou sem erros de CSS/template. LbotChat redesenhado com bolhas Rausch/surface-soft, estrelas ink, input Airbnb 56px, popups com scrim + card canvas. Game page com fundo canvas, split layout com hairline entre paineis, HUD branco semi-transparente com blur. Layout responsivo empilha em <744px.
-- Pendencias: Nenhuma
+(Preenchido pelo agente durante a execucao)
+
+- Data:
+- Arquivos criados:
+- Arquivos alterados:
+- Testes executados:
+- Resultado:
+- Pendencias:

@@ -1,158 +1,130 @@
-# Fase 02: Reescrever system prompt e atualizar agent
+# Fase 02: Bloqueio de avanco + reducao de passo
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Reescrever completamente o system prompt e as tool descriptions para guiar o LLM na classificacao e execucao correta de Movimentos vs Tarefas, e atualizar o ReActAgent para tratar a tool `observe` e aumentar o limite de steps.
+Implementar no `agent.py`:
+- **RF02**: Bloqueio de comandos de avanco quando a distancia frontal <= 20cm
+- **RF06**: Reducao automatica do passo conforme zonas de proximidade
+
+Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando tool calls do tipo `move`.
 
 ## Pre-requisitos
 
-- Fase 01 concluida (tools `observe` e `move` modificada devem estar disponiveis)
+- Fase 01 concluida (prompt atualizado com as zonas de distancia e regras de aproximacao)
 
 ## Tarefas
 
-- [x] Tarefa 1: Reescrever o `SYSTEM_PROMPT` em `lbot-mcp/src/harness/personality.py`
-  - Arquivo: `lbot-mcp/src/harness/personality.py`
-  - O que fazer:
-    - Reescrever completamente a constante `SYSTEM_PROMPT` com as seguintes secoes:
-    
-    **Identidade e ambiente:**
-    - Manter descricao do robo E-Puck, da arena 4m x 4m, posicao inicial no centro
-    - Mencionar que o sensor de proximidade reflete o que esta centralizado exatamente a frente do robo
-    
-    **Classificacao de acoes:**
-    - Explicar os 3 tipos: Movimento Bem Definido, Movimento Ambiguo, Tarefa
-    - Movimento Bem Definido: distancias e direcoes claras, usar tool `move` com linguagem natural
-    - Movimento Ambiguo: sem distancias especificas (faca um quadrado, de uma volta), gerar LBML direto e enviar via `move`
-    - Tarefa: exige raciocinio, camera, sensores, multiplos passos; usar `observe` e `move` em loop
-    
-    **Ferramentas:**
-    - `camera()`: Captura imagem (para consultas simples do usuario, tipo "o que voce ve?")
-    - `proximity()`: Le sensores (para consultas simples, tipo "qual a distancia ate a parede?")
-    - `observe()`: Camera + proximidade juntos(destinado a Tarefas, economiza steps)
-    - `move(command)`: Executa movimento. Aceita linguagem natural OU LBML direto (para movimentos ambiguos)
-    
-    **Regras para Movimentos:**
-    - Movimentos bem definidos: enviar comando NL via `move`, o tradutor converte para LBML
-    - Movimentos ambiguos: gerar LBML e enviar via `move` diretamente
-    - Formato LBML: `D<distancia><direcao>;R<angulo><direcao>;` (D=deslocamento cm, R=rotacao graus; direcoes: F/B/L/R para D, L/R para R)
-    - Exemplos de LBML: `D50F;R90L;D50F;R90L;D50F;R90L;D50F;R90L;` (quadrado)
-    - Nenhum uso de camera ou sensores para Movimentos
-    
-    **Regras para Tarefas:**
-    - SEMPRE usar `observe` (nao camera+proximity separados) durante Tarefas
-    - `camera` e `proximity` sozinhos sao para consultas simples do usuario
-    - Manter distancia de seguranca de 20cm (frente e tras)
-    - Centralizar objeto na camera antes de confiar no sensor de proximidade
-    - Protocolo de busca: girar 90 graus, `observe`, repetir ate 360 graus
-    - Protocolo de objeto perdido: recuar 20cm, girar 90 em 90, `observe`, se 360 sem encontrar, informar
-    - Se distancia frontal <= 20cm durante aproximacao: parar, nao avancar mais
-    
-    **Regras gerais:**
-    - Responder em portugues, ser honesto sobre limitacoes
-    - Distancias acima de 400cm sao impossiveis (limite da arena)
-    - Se acao impossivel, informar ao usuario
-    - Nao inventar capacidades
-    
-    **Formato LBML (para referencia do LLM):**
-    - `<distancia>`: valor numerico em cm
-    - `<direcao>` para deslocamento: F (frente), B (tras), L (esquerda), R (direita)
-    - `<angulo>`: valor numerico em graus
-    - `<direcao>` para rotacao: L (esquerda), R (direita)
-    - Comandos separados por `;`
-    - Exemplos: `D30F;` (30cm para frente), `R90L;` (rotacao 90 graus a esquerda), `D50F;R90L;D30B;`
-
-- [x] Tarefa 2: Atualizar `get_tools_description()` em `lbot-mcp/src/harness/personality.py`
-  - Arquivo: `lbot-mcp/src/harness/personality.py`
-  - O que fazer:
-    - Adicionar a tool `observe` com parametros vazios (como `camera` e `proximity`)
-    - Atualizar descricao do `move` para mencionar que aceita tanto linguagem natural quanto LBML direto
-    - Atualizar descricao do `camera` para enfatizar que e para consultas simples
-    - Atualizar descricao do `proximity` para enfatizar que e para consultas simples
-    - Ordem das tools: observe, camera, proximity, move (observe primeiro pois e a principal para Tarefas)
-
-- [x] Tarefa 3: Atualizar handler de tools no `lbot-mcp/src/harness/agent.py`
+- [ ] Tarefa 1: Criar funcoes helper de parse e modificacao de LBML
   - Arquivo: `lbot-mcp/src/harness/agent.py`
-  - O que fazer:
-    - Alterar `max_steps` default de 20 para 100 na linha 227
-    - Adicionar tratamento para tool `observe` no loop de processamento de tool_calls (similar ao tratamento de `camera`):
-      - Se `tool_name == "observe"`: parsear JSON do resultado
-      - Se tiver campo `image` com base64 valido: injetar como user message com image_url (mesmo padrao da camera)
-      - Incluir texto de proximidade na mensagem junto com a imagem
-      - Se tiver campo `proximity`: formatar leituras de frente/tras no texto da mensagem
-      - Se tiver `proximity_error`: mencionar que proximidade nao esta disponivel
-      - Se tiver `camera_error`: tratar como erro de camera
-    - Manter o handler especial para `move` (que ja extrai `command` do raw_args)
-    - Manter o handler especial para `camera` (que ja existe)
-    - Para outras tools (proximity): manter comportamento padrão (append como tool message)
+  - O que fazer: Adicionar NO TOPO do arquivo (abaixo dos imports e constantes existentes, antes da classe `ReActAgent`) as seguintes funcoes:
+    - `_parse_lbml_command(command_str: str) -> list[dict]` — parseia string LBML (ex: "D30F;R90L;") em lista de `{"type": "D"|"R", "value": int, "direction": str}`. Usar regex similar ao `LBML_SEQUENCE_RE` em `movement.py`.
+    - `_is_forward_command(parsed: list[dict]) -> bool` — retorna True se algum comando na lista for do tipo "D" com direcao "F"
+    - `_is_rotation_command(parsed: list[dict]) -> bool` — retorna True se TODOS os comandos forem do tipo "R"
+    - `_reduce_step(parsed: list[dict], max_distance: int) -> list[dict]` — modifica todos os comandos "D"+"F" com `value > max_distance` para `max_distance`, retorna nova lista
+    - `_parsed_to_lbml(parsed: list[dict]) -> str` — reconstroi string LBML a partir da lista parseada
+    - `_extract_proximity_from_messages(messages: list[dict]) -> dict | None` — varre `messages` de tras pra frente e procura a ultima leitura de proximidade. A leitura pode estar em:
+      - Resultado de `observe()` como JSON: `{"proximity": {"frente": 50.0, "tras": 200.0}}`
+      - Resultado de `proximity()` como texto: `"Frente: 50 cm | Trás: 200 cm"`
+      - Retorna `{"frente": float, "tras": float}` ou `None` se nao encontrar
 
-- [x] Tarefa 4: Atualizar handler do CLI para `observe` em `lbot-mcp/src/harness/cli.py`
-  - Arquivo: `lbot-mcp/src/harness/cli.py`
-  - O que fazer:
-    - O CLI ja exibe tool_call e tool_result genericamente, mas deve ser verificado se o output do `observe` (que e JSON grande com base64) precisa ser truncado ou formatado de forma especial no display
-    - Atualizar o `_print_event` para formatar resultados de `observe` de forma mais legivel (mostrar texto de proximidade, nao o JSON inteiro)
-    - Garantir que o resumo de mensagens em `_summarize_messages` trate observe igual a camera (marcar como [imagem])
+- [ ] Tarefa 2: Implementar metodo `_validate_and_adjust_move()` no ReActAgent
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
+  - O que fazer: Adicionar metodo `_validate_and_adjust_move(self, command: str) -> tuple[str, str | None]` que:
+    1. Extrai a ultima leitura de proximidade do historico via `_extract_proximity_from_messages(self._messages)`
+    2. Se nao ha leitura (sensor indisponivel): retorna `(command, None)` — modo fallback, sem modificacao (RF Nao-Funcional: robustez)
+    3. Faz parse do comando original via `_parse_lbml_command(command)`
+    4. Se NAO for LBML mas linguagem natural: retorna `(command, None)` — o tradutor cuidara depois, nao conseguimos modificar comandos NL
+    5. **RF02 — Bloqueio de avanco:**
+       - Se `frente <= 20` E `_is_forward_command(parsed)`:
+         - Retorna `(None, "Bloqueado: distancia frontal e de Xcm, ja esta dentro da faixa de aproximacao (15-25cm). Objetivo alcancado.")`
+    6. **RF06 — Reducao de passo:**
+       - Se `20 < frente <= 40`: reduz passos F > 10 para 10 via `_reduce_step(parsed, 10)`, reconstroi LBML
+       - Se `40 < frente <= 80`: reduz passos F > 15 para 15 via `_reduce_step(parsed, 15)`
+       - Se `frente > 80`: sem reducao
+       - Retorna `(lbml_modificado, mensagem_informativa)` onde a mensagem diz "Comando ajustado: D20F reduzido para D10F (proximo ao alvo, passo reduzido por seguranca)"
+    7. Comandos de recuo (D*B) e rotacao (R*) NAO sao modificados
+
+- [ ] Tarefa 3: Integrar validacao no loop principal
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
+  - O que fazer: No metodo `run()`, dentro do loop que processa tool_calls (linhas 407-430), modificar o tratamento da tool `"move"`:
+    - ANTES de chamar `self._mcp.call_tool("move", ...)`, chamar `adjusted_command, block_msg = self._validate_and_adjust_move(raw_args.get("command", ""))`
+    - Se `block_msg` (comando bloqueado):
+      - NAO executar o movimento
+      - Adicionar `block_msg` como resultado da tool (como se fosse tool_result), inserindo mensagem no `self._messages` com role "tool" e o `block_msg` como content
+      - Emitir evento `tool_result` com o `block_msg`
+    - Se `adjusted_command != command_original` (comando modificado):
+      - Usar `adjusted_command` em vez do comando original na chamada `call_tool`
+      - Apos a execucao, adicionar a mensagem informativa ao resultado OU como tool_result adicional
+    - Se nenhuma modificacao: executar normalmente como ja faz hoje
+
+- [ ] Tarefa 4: Adicionar testes
+  - Arquivo: `lbot-mcp/tests/test_agent.py`
+  - O que fazer: Criar novas classes de teste no final do arquivo:
+    - `TestLBMLHelpers` — testa `_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml`
+    - `TestProximityExtraction` — testa `_extract_proximity_from_messages` com observe JSON, proximity texto, mensagens sem proximidade, historico vazio
+    - `TestCommandModification` — testa `_validate_and_adjust_move` via mock do ReActAgent:
+      - Bloqueio quando frente <= 20cm e comando D20F
+      - Passo reduzido para 10cm quando frente = 35cm e comando D20F
+      - Passo reduzido para 15cm quando frente = 60cm e comando D20F
+      - Sem modificacao quando frente = 100cm e comando D20F
+      - Comandos de recuo/rotacao nao sao bloqueados nem modificados
+      - Fallback quando sem leitura de proximidade
 
 ## Arquivos Referencia
 
-- `lbot-mcp/src/harness/personality.py` - System prompt e tool descriptions atuais
-- `lbot-mcp/src/harness/agent.py` - Handler de camera (linhas 447-513) como referencia para observe
-- `lbot-mcp/src/harness/cli.py` - Print events e resumo de mensagens
-- `lbot-mcp/src/mcp_server/tools/observe.py` - Tool observe criada na Fase 01
-- `task/business-spec.md` - Especificacao de negocio completa (RF01-RF10, CA01-CA12)
+- `lbot-mcp/src/harness/agent.py` — loop principal, linhas 407-430 (onde move() e chamado), e estrutura de mensagens
+- `lbot-mcp/src/mcp_server/tools/movement.py` — referencia do regex LBML (`LBML_SEQUENCE_RE`, linha 8), como o parse e feito
+- `lbot-mcp/tests/test_agent.py` — padrao de mock do OpenAI e estrutura de testes existentes
 
 ## Criterios de Aceite
 
-- [ ] CA01: Movimento bem definido direto ao tradutor
-  - Cenario: Given que o prompt instrui sobre Movimentos bem definidos, When o LLM recebe "ande 30cm para frente", Then classifica como Movimento e envia via `move` em linguagem natural
-- [ ] CA02: Movimento ambiguo expandido pelo LLM
-  - Cenario: Given que o prompt instrui sobre Movimentos ambiguos e formato LBML, When o LLM recebe "faca um quadrado", Then gera LBML e envia via `move` diretamente
-- [ ] CA03: Tarefa de busca de objeto
-  - Cenario: Given que o prompt instrui sobre Tarefas, When o LLM recebe "encontre o cubo vermelho", Then usa `observe` para buscar em loop de 90 graus
-- [ ] CA04: Centralizacao antes de proximidade
-  - Cenario: Given que o prompt instrui sobre centralizacao, When o LLM avista um objeto durante Tarefa, Then gira para centralizar antes de confiar na proximidade
-- [ ] CA05: Distancia de seguranca em Tarefa
-  - Cenario: Given que o prompt instrui sobre distancia de seguranca, When o sensor indica <=20cm durante Tarefa, Then para e informa ao usuario
-- [ ] CA06: Distancia de seguranca nao aplica em Movimento
-  - Cenario: Given que o prompt distingue Movimento de Tarefa, When comando e Movimento, Then executa sem restricao de distancia
-- [ ] CA07: Protocolo de objeto perdido
-  - Cenario: Given que o prompt instrui sobre protocolo, When perde objeto de vista, Then recua 20cm e gira 90 em 90
-- [ ] CA08: Tool observe retorna camera e proximidade
-  - Cenario: Given que observe foi implementada na Fase 01, When o agente processa resultado de observe, Then injeta imagem como user message com image_url e texto de proximidade
-- [ ] CA09: Acao impossivel reportada ao usuario
-  - Cenario: Given que o prompt instrui sobre limites, When distancia excede 400cm, Then LLM informa impossibilidade
-- [ ] CA10: Objeto inexistente
-  - Cenario: Given que o prompt instrui sobre busca, When 360 graus sem encontrar, Then informa ao usuario
-- [ ] CA11: Limite de steps aumentado
-  - Cenario: Given que max_steps default e 100, When tarefa complexa precisa de mais de 20 steps, Then agente pode continuar ate 100
-- [ ] CA12: Consulta simples com camera e proximity
-  - Cenario: Given que o prompt menciona camera/proximity para consultas simples, When usuario pergunta "o que voce ve?", Then LLM pode usar camera ou proximity individualmente
+- [ ] CA02: Bloqueio de avanco por proximidade minima
+  - Cenario: Ultima leitura de proximidade frontal <= 20cm, LLM envia D<dist>F → comando bloqueado, mensagem informativa retornada
+- [ ] CA03: Reducao de passo perto do alvo (frente ~35cm)
+  - Cenario: Frente = 35cm, LLM envia D20F → modificado para D10F, LLM informado
+- [ ] CA04: Reducao de passo em zona intermediaria (frente ~60cm)
+  - Cenario: Frente = 60cm, LLM envia D20F → modificado para D15F, LLM informado
+- [ ] CA05: Aproximacao normal fora de zona de reducao (frente > 80cm)
+  - Cenario: Frente = 100cm, LLM envia D20F → executado sem modificacao
+- [ ] CA09: Comandos de recuo e rotacao nao sao bloqueados
+  - Cenario: Frente <= 20cm, LLM envia D20B ou R90L → executado normalmente
+- [ ] CA10: Funcionamento sem sensor de proximidade
+  - Cenario: Sem leitura de proximidade no historico → comando executado sem modificacao (fallback)
 
 ## Testes Esperados
 
-- `test_observe_handler_injects_image` - Agent injeta imagem de observe como user message
-- `test_observe_handler_proximity_text` - Agent inclui texto de proximidade na mensagem
-- `test_observe_handler_camera_error` - Agent trata erro de camera no observe
-- `test_observe_handler_proximity_error` - Agent trata erro de proximity no observe
-- `test_max_steps_default_100` - Verificar que default de max_steps e 100
-- `test_system_prompt_contains_movement_rules` - Prompt menciona Movimento Bem Definido e Ambiguo
-- `test_system_prompt_contains_task_rules` - Prompt menciona Tarefa, observe, distancia de seguranca
-- `test_system_prompt_contains_lbml_reference` - Prompt menciona formato LBML
-- `test_tools_description_has_observe` - get_tools_description() inclui observe
+- `TestLBMLHelpers.test_parse_single_forward` — "D30F;" → [{"type":"D","value":30,"direction":"F"}]
+- `TestLBMLHelpers.test_parse_sequence` — "D50F;R90L;D30B;"
+- `TestLBMLHelpers.test_is_forward_true` — comando D tem direcao F
+- `TestLBMLHelpers.test_is_forward_false` — comando D tem direcao B
+- `TestLBMLHelpers.test_is_rotation_true` — so tem R
+- `TestLBMLHelpers.test_reduce_step` — D20F → D10F com max=10
+- `TestLBMLHelpers.test_parsed_to_lbml` — reconstroi LBML
+- `TestProximityExtraction.test_extract_from_observe_json` — observe com proximity:50
+- `TestProximityExtraction.test_extract_from_proximity_text` — "Frente: 50 cm | Trás: 200 cm"
+- `TestProximityExtraction.test_no_proximity_found` — retorna None
+- `TestCommandModification.test_blocks_forward_when_front_lte_20`
+- `TestCommandModification.test_reduces_to_10_when_front_between_20_40`
+- `TestCommandModification.test_reduces_to_15_when_front_between_40_80`
+- `TestCommandModification.test_no_modification_when_front_gt_80`
+- `TestCommandModification.test_backward_and_rotation_not_blocked`
+- `TestCommandModification.test_fallback_when_no_proximity_reading`
 
 ## Comandos pos-fase
 
-- `cd lbot-mcp && python -m pytest tests/ -x -v`
-- `cd lbot-mcp && python -m mypy src/`
+```bash
+cd lbot-mcp && python -m pytest tests/test_agent.py -v
+```
 
 ## Registro de Execucao
 
-- Data: 2026-06-06
-- Arquivos criados: nenhum
+<Preenchido pelo agente durante a execucao>
+
+- Data:
+- Arquivos criados:
 - Arquivos alterados:
-  - `lbot-mcp/src/harness/agent.py` (corrigido variável `observe_img_content_ok` → `observe_img_content` na linha 618)
-  - `lbot-mcp/src/harness/cli.py` (movido `import json` para topo do arquivo, removido import inline)
-- Testes executados: `cd lbot-mcp && python -m pytest tests/ -x -v` → 47 passed, 3 skipped
-- Resultado: SUCESSO - todos os testes passaram, sem regressões
-- Pendencias: nenhuma (SYSTEM_PROMPT, get_tools_description(), max_steps=100 e observe handler já estavam implementados; apenas correção de bug e limpeza de código)
+- Testes executados:
+- Resultado:
+- Pendencias:

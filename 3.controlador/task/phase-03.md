@@ -1,111 +1,147 @@
-# Fase 03: Testes de integracao e regressao
+# Fase 03: Parada automatica + deteccao de loop + limite de passos
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Criar testes unitarios e de integracao abrangentes para todas as alteracoes feitas nas Fases 01 e 02, garantindo que nao ha regressoes no comportamento existente e que os novos cenarios funcionam corretamente.
+Implementar no `agent.py`:
+- **RF01**: Parada automatica quando o robo atinge a faixa de proximidade alvo (15-25cm) apos ter o objeto centralizado
+- **RF04**: Deteccao de loop de rotacao + limite maximo de 50 passos com cancelamento automatico
+
+Tambem inclui a alteracao do `max_steps` default de 100 para 50.
 
 ## Pre-requisitos
 
-- Fase 01 concluida (tools observe e move modificada)
-- Fase 02 concluida (agent, prompt, cli atualizados)
+- Fase 02 concluida (helpers de parse LBML e extracao de proximidade ja existem em agent.py)
 
 ## Tarefas
 
-- [ ] Tarefa 1: Criar testes unitarios da tool `observe`
-  - Arquivo: `lbot-mcp/tests/test_observe.py` (novo)
+- [ ] Tarefa 1: Alterar max_steps default para 50
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
-    - Criar classe `TestObserveTool` com os seguintes testes:
-    - `test_observe_returns_camera_and_proximity`: mock do backend retornando camera e proximity validos, verificar que o resultado contem `image`, `proximity.frente`, `proximity.tras`, `render_method`
-    - `test_observe_camera_error_proximity_ok`: camera com erro mas proximity ok, verificar que resultado contem `camera_error` e `proximity`
-    - `test_observe_proximity_error_camera_ok`: camera ok mas proximity com erro, verificar que resultado contem `image` e `proximity_error`
-    - `test_observe_both_error`: ambos com erro, verificar que resultado contem ambos os erros ou mensagem geral
-    - `test_observe_timeout_camera`: camera com timeout, verificar tratamento
-    - `test_observe_timeout_proximity`: proximity com timeout, verificar tratamento
-    - Cada teste deve configurar `mock_backend` no `mcp_server.context` e restaurar apos
+    - No `__init__` do `ReActAgent` (linha 227), alterar `max_steps: int = 100` para `max_steps: int = 50`
+    - Atualizar o teste `test_max_steps_default_is_100` em `test_agent.py` para esperar 50 (renomear para `test_max_steps_default_is_50`)
+    - Atualizar a mensagem de `max_steps_reached` (linha 656-658): "Atingi o numero maximo de 50 passos sem concluir o objetivo. Tente reformular o pedido ou verificar se o ambiente esta funcionando."
 
-- [ ] Tarefa 2: Atualizar testes da tool `move` para LBML direto
-  - Arquivo: `lbot-mcp/tests/test_integration.py` (alterar classe `TestMoveTool`)
-  - O que fazer:
-    - Adicionar testes na classe `TestMoveTool`:
-    - `test_move_lbml_direct_execution`: input `D30F;` deve pular tradutor e executar LBML direto. Verificar que o backend.execute_lbml foi chamado com "D30F;" e que o resultado contem "LBML direto"
-    - `test_move_lbml_sequence_direct_execution`: input `D50F;R90L;D50F;R90L;` deve pular tradutor e executar direto
-    - `test_move_natural_language_goes_to_translator`: input "ande 30cm para frente" deve chamar o tradutor (como antes)
-    - `test_move_invalid_lbml_still_uses_translator`: input que nao bate na regex (ex: "abc") deve ir para o tradutor, que retorna ERRO
-    - Garantir que os testes existentes de `move` continuam passando
+- [ ] Tarefa 2: Adicionar rastreadores de estado no ReActAgent
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
+  - O que fazer: No `__init__` do `ReActAgent` (apos `self._tools = ...`), adicionar:
+    - `self._last_front_proximity: float | None = None` — ultima leitura de proximidade frontal conhecida
+    - `self._last_back_proximity: float | None = None` — ultima leitura de proximidade traseira
+    - `self._last_position: dict | None = None` — ultima posicao {x, z, rotation} do robo
+    - `self._consecutive_rotations: int = 0` — contador de passos com comandos exclusivamente de rotacao sem mudanca de posicao
+    - `self._object_was_centered: bool = False` — flag: o LLM ja confirmou que o objeto esta centralizado? (true apos observe que o LLM considera "objeto centralizado")
+    - `self._goal_achieved: bool = False` — flag: objetivo de aproximacao foi alcancado
+    - `self._step_count: int = 0` — contador de passos (usado para o limite de 50)
+  - Metodo `reset()` (linha 260): tambem resetar todos esses rastreadores
 
-- [ ] Tarefa 3: Criar testes do agent para tool `observe`
-  - Arquivo: `lbot-mcp/tests/test_agent.py` (alterar)
-  - O que fazer:
-    - Adicionar classe `TestReActAgentObserveTool` com:
-    - `test_observe_success_injects_image_and_proximity`: Simular observe retornando JSON com image base64 + proximity, verificar que agente injeta user message com image_url e texto de proximidade
-    - `test_observe_camera_error_only_proximity`: observe com camera_error, verificar que so texto de proximidade e retornado (sem imagem)
-    - `test_observe_proximity_error_only_camera`: observe com proximity_error, verificar que imagem e injetada mas texto menciona erro de proximidade
-    - `test_observe_both_error`: ambos com erro, verificar comportamento de fallback
-    - `test_observe_increments_steps_correctly`: verificar que observe conta como 1 step no loop
+- [ ] Tarefa 3: Implementar metodo `_update_state_from_result()`
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
+  - O que fazer: Metodo que atualiza os rastreadores apos cada tool result:
+    1. Extrai proximidade frontal/traseira do resultado (usando `_extract_proximity_from_messages` ou parseando o resultado JSON da tool)
+    2. Extrai posicao do robo (de observe/camera results que contem `robot_position`)
+    3. Atualiza `_last_front_proximity`, `_last_back_proximity`, `_last_position`
+    4. Este metodo deve ser chamado no loop principal apos processar cada tool result de `observe`, `camera`, ou `proximity`
 
-- [ ] Tarefa 4: Criar testes de regressao do system prompt e tool descriptions
-  - Arquivo: `lbot-mcp/tests/test_personality.py` (novo)
-  - O que fazer:
-    - Criar classe `TestSystemPrompt` com:
-    - `test_prompt_mentions_movimento_bem_definido`: verificar que SYSTEM_PROMPT menciona "Movimento" e linguagem natural/tradutor
-    - `test_prompt_mentions_movimento_ambiguo`: verificar que SYSTEM_PROMPT menciona movimentos ambiguos e LBML
-    - `test_prompt_mentions_tarefa`: verificar que SYSTEM_PROMPT menciona "Tarefa" e raciocinio inteligente
-    - `test_prompt_mentions_observe`: verificar que SYSTEM_PROMPT menciona a tool `observe`
-    - `test_prompt_mentions_distancia_seguranca`: verificar que SYSTEM_PROMPT menciona "20cm" ou distancia de seguranca
-    - `test_prompt_mentions_centralizacao`: verificar que SYSTEM_PROMPT menciona centralizar objeto
-    - `test_prompt_mentions_limite_arena`: verificar que SYSTEM_PROMPT menciona "400cm" ou limite de arena
-    - `test_prompt_mentions_lbml_format`: verificar que SYSTEM_PROMPT tem instrucoes de formato LBML
-    - Criar classe `TestToolsDescription` com:
-    - `test_tools_include_observe`: verificar que `get_tools_description()` retorna 4 tools (observe, camera, proximity, move)
-    - `test_observe_tool_has_no_parameters`: verificar que observe nao tem parametros obrigatorios
-    - `test_move_description_mentions_lbml`: verificar que descricao de move menciona LBML ou ambos os formatos
+- [ ] Tarefa 4: Implementar RF01 — Parada automatica por proximidade alvo
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
+  - O que fazer: Metodo `_check_proximity_goal(self) -> str | None`:
+    1. Se `_last_front_proximity` e None: retorna None (sem leitura)
+    2. Se `15 <= _last_front_proximity <= 25`:
+       - Define `_goal_achieved = True`
+       - Retorna mensagem: "**[CONTROLE AUTOMATICO]** Proximidade frontal: Xcm (faixa alvo: 15-25cm). Voce chegou perto o suficiente do objeto. Declare sucesso e informe o usuario que o objetivo foi alcancado."
+    3. Se `_last_front_proximity < 15`:
+       - Se `_object_was_centered` for True: considera que perdeu o objeto (overshooting) → ativa protocolo de recuperacao (Fase 04), por enquanto retorna mensagem de alerta
+       - Se `_object_was_centered` for False: retorna mensagem "Cuidado: muito perto de um obstaculo (Xcm). Recue um pouco e tente centralizar o alvo na camera."
+    4. Senao: retorna None (fora da faixa alvo)
+  - Chamar `_check_proximity_goal()` no loop principal:
+    - Apos processar tool results de `observe` e `proximity`, chamar `_update_state_from_result()`
+    - Em seguida, chamar `goal_msg = self._check_proximity_goal()`
+    - Se `goal_msg` nao for None:
+      - Injetar mensagem no contexto: `self._messages.append({"role": "user", "content": goal_msg})`
+      - Emitir evento (pode ser um `tool_result` customizado ou um novo evento tipo `proximity_goal`)
+      - Se `_goal_achieved`: na proxima iteracao do loop, o LLM deve responder textualmente sem tool_calls e o loop termina naturalmente. Alternativamente, forcar a parada imediata.
 
-- [ ] Tarefa 5: Teste de max_steps default
-  - Arquivo: `lbot-mcp/tests/test_agent.py` (alterar)
+- [ ] Tarefa 5: Implementar RF04 — Deteccao de loop de rotacao
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
+  - O que fazer: Metodo `_check_rotation_loop(self, command: str, parsed: list[dict]) -> str | None`:
+    1. Se o comando e exclusivamente de rotacao (`_is_rotation_command(parsed)`):
+       - Compara `_last_position` com a posicao atual (se disponivel no ultimo resultado)
+       - Se a posicao nao mudou significativamente (delta < 5cm em x e z): incrementa `_consecutive_rotations`
+       - Senao: reseta `_consecutive_rotations = 0`
+    2. Se o comando NAO e de rotacao (inclui deslocamento): reseta `_consecutive_rotations = 0`
+    3. Se `_consecutive_rotations >= 10`:
+       - Retorna mensagem: "**[CONTROLE AUTOMATICO]** Voce executou 10 rotacoes consecutivas sem mudanca significativa de posicao. Voce pode estar em um loop de rotacao. Tente uma estrategia diferente: recue 20cm, faca um observe(), ou gire em angulos maiores (ex: 30-45 graus)."
+       - Reseta `_consecutive_rotations = 0` apos injetar o alerta
+    4. Senao: retorna None
+  - Chamar `_check_rotation_loop()` ANTES de executar cada comando `move` (junto com `_validate_and_adjust_move`):
+    - Fazer parse do comando
+    - Se for LBML: chamar `_check_rotation_loop(command, parsed)`
+    - Se retornar mensagem de alerta: injetar no contexto
+
+- [ ] Tarefa 6: Implementar RF04 — Limite de 50 passos com cancelamento
+  - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
-    - Adicionar teste: `test_max_steps_default_is_100`: criar ReActAgent sem explicitar max_steps, verificar que `agent._max_steps == 100`
-    - Adicionar teste: `test_max_steps_override`: criar ReActAgent com `max_steps=50`, verificar que `agent._max_steps == 50`
+    - Incrementar `_step_count` a cada iteracao do loop (inicio do `while` loop)
+    - Se `_step_count > max_steps` (50):
+      - Emitir evento `max_steps_reached` com max_steps=50
+      - Retornar a mensagem: "Nao consegui completar a tarefa apos 50 passos. Tente reformular o pedido ou verificar se o ambiente esta funcionando."
+      - NOTA: O loop ja tem `while step < max_steps` que cuida do limite. A mudanca principal e so o default 50 e a mensagem. O `_step_count` e redundante com `step` — podemos usar o `step` existente mesmo.
+
+- [ ] Tarefa 7: Adicionar testes
+  - Arquivo: `lbot-mcp/tests/test_agent.py`
+  - O que fazer:
+    - `TestProximityGoal` — testa `_check_proximity_goal()`:
+      - Retorna mensagem quando frente entre 15-25cm
+      - Retorna None quando frente > 25cm
+      - Retorna alerta quando frente < 15cm sem objeto centralizado
+    - `TestLoopDetection` — testa `_check_rotation_loop()`:
+      - Reseta contador com comando de deslocamento
+      - Incrementa contador com comando de rotacao sem mudanca de posicao
+      - Dispara alerta apos 10 rotacoes consecutivas
+      - Nao incrementa se posicao mudou durante rotacao
+    - `TestMaxSteps` — atualiza teste existente para 50
+    - `TestStateReset` — testa que `reset()` limpa todos os rastreadores
 
 ## Arquivos Referencia
 
-- `lbot-mcp/tests/test_integration.py` - Padrao de testes de integracao com mock_backend
-- `lbot-mcp/tests/test_agent.py` - Padrao de testes do agent com mock_mcp_client e mock_llm
-- `lbot-mcp/src/mcp_server/tools/observe.py` - Tool observe (Fase 01)
-- `lbot-mcp/src/mcp_server/tools/movement.py` - Tool move modificada (Fase 01)
-- `lbot-mcp/src/harness/personality.py` - System prompt reescrito (Fase 02)
-- `lbot-mcp/src/harness/agent.py` - Agent atualizado (Fase 02)
+- `lbot-mcp/src/harness/agent.py` — construtor `__init__` (linhas 221-248), loop `run()` (linhas 301-659), metodo `reset()` (linha 260)
+- `lbot-mcp/tests/test_agent.py` — classe `TestReActAgentMaxSteps` (linhas 587-596), estrutura de mock
 
 ## Criterios de Aceite
 
-- [ ] Todos os testes unitarios da tool observe passam
-- [ ] Todos os testes de integracao da tool move (existentes + novos com LBML) passam
-- [ ] Todos os testes do agent para observe handler passam
-- [ ] Todos os testes de regressao do system prompt passam
-- [ ] Teste de max_steps=100 passa
-- [ ] Nenhum teste existente regrediu
+- [ ] CA01: Robo para ao atingir distancia alvo
+  - Cenario: Robo esta se aproximando, objeto centralizado na camera, leitura frontal entre 15-25cm → mensagem injetada no contexto instruindo o LLM a declarar sucesso
+- [ ] CA07: Limite de passos atingido
+  - Cenario: Robo executou 50 passos sem concluir → loop interrompido, usuario informado
+- [ ] CA08: Deteccao de loop de rotacao
+  - Cenario: 10 passos de rotacao consecutivos sem mudanca de posicao → alerta injetado no contexto
 
 ## Testes Esperados
 
-- Conforme detalhado nas tarefas acima
+- `TestMaxSteps.test_max_steps_default_is_50` — atualizado de 100 para 50
+- `TestProximityGoal.test_goal_when_front_in_range_15_25` — retorna mensagem de sucesso
+- `TestProximityGoal.test_no_goal_when_front_above_25` — retorna None
+- `TestProximityGoal.test_alert_when_front_below_15_not_centered` — retorna alerta
+- `TestLoopDetection.test_resets_on_displacement_command` — zera contador
+- `TestLoopDetection.test_increments_on_rotation_no_position_change` — incrementa
+- `TestLoopDetection.test_alerts_after_10_consecutive_rotations` — dispara alerta
+- `TestLoopDetection.test_does_not_increment_when_position_changes` — nao incrementa
+- `TestStateReset.test_reset_clears_state_trackers` — reset() limpa tudo
 
 ## Comandos pos-fase
 
-- `cd lbot-mcp && python -m pytest tests/ -x -v`
-- `cd lbot-mcp && python -m mypy src/`
+```bash
+cd lbot-mcp && python -m pytest tests/test_agent.py -v
+```
 
 ## Registro de Execucao
 
-- Data: 2026-06-06
+<Preenchido pelo agente durante a execucao>
+
+- Data:
 - Arquivos criados:
-  - `lbot-mcp/tests/test_observe.py` - 6 testes unitarios da tool observe
-  - `lbot-mcp/tests/test_personality.py` - 15 testes do system prompt e tool descriptions
 - Arquivos alterados:
-  - `lbot-mcp/tests/test_integration.py` - +4 testes LBML direto na classe TestMoveTool
-  - `lbot-mcp/tests/test_agent.py` - +7 testes (5 TestReActAgentObserveTool + 2 TestReActAgentMaxSteps)
-  - `lbot-mcp/src/harness/agent.py` - Corrigido bug UnboundLocalError: variavel `observe_img_content_ok` na branch else (ambos ok) renomeada e usada corretamente na linha 618
-- Testes executados: `cd lbot-mcp && python -m pytest tests/ -x -v` → 79 passed, 3 skipped
-- MyPy: `cd lbot-mcp && python -m mypy src/` → 5 erros (todos pre-existentes, nenhum novo)
-- Resultado: SUCESSO - todos os testes passaram, sem regressoes
-- Pendencias: nenhuma
+- Testes executados:
+- Resultado:
+- Pendencias:

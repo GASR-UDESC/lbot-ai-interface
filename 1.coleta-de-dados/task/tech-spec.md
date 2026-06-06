@@ -1,94 +1,88 @@
-# Plano Tecnico: Redesign UI LBot DataGen - Estilo Airbnb
+# Plano Tecnico: Migracao Visual BMW M + Navegacao Global
 
 ## Visao Geral
 
-Redesign completo da UI do LBot DataGen, substituindo o tema dark/neon verde atual por um design system Airbnb (canvas branco, Rausch como acento unico, Inter como tipografia). A abordagem e puramente visual (HTML/CSS/templates) — nenhum service, model ou logica de negocio e alterado. O componente `robo-simulator` (canvas 3D Three.js) permanece inalterado.
+Migracao completa do design system do LBot DataGen frontend do tema claro Airbnb-style para o tema escuro BMW M, incluindo criacao de componente de navegacao global (`app-top-nav`) e padronizacao de layout das paginas de jogo e controle.
 
-**Estrategia**: Redesign componente-a-componente, substituindo o tema dark por tokens Airbnb em 5 fases sequenciais, cada uma entregando um subset testavel de componentes.
+A abordagem e **substituicao direta das variaveis CSS** no `:root` de `styles.css` — atualizando valorescomo de `#ffffff` para `#000000`, `#ff385c` para `#ffffff`, etc. — seguida de atualizacao componente a componente para corrigir hardcoded values e aplicar os padroes BMW M.
+
+## Modulos Envolvidos
+
+- **styles.css (global)**: Significa para as variaveis CSS e reset base
+- **app-top-nav (novo componente)**: Navegacao global com menu hamburger mobile
+- **app-root**: Template para incluir o top-nav
+- **menu.page**: Redesign completo para estilo editorial BMW M
+- **leaderboard.page**: Tema escuro BMW M
+- **game.page**: Adicao de header contextual, remocao de nav-links do HUD, padronizacao de layout
+- **controls.page**: Adicao de header contextual com faixa M
+- **lbot-chat**: Tema escuro BMW M
+- **virtual-controls**: Tema escuro BMW M
+- **victory-screen**: Overlay BMW M
+- **level-transition**: Overlay BMW M
+- **confirm-modal**: Overlay BMW M
+
+## Arquivos Impactados
+
+### Novos
+
+- `src/app/components/top-nav/top-nav.ts` - Componente standalone de navegacao global
+- `src/app/components/top-nav/top-nav.html` - Template com nav desktop + hamburger mobile
+- `src/app/components/top-nav/top-nav.css` - Estilos BMW M (fundo preto, faixa tricolor, hamburger)
+
+### Alterados
+
+- `src/styles.css` - Substituicao completa das variaveis CSS `:root` (cores, border-radius, tipografia)
+- `src/app/app.ts` - Importar `TopNavComponent`
+- `src/app/app.html` - Adicionar `<app-top-nav>` acima do `<router-outlet>`, remover padding-top se necessario
+- `src/app/app.css` - Ajustar layout para acomodar top-nav
+- `src/app/pages/menu/menu.page.html` - Redesign editorial BMW M
+- `src/app/pages/menu/menu.page.css` - Estilos menu BMW M (canvas preto, botoes outline, uppercase)
+- `src/app/pages/menu/menu.page.ts` - Ajustes se necessario
+- `src/app/pages/leaderboard/leaderboard.page.html` - Titulo uppercase, botoes BMW M
+- `src/app/pages/leaderboard/leaderboard.page.css` - Tema escuro completo
+- `src/app/pages/game/game.page.html` - Adicionar header contextual, remover hud-nav links
+- `src/app/pages/game/game.page.css` - Tema escuro, border-radius 0, hairline borders, gap padronizado
+- `src/app/pages/controls/controls.page.html` - Adicionar header contextual com faixa M
+- `src/app/pages/controls/controls.page.css` - Tema escuro, border-radius 0
+- `src/app/components/lbot-chat/lbot-chat.html` - Labels uppercase BMW M
+- `src/app/components/lbot-chat/lbot-chat.css` - Tema escuro (surface-card header, surface-soft/elevated messages, border-radius 0)
+- `src/app/components/virtual-controls/virtual-controls.html` - Ajustes se necessario
+- `src/app/components/virtual-controls/virtual-controls.css` - Tema escuro, border-radius 0
+- `src/app/components/victory-screen/victory-screen.html` - Uppercase labels, tipografia display
+- `src/app/components/victory-screen/victory-screen.css` - Overlay escuro rgba(0,0,0,0.85), surface-card, border 0
+- `src/app/components/level-transition/level-transition.html` - Uppercase labels
+- `src/app/components/level-transition/level-transition.css` - Overlay escuro, surface-card, border-radius 0
+- `src/app/components/confirm-modal/confirm-modal.html` - Uppercase labels
+- `src/app/components/confirm-modal/confirm-modal.css` - Overlay escuro, botoes outline, border-radius 0
+- `src/app/components/simulator-frame/simulator-frame.css` - Border-radius 0, hairline border
 
 ## Decisoes Tecnicas
 
 | Decisao | Opcao escolhida | Justificativa |
 |---------|-----------------|---------------|
-| Fonte | Inter via Google Fonts CDN | Substituto open-source do Airbnb Cereal VF; carregamento via CDN e simples e performatico |
-| Tokens CSS | Todas as custom properties em `styles.css` | Centralizacao simples; nao ha necessidade de arquivos separados para ~50 variaveis |
-| Animacoes | CSS puro (keyframes + transitions) | Os overlays ja usam CSS puro; manter consistente, sem adicionar dependencia de @angular/animations |
-| SSR | Sem fase dedicada de testes SSR | CSS puro e HTML nao afetam SSR; validacao manual pos-cada fase |
-| Testes | Nao adicionar testes automatizados | Foco 100% no redesign visual; componentes nao tem logica complexa |
-| Divisao de fases | 5 fases menores (2-3 componentes cada) | Menos risco, mais iterativo, cada fase e testavel independentemente |
-| Responsividade | Integrada em cada fase | Cada componente recebe tratamento responsive no momento da implementacao |
-
-## Modulos Envolvidos
-
-- **app (root)**: Layout shell, global styles, top-nav
-- **pages/menu**: Landing page com hero e search bar
-- **pages/game**: Layout split simulador + chat, HUD overlay
-- **pages/leaderboard**: Cards de ranking
-- **pages/controls**: Layout duas colunas simulador + controles
-- **components/lbot-chat**: Chat bubbles, input, estrelas, popups
-- **components/level-transition**: Overlay entre niveis
-- **components/victory-screen**: Overlay de vitoria
-- **components/confirm-modal**: Modal de confirmacao
-- **components/virtual-controls**: Botoes direcionais, timeline
-- **Novo componente**: components/top-nav (barra de navegacao global)
-
-## Arquivos Impactados
-
-### Novos
-- `src/app/components/top-nav/top-nav.ts` - Componente standalone de navegacao global (RF02)
-- `src/app/components/top-nav/top-nav.html` - Template da top nav
-- `src/app/components/top-nav/top-nav.css` - Estilos da top nav (80px, tabs, responsivo)
-
-### Alterados
-- `src/styles.css` - Reset global + todos os tokens Airbnb como CSS custom properties
-- `src/app/app.css` - Remover variaveis dark, adaptar layout shell com top-nav
-- `src/app/app.html` - Adicionar `<app-top-nav>` acima do `<router-outlet>`
-- `src/app/app.ts` - Importar TopNavComponent
-- `src/index.html` - Adicionar link para Google Fonts (Inter)
-- `src/app/pages/menu/menu.page.html` - Redesign completo: hero + search bar
-- `src/app/pages/menu/menu.page.css` - Redesign completo para estilo Airbnb
-- `src/app/pages/game/game.page.html` - Ajustar HUD para estilo Airbnb, nav links
-- `src/app/pages/game/game.page.css` - Redesign: split layout, HUD branco, chat panel
-- `src/app/components/lbot-chat/lbot-chat.html` - Ajustar classe CSS para estilo Airbnb
-- `src/app/components/lbot-chat/lbot-chat.css` - Redesign completo: bolhas, input, estrelas
-- `src/app/components/level-transition/level-transition.html` - Ajustar para card branco
-- `src/app/components/level-transition/level-transition.css` - Redesign para Airbnb overlay
-- `src/app/components/victory-screen/victory-screen.html` - Ajustar para card branco
-- `src/app/components/victory-screen/victory-screen.css` - Redesign para Airbnb overlay
-- `src/app/components/confirm-modal/confirm-modal.html` - Ajustar para card branco
-- `src/app/components/confirm-modal/confirm-modal.css` - Redesign para Airbnb overlay
-- `src/app/pages/leaderboard/leaderboard.page.html` - Converter tabela para card grid
-- `src/app/pages/leaderboard/leaderboard.css` - Redesign completo para cards Airbnb
-- `src/app/pages/controls/controls.page.html` - Ajustar layout e estilo
-- `src/app/pages/controls/controls.page.css` - Redesign para tema claro Airbnb
-- `src/app/components/virtual-controls/virtual-controls.html` - Ajustar botoes e timeline
-- `src/app/components/virtual-controls/virtual-controls.css` - Redesign para Airbnb style
-
-## Arquivos Nao Alterados
-
-- `src/app/components/robo-simulator/robo-simulator.ts` - Canvas 3D (excluido do redesign)
-- `src/app/components/robo-simulator/robo-simulator.css` - Canvas 3D (excluido do redesign)
-- `src/app/components/simulator-frame/*` - Wrapper de iframe (excluido)
-- Todos os services (`*.service.ts`) - Logica de negocio inalterada
-- Todos os models (`*.model.ts`) - Interfaces inalteradas
-- `src/app/app.routes.ts` - Rotas inalteradas
-- `src/app/app.config.ts` - Configuracao inalterada
-- Ambientes (`environment.ts`, `environment.prod.ts`) - Inalterados
+| Estrategia de migracao CSS | Substituicao direta no `:root` | Mudanca instantanea; todos os componentes que usam variaveis serao atualizados de uma vez. Componentes com hardcoded values serao corrigidos fase a fase. |
+| Estilo de botao primario | BMW M outline (bg transparente/preto, texto branco, outline 1px branco, border-radius 0) | Consistente com o design system BMW M. O CTA "Jogar" perde o destaque colorido mas segue o principio editorial. |
+| Simulador 3D (app-robo-simulator) | Fora de escopo | Componente de iframe com cores hardcoded; migracao interna seria arriscada e fora do escopo definido na business-spec. |
+| Carregamento do top-nav | Eager (componente importado no app-root) | Nav deve aparecer em todas as rotas imediatamente; lazy loading adiciona complexidade sem beneficio. |
+| Menu hamburger mobile | Dentro do app-top-nav | Autocontido; toggle de estado interno com Signal; overlay reutilizavel. |
+| Faixa tricolor M | Classe CSS `.m-stripe` em styles.css | Implementada como gradiente linear de 4px com 3 paradas (#0066b1, #1c69d4, #e22718). Reutilizavel em qualquer lugar. |
+| Tipografia BMW M | Substituir valores das variaveis existentes | Inter ja esta no projeto; ajustar pesos (body 300, display 700) e tracking (uppercase 1.5px) nas variaveis. display-lg+ com tracking -0.5px. |
+| Border-radius | Atualizar variaveis e auditar componente a componente | `--rounded-md` de 14px para 6px, `--rounded-lg` de 20px para 0 (ou remover), etc. Depois auditar cada CSS. |
 
 ## Dependencias entre Fases
 
-- Fase 1 -> Todas as demais (tokens CSS sao base para tudo)
-- Fase 2 -> Fase 1 (top-nav precisa de tokens)
-- Fase 3 -> Fase 1, Fase 2 (chat herda tokens e esta dentro da game page que precisa da nav)
-- Fase 4 -> Fase 1 (overlays usam tokens)
-- Fase 5 -> Fase 1, Fase 2 (leaderboard e controls precisam de tokens e nav)
+- **Fase 1** -> Fases 2, 3, 4, 5 (CSS vars globais e top-nav sao prereq para tudo)
+- **Fase 2** -> Fase 5 (menu/leaderboard precisam de tipografia final)
+- **Fase 3** -> Fase 5 (game/controls layouts precisam de tipografia final)
+- **Fase 4** -> Fase 5 (componentes precisam de tipografia final)
+- Fases 2, 3, 4 podem rodar em paralelo depois da Fase 1 (mas serao executadas sequencialmente)
 
 ## Mapa de Fases
 
-| Fase | Descricao | Componentes/Arquivos Principais |
-|------|-----------|--------------------------------|
-| 01 | Design System Foundation | styles.css, app.css, app.html, index.html |
-| 02 | Top Nav + Menu/Home Page | top-nav (novo), menu.page |
-| 03 | Chat + Game Page + HUD | lbot-chat, game.page, HUD overlay |
-| 04 | Overlay Components | level-transition, victory-screen, confirm-modal |
-| 05 | Leaderboard + Controls + Virtual Controls | leaderboard.page, controls.page, virtual-controls |
+| Fase | Descricao | Modulo Principal |
+|------|-----------|-----------------|
+| 01 | Fundacao: CSS Variables + Top-Nav Global | styles.css, app-top-nav (novo), app-root |
+| 02 | Paginas Estaticas: Menu + Leaderboard | menu.page, leaderboard.page |
+| 03 | Layouts de Jogo: Game + Controls | game.page, controls.page |
+| 04 | Componentes: Chat, Controles Virtuais, Overlays | lbot-chat, virtual-controls, victory-screen, level-transition, confirm-modal |
+| 05 | Tipografia Final + Auditoria Border-Radius + Polish | Todos os componentes |

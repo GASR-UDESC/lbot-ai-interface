@@ -1,100 +1,120 @@
-# Fase 02: Top Nav + Menu/Home Page
+# Fase 02: Paginas Estaticas - Menu + Leaderboard
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Criar o componente de navegacao global (top-nav) e redesenhar completamente a pagina Menu/Home com hero section e search bar estilo Airbnb.
+Redesenhar as paginas Menu e Leaderboard para o estilo editorial BMW M: canvas preto, tipografia uppercase, botoes outline retangulares, cards com hairline borders e border-radius 0.
 
 ## Pre-requisitos
 
-- Fase 01 concluida (tokens CSS e base styles definidos)
+- Fase 01 concluida (variaveis CSS globais e top-nav)
 
 ## Tarefas
 
-- [x] Tarefa 1: Criar componente TopNav (standalone)
-  - Arquivos novos: `src/app/components/top-nav/top-nav.ts`, `top-nav.html`, `top-nav.css`
-  - O que fazer: Criar componente standalone com:
-    - Altura 80px, fundo canvas (#ffffff), borda inferior 1px hairline
-    - Lado esquerdo: Logo/marca "LBot Arena" em typography nav-link (16px, 600)
-    - Centro: 3 tabs - "Jogar" (/game), "Leaderboard" (/leaderboard), "Controles" (/controls) - estilo product-tab-active (ink + underline) para ativa, product-tab-inactive (muted) para inativas
-    - Lado direito: Area de utilitarios (vazia por enquanto, reservada)
-    - Tipografia: nav-link (16px, 600, 1.25)
-    - Em mobile (<744px): colapsar para logo + hamburger, com menu dropdown
-
-- [x] Tarefa 2: Integrar TopNav no app shell
-  - Arquivo: `src/app/app.html`
-  - O que fazer: Adicionar `<app-top-nav></app-top-nav>` acima do `<router-outlet>` dentro de um wrapper com `display: flex; flex-direction: column; height: 100dvh`
-  - Arquivo: `src/app/app.ts`
-  - O que fazer: Importar `TopNavComponent` nos imports do AppComponent
-  - Arquivo: `src/app/app.css`
-  - O que fazer: Adicionar estilos de layout: wrapper flex column, router-outlet com flex: 1 e overflow: auto
-
-- [x] Tarefa 3: Redesenhar a pagina Menu/Home
+- [ ] Tarefa 1: Redesenhar pagina Menu (RF08)
   - Arquivo: `src/app/pages/menu/menu.page.html`
-  - O que fazer: Substituir o conteudo completamente:
-    - Hero section centralizado com titulo "LBot Arena" em display-xl (28px, 700) e subtitulo em body-md (16px, 400)
-    - Search bar pill-shaped: fundo branco, rounded.full, 64px altura, dividida por hairlines em 3 segmentos ("Modo" / "Nivel" / "Jogador"), com search orb circular Rausch (48x48px) no lado direito
-    - Ao clicar no search orb com "Jogar" selecionado: navegar para /game
-    - Segmentos "Nivel" e "Jogador" exibem "Qualquer" por enquanto
-    - Background: canvas branco com padding section (64px)
-    - Footer section com links estilo footer-light do Airbnb
-    - Remover a navegacao tipo card existente (btn-primary, btn-secondary, btn-tertiary)
+  - O que fazer:
+    - Manter a estrutura centralizada mas redesenhar:
+    - Logo emoji `🤖` pode ser mantido ou substituido por "LBOT" em display-lg uppercase
+    - Titulo "LBot Arena" -> "LBOT ARENA" em `var(--typography-display-lg-size)` (56px), weight 700, uppercase, tracking -0.5px, cor `var(--color-ink)` (branco)
+    - Subtitulo manter sentence-case, weight 300 (Light), cor `var(--color-body)` (#bbbbbb)
+    - Os 3 botoes de navegacao (Jogar, Leaderboard, Modo Controle):
+      - Remover fundo colorido do botao primario (Jogar)
+      - Todos os botoes: estilo card BMW -> `background: var(--color-surface-card)` (#1a1a1a), `border: 1px solid var(--color-hairline)` (#3c3c3c), `border-radius: 0`
+      - Icones Lucide dentro de circulos (`border-radius: var(--rounded-full)`, `background: var(--color-surface-card)`)
+      - Hover: `border-color: var(--color-on-dark)`, `box-shadow: none` (remover sombra flutuante)
+      - Texto do botao em `label-uppercase` style (14px, weight 700, tracking 1.5px)
+      - Descricao do botao em `body-sm` (14px, weight 300, cor body)
+    - Footer: texto muted `var(--color-muted)` (#7e7e7e) em `caption` style
 
-- [x] Tarefa 4: Redesenhar os estilos da pagina Menu/Home
   - Arquivo: `src/app/pages/menu/menu.page.css`
-  - O que fazer: Substituir TODOS os estilos dark/neon por estilos Airbnb:
-    - `.menu-wrapper`: fundo canvas, sem gradientes escuros
-    - Hero section: centralizado, spacing generoso
-    - Search bar: estilo Airbnb search-bar-pill com hairlines, segmentos clicaveis, search orb Rausch
-    - Footer: estilo footer-light com hairline dividers, muted text
-    - Mobile (<744px): search bar colapsa para pill unico com icone
-    - Remover todas as cores dark (#0a0e0a, #0f0f12, etc.) e substituir por tokens Airbnb
-    - Remover gradientes (linear-gradient com verdes/escuros)
+  - O que fazer:
+    - `.menu-wrapper`: `background-color: var(--color-canvas)` (ja e, mas agora preto)
+    - `.menu-card`: `border-radius: 0` (remover rounded-md)
+    - `.title`: `font-size: var(--typography-display-lg-size)`, `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: -0.5px`, cor `var(--color-ink)` (branco)
+    - `.subtitle`: `font-weight: 300` (Light), cor `var(--color-body)` (#bbbbbb)
+    - `.menu-btn`: `border-radius: 0`, `background-color: var(--color-surface-card)`, `border: 1px solid var(--color-hairline)`, `color: var(--color-ink)`, remover `box-shadow` hover em favor de border highlight
+    - `.btn-primary`, `.btn-secondary`, `.btn-tertiary`: todos outline/card style, mesmo visual, sem destaque colorido
+    - `.btn-icon`: `border-radius: var(--rounded-full)`, `background: var(--color-surface-elevated)`
+    - `.btn-text`: `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 1.5px`, `font-size: var(--typography-label-uppercase-size)`
+    - `.btn-desc`: `font-weight: 300`, cor `var(--color-body)`
+    - `.menu-footer`: cor `var(--color-muted)`
+    - Remover todos os `border-radius: var(--rounded-md)` ou `var(--rounded-sm)` que nao sejam icones circulares
+
+- [ ] Tarefa 2: Atualizar pagina Leaderboard (RF09)
+  - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
+  - O que fazer:
+    - Trofeu emoji `🏆` pode ser mantido ou substituido por icone Lucide `Trophy`
+    - Titulo "Leaderboard Global" -> "LEADERBOARD" em uppercase, `var(--typography-display-lg-size)`, weight 700, tracking -0.5px
+    - Subtitulo: sentence-case, weight 300 (Light), cor `var(--color-body)`
+    - Botao retry: estilo outline BMW (border branco, bg transparent, texto branco, border-radius 0)
+    - Link "Voltar ao Menu": remover ou estilizar como link BMW M (uppercase, tracking 1.5px) — agora o top-nav provê navegação
+
+  - Arquivo: `src/app/pages/leaderboard/leaderboard.page.css`
+  - O que fazer:
+    - `.lb-page`: `background: var(--color-canvas)` (preto)
+    - `.lb-title`: `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: -0.5px`, cor `var(--color-ink)` (branco)
+    - `.lb-subtitle`: `font-weight: 300`, cor `var(--color-body)`
+    - `.lb-card`, `.lb-skeleton-card`: `background: var(--color-surface-card)`, `border-radius: 0`, `border: 1px solid var(--color-hairline)`, remover `box-shadow` hover
+    - `.lb-state`: `background: var(--color-surface-card)`, `border-radius: 0`
+    - `.lb-retry-btn`: estilo outline BMW — `background: transparent`, `border: 1px solid var(--color-on-dark)`, `color: var(--color-on-dark)`, `border-radius: 0`, `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 1.5px`
+    - `.lb-back-btn`: `color: var(--color-on-dark)`, uppercase, tracking 1.5px, `font-weight: 700`
+    - `.lb-rank-num`, `.lb-card-nickname`, `.lb-card-time`, `.lb-card-date`: auditar cores para tema escuro
+    - Skeleton pulse: `background: var(--color-surface-elevated)` ao inves de `var(--color-surface-soft)`
+    - `.lb-skeleton-line`, `.lb-skeleton-rank`: `background: var(--color-surface-elevated)` (#262626)
+    - Remover todos os `border-radius: var(--rounded-md)` -> `border-radius: 0`
+    - Remover hover transform/scale e box-shadow; usar apenas border highlight
+
+- [ ] Tarefa 3: Garantir padding-top para top-nav nas paginas Menu e Leaderboard
+  - Arquivo: `src/app/pages/menu/menu.page.css`
+  - O que fazer: `.menu-wrapper` ja tem `min-height: 100dvh` e `padding: 24px`. Adicionar `padding-top: calc(var(--top-nav-height, 64px) + 24px)` ou ajustar para compensar a nav fixa
+  - Arquivo: `src/app/pages/leaderboard/leaderboard.page.css`
+  - O que fazer: `.lb-page` tem `padding: var(--spacing-section) var(--spacing-lg)`. Adicionar `padding-top: calc(var(--top-nav-height, 64px) + var(--spacing-section))` ou equivalente
 
 ## Arquivos Referencia
 
-- `src/app/pages/menu/menu.page.ts` - Componente atual (usa RouterLink)
-- `src/app/pages/menu/menu.page.html` - Template atual com cards dark
-- `src/app/pages/menu/menu.page.css` - Estilos atuais dark/neon
-- `src/app/app.html` - Shell atual (apenas router-outlet)
-- `src/app/app.css` - Variaveis dark que serao removidas na Fase 01
-- `task/DESIGN-airbnb.md` - Especificacao de search-bar-pill, top-nav, footer-light
+- `src/app/pages/menu/menu.page.ts` - Logica do componente menu
+- `src/app/pages/menu/menu.page.html` - Template atual
+- `src/app/pages/menu/menu.page.css` - Estilos atuais (tema claro)
+- `src/app/pages/leaderboard/leaderboard.page.ts` - Logica do componente leaderboard
+- `src/app/pages/leaderboard/leaderboard.page.html` - Template atual
+- `src/app/pages/leaderboard/leaderboard.page.css` - Estilos atuais (tema claro)
+- `task/DESIGN-bmw-m.md` - Referencia visual BMW M
 
 ## Criterios de Aceite
 
-- [ ] CA01: Top Navigation Global
-  - Cenario: Abrir qualquer pagina e ver a top nav com 80px de altura, fundo branco, 3 tabs centralizadas com a ativa em ink com underline
-- [ ] CA02: Menu/Home com Hero e Search Bar
-  - Cenario: Ao acessar /menu, aparece hero com "LBot Arena" em display-xl, search bar pill com 3 segmentos e search orb Rausch
-  - Cenario: Clicar no search orb com "Jogar" selecionado navega para /game
-- [ ] CA10 (parcial): Responsividade Mobile
-  - Cenario: Em <744px, a top nav colapsa para logo + hamburger
-  - Cenario: Em <744px, a search bar colapsa para pill unico
+- [ ] CA07: Tema escuro nas paginas Menu e Leaderboard
+  - Cenario: Dado que o usuario navega para /menu ou /leaderboard / Quando a pagina carrega / Entao o fundo e preto, o texto principal e branco, cards usam #1a1a1a, hairlines usam #3c3c3c.
+- [ ] CA08: Tipografia BMW M nos titulos
+  - Cenario: Dado que o usuario esta em /menu ou /leaderboard / Quando visualiza os titulos / Entao estao em uppercase, weight 700, e tracking ajustado.
+- [ ] CA09: Cantos retos BMW nas paginas
+  - Cenario: Dado que o usuario visualiza cards e botoes / Entao todos tem border-radius 0.
+- [ ] CA12: Menu redesenhado no estilo BMW M
+  - Cenario: Dado que o usuario navega para /menu / Entao o menu exibe canvas preto, titulo "LBOT ARENA" em display uppercase, botoes retangulares com outline, sem bordas arredondadas.
+- [ ] CA13: Leaderboard atualizado para tema escuro
+  - Cenario: Dado que o usuario navega para /leaderboard / Entao a leaderboard exibe fundo preto, cards com surface-card, border-radius 0, texto branco e titulo uppercase.
 
 ## Testes Esperados
 
-- TopNav aparece em todas as paginas (/menu, /game, /leaderboard, /controls)
-- Tabs refletem a rota ativa com underline ink
-- Search bar funciona e navega para /game ao clicar no orb
-- Mobile: hamburger e search pill aparecem em <744px
+- `npx ng build` - Build sem erros
+- Verificar visualmente: pagina menu com fundo preto, titulo uppercase, botoes retangulares outline
+- Verificar visualmente: pagina leaderboard com fundo preto, cards escuros, border-radius 0
+- Verificar: top-nav continua funcional em ambas as paginas
+- Verificar: navegacao entre paginas funciona
 
 ## Comandos pos-fase
 
-```bash
-cd lbot-datagen/lbot-datagen-frontend && ng build --configuration local
-```
+- `npx ng build`
+- `npx ng serve`
 
 ## Registro de Execucao
 
-- Data: 2026-06-06
+(Preenchido pelo agente durante a execucao)
+
+- Data:
 - Arquivos criados:
-  - Nenhum arquivo novo criado
 - Arquivos alterados:
-  - `lbot-mcp/src/harness/personality.py` (SYSTEM_PROMPT reescrito completamente + get_tools_description atualizada com observe)
-  - `lbot-mcp/src/harness/agent.py` (max_steps default 100 + handler observe tool)
-  - `lbot-mcp/src/harness/cli.py` (_print_event formatado para resultados de observe)
-- Testes executados: `cd lbot-mcp && python -m pytest tests/ -x -v` → 47 passed, 3 skipped
-- mypy: `cd lbot-mcp && python -m mypy src/` → 5 erros pre-existentes (translator, server, OpenAI), nenhum novo
-- Resultado: SUCESSO - todos os testes passaram, sem regressoes
-- Pendencias: nenhuma
+- Testes executados:
+- Resultado:
+- Pendencias:

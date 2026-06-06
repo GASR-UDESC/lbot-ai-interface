@@ -1,103 +1,75 @@
-# Fase 01: Criar tool `observe` e modificar tool `move`
+# Fase 01: Prompt melhorado para aproximacao
 
-## Status: CONCLUIDO
+## Status: PENDENTE
 
 ## Objetivo
 
-Implementar as alteracoes no modulo MCP Server tools:
-1. Criar a tool `observe` que combina camera + proximidade
-2. Modificar a tool `move` para detectar LBML direto no input e pular o tradutor quando aplicavel
-3. Registrar a nova tool no server.py
+Atualizar o `SYSTEM_PROMPT` em `personality.py` com instrucoes mais fortes e especificas sobre aproximacao, zonas de distancia, e anti-loop, conforme RF03.
 
 ## Pre-requisitos
 
-- Nenhum (primeira fase)
+- Nenhum
 
 ## Tarefas
 
-- [x] Tarefa 1: Criar `lbot-mcp/src/mcp_server/tools/observe.py`
-  - Arquivo: `lbot-mcp/src/mcp_server/tools/observe.py`
+- [ ] Tarefa 1: Atualizar a secao "REGRAS PARA TAREFAS" do SYSTEM_PROMPT
+  - Arquivo: `lbot-mcp/src/harness/personality.py`
   - O que fazer:
-    - Criar funcao assincrona `observe()` decorada com `@mcp.tool()`
-    - Chamar `backend.get_camera()` e `backend.get_proximity()` simultaneamente (usar `asyncio.gather`)
-    - Combinar os resultados em um dict com campos: `image` (base64 PNG), `render_method`, `robot_position`, `proximity` (sub-dict com `frente` e `tras` em cm)
-    - Retornar JSON string do dict combinado
-    - Tratar erros: se camera falhar, incluir campo `camera_error`; se proximity falhar, incluir campo `proximity_error`; se ambos falharem, retornar erro geral
-    - Formato de retorno em caso de sucesso:
-      ```json
-      {
-        "image": "<base64_png>",
-        "render_method": "2d" | "webgl" | "unknown",
-        "robot_position": {"x": 0, "z": 0, "rotation": 0},
-        "proximity": {"frente": 50.0, "tras": 200.0}
-      }
-      ```
-    - Formato de retorno em caso de erro parcial (camera ok, proximity falhou):
-      ```json
-      {
-        "image": "<base64_png>",
-        "render_method": "2d",
-        "robot_position": {"x": 0, "z": 0, "rotation": 0},
-        "proximity_error": "sensor indisponivel"
-      }
-      ```
+    - **Enfatizar que o sensor de proximidade mede o objeto mais proximo naquela direcao**, nao necessariamente o alvo. Adicionar instrucao explicita: "sempre centralize o alvo na camera ANTES de confiar na leitura de proximidade" (ja existe parcialmente — reforcar com mais enfase)
+    - **Adicionar zonas de aproximacao com limites de passo:**
+      - `> 80cm`: passos de ate 20cm
+      - `40-80cm`: passos de no maximo 15cm
+      - `< 40cm`: passos de no maximo 10cm
+    - **Adicionar instrucao de parada**: "Quando a distancia frontal estiver entre 15cm e 25cm, NAO avance mais. Voce ja esta na distancia correta. Declare sucesso e informe o usuario."
+    - **Adicionar instrucao anti-loop de rotacao**: "NUNCA use R5L/R5R repetidamente mais de 3 vezes quando o objeto estiver visivel. Se nao centralizar apos 2-3 rotacoes de 5 graus, tente estrategia diferente: recue 10cm, gire 20 graus na direcao oposta, ou faca um observe() para reavaliar a situacao."
+    - **Atualizar o protocolo de aproximacao gradual** para usar distancias por zona (20cm quando >80cm, 15cm quando 40-80cm, 10cm quando <40cm)
+    - **Manter o texto em portugues**, seguindo o estilo e tom do prompt existente
+    - **NAO remover regras existentes**, apenas adicionar/esclarecer
 
-- [x] Tarefa 2: Modificar `lbot-mcp/src/mcp_server/tools/movement.py`
-  - Arquivo: `lbot-mcp/src/mcp_server/tools/movement.py`
+- [ ] Tarefa 2: Atualizar testes do prompt
+  - Arquivo: `lbot-mcp/tests/test_personality.py`
   - O que fazer:
-    - Antes de chamar o tradutor, verificar se o `command` ja e LBML valido usando a regex `LBML_SEQUENCE_RE`
-    - Se o command bater na regex, pular o tradutor e executar diretamente
-    - Se nao bater, manter o fluxo atual (passar pelo tradutor)
-    - Atualizar a mensagem de retorno para distinguir os dois caminhos:
-      - Traduzido: `"Comando executado: {lbml} ({preprocessed})"`
-      - LBML direto: `"Comando executado: {command} (LBML direto)"`
-
-- [x] Tarefa 3: Registrar tool `observe` no server.py
-  - Arquivo: `lbot-mcp/src/mcp_server/server.py`
-  - O que fazer:
-    - Adicionar `import mcp_server.tools.observe  # noqa: F401` na funcao `main()`
-    - Adicionar "observe" na string de log: `"Tools registradas: camera, proximity, move, observe"`
+    - Adicionar assertions que validam a presenca das novas instrucoes no SYSTEM_PROMPT:
+      - `"centralize" in prompt` e `"ANTES" in prompt` (centralizacao antes do sensor)
+      - `"15cm" in prompt` e `"25cm" in prompt` (faixa de parada)
+      - `"40cm" in prompt` ou `"40-80cm" in prompt` (zona intermediaria)
+      - `"80cm" in prompt` (zona distante)
+      - `"nao avance mais" in prompt.lower()` ou `"ja esta na distancia" in prompt.lower()`
+      - `"R5L" in prompt` ou `"R5R" in prompt` ou `"rotacoes de 5" in prompt.lower()` (anti-loop)
+    - Manter o teste existente de `test_tool_count` (4 ferramentas)
 
 ## Arquivos Referencia
 
-- `lbot-mcp/src/mcp_server/tools/camera.py` - Padrao de implementacao de tool (error handling, JSON retorno)
-- `lbot-mcp/src/mcp_server/tools/proximity.py` - Padrao de formatacao de leituras de proximidade
-- `lbot-mcp/src/mcp_server/tools/movement.py` - Tool atual a ser modificada (regex LBML, tradutor)
-- `lbot-mcp/src/mcp_server/context.py` - Singleton para acessar backend
-- `lbot-mcp/src/mcp_server/server.py` - Registro de tools
+- `lbot-mcp/src/harness/personality.py` — prompt atual que sera modificado (linhas 1-127)
+- `lbot-mcp/tests/test_personality.py` — testes existentes do prompt para referencia de estilo
 
 ## Criterios de Aceite
 
-- [ ] CA08: Tool observe retorna camera e proximidade
-  - Cenario: Given que o LLM chama a tool `observe`, When a tool e executada, Then retorna simultaneamente a imagem da camera (base64 PNG) e os dados de proximidade (frente e tras em cm)
-- [ ] Movimento ambiguo via move com LBML direto
-  - Cenario: Given que o LLM classifica como Movimento ambiguo e gera LBML, When envia via tool `move` com o LBML como command, Then a tool detecta que e LBML valido, pula o tradutor, e executa diretamente
-- [ ] Movimento bem definido continua funcionando via tradutor
-  - Cenario: Given que o LLM classifica como Movimento bem definido e envia comando em linguagem natural, When a tool `move` e chamada, Then o tradutor e usado normalmente como antes
+- [ ] CA11: Prompt orienta centralizacao antes de confiar no sensor
+  - Cenario: O SYSTEM_PROMPT contem instrucao explicita para centralizar o objeto na camera ANTES de confiar na leitura do sensor de proximidade
+- [ ] CA12: Passos reduzidos na zona de aproximacao
+  - Cenario: O SYSTEM_PROMPT instrui o LLM a usar passos de no maximo 10cm quando estiver a < 40cm do objeto
 
 ## Testes Esperados
 
-- `test_observe_returns_camera_and_proximity` - observe retorna JSON com image + proximity quando ambos funcionam
-- `test_observe_camera_error` - observe lida com erro de camera
-- `test_observe_proximity_error` - observe lida com erro de proximity
-- `test_observe_both_error` - observe lida com ambos falhando
-- `test_move_lbml_direct` - move com LBML valido pula tradutor
-- `test_move_lbml_invalid_still_translates` - move com input que nao e LBML passa pelo tradutor
-- `test_move_natural_language_translates` - move com linguagem natural funciona como antes
+- `test_prompt_contains_centralization_before_sensor` — valida que o prompt instrui centralizar antes do sensor
+- `test_prompt_contains_stop_zone` — valida que ha instrucao para parar entre 15-25cm
+- `test_prompt_contains_distance_zones` — valida que ha zonas 40-80cm e >80cm
+- `test_prompt_contains_anti_rotation_loop` — valida que ha instrucao contra R5L/R5R repetidos
 
 ## Comandos pos-fase
 
-- `cd lbot-mcp && python -m pytest tests/ -x -v`
-- `cd lbot-mcp && python -m mypy src/`
+```bash
+cd lbot-mcp && python -m pytest tests/test_personality.py -v
+```
 
 ## Registro de Execucao
 
-- Data: 2026-06-06
+<Preenchido pelo agente durante a execucao>
+
+- Data:
 - Arquivos criados:
-  - `lbot-mcp/src/mcp_server/tools/observe.py`
 - Arquivos alterados:
-  - `lbot-mcp/src/mcp_server/tools/movement.py` (adicionado deteção de LBML direto)
-  - `lbot-mcp/src/mcp_server/server.py` (import e log da tool observe)
-- Testes executados: `cd lbot-mcp && python -m pytest tests/ -x -v` → 47 passed, 3 skipped
-- Resultado: SUCESSO - todos os testes passaram, sem regressões
-- Pendencias: nenhuma
+- Testes executados:
+- Resultado:
+- Pendencias:

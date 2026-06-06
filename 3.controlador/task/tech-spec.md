@@ -1,57 +1,62 @@
-# Plano Tecnico: Reestruturacao do Harness - Movimento vs Tarefa
+# Plano Tecnico: Melhoria de Aproximacao do Robo a Objetos
 
 ## Visao Geral
 
-Reestruturar o harness do LBot para classificar e tratar diferentemente dois tipos de acao: **Movimento** (bem definido ou ambiguo) e **Tarefa** (acao inteligente). A classificacao e feita pelo LLM via system prompt, sem etapa de classificacao explicita. A implementacao envolve:
+O plano implementa 6 requisitos funcionais (RF01-RF06) em 4 fases incrementais, todas com escopo limitado ao `lbot-mcp` (sem modificar o `lbot-simulator-web`).
 
-1. **Nova tool `observe`** que combina camera + proximidade em uma unica chamada
-2. **Modificacao da tool `move`** para aceitar LBML direto (pular tradutor quando input ja e LBML valido)
-3. **Reescrita completa do system prompt** para guiar o LLM na classificacao e execucao correta
-4. **Atualizacao do ReActAgent** para tratar output do `observe` com injecao de imagem (mesmo padrao da tool `camera`)
+A abordagem tecnica consiste em:
+1. **Melhorar o prompt** (personality.py) com instrucoes mais fortes de aproximacao
+2. **Adicionar validacoes no agent loop** (agent.py) que interceptam comandos `move()` ANTES do envio ao simulador, usando a ultima leitura de proximidade parseada do historico de mensagens
+3. **Adicionar rastreadores de estado** como atributos do `ReActAgent` para detectar loops, perda de objeto, e condicoes de parada
+
+As funcoes helper de parse/modificacao de LBML ficam como helpers no proprio `agent.py`.
 
 ## Modulos Envolvidos
 
-- **lbot-mcp/src/mcp_server/tools/**: Modulo de tools MCP - adicionar `observe`, modificar `move`
-- **lbot-mcp/src/mcp_server/server.py**: Registro da nova tool
-- **lbot-mcp/src/harness/personality.py**: Reescrita completa do system prompt e tool descriptions
-- **lbot-mcp/src/harness/agent.py**: Handler para tool `observe`, aumento de max_steps
-- **lbot-mcp/tests/**: Testes unitarios e de integracao
+- **harness/agent.py**: Loop ReAct — recebe validacoes de proximidade, modificacao de comandos, rastreadores de estado (loop, step counter, last position), e condicoes de parada automatica
+- **harness/personality.py**: SYSTEM_PROMPT — recebe instrucoes atualizadas de aproximacao, zonas de distancia, anti-loop
+- **tests/test_agent.py**: Testes novos para parsing de proximidade, modificacao de comandos, deteccao de loop, limite de passos
+- **tests/test_personality.py**: Validacao das novas secoes do prompt
 
 ## Arquivos Impactados
 
-### Novos
-- `lbot-mcp/src/mcp_server/tools/observe.py` - Tool observe que combina camera + proximidade
-- `lbot-mcp/tests/test_observe.py` - Testes da tool observe
-
 ### Alterados
-- `lbot-mcp/src/mcp_server/tools/movement.py` - Detectar LBML no input e pular tradutor
-- `lbot-mcp/src/mcp_server/server.py` - Importar e registrar tool `observe`
-- `lbot-mcp/src/harness/personality.py` - Reescrita completa do SYSTEM_PROMPT e get_tools_description()
-- `lbot-mcp/src/harness/agent.py` - Handler para `observe` (injecao de imagem), max_steps=100
-- `lbot-mcp/tests/test_agent.py` - Testes para observe handler e max_steps
-- `lbot-mcp/tests/test_integration.py` - Testes integrados da tool observe e move com LBML
+- `lbot-mcp/src/harness/agent.py` — +~200 linhas (helpers de LBML, metodos de validacao, rastreadores, injecao de mensagens)
+- `lbot-mcp/src/harness/personality.py` — +~40 linhas no SYSTEM_PROMPT (instrucoes de aproximacao por zona, anti-loop)
+- `lbot-mcp/tests/test_agent.py` — +~300 linhas (novas classes de teste)
+- `lbot-mcp/tests/test_personality.py` — +~20 linhas (validacao de novas secoes)
+
+### Nao alterados
+- `mcp_server/tools/movement.py` (sem mudancas — validacoes ficam no agent)
+- `mcp_server/tools/proximity.py`
+- `mcp_server/tools/observe.py`
+- `mcp_server/tools/camera.py`
+- `mcp_server/backends/*`
+- `mcp_client.py`, `cli.py`
 
 ## Decisoes Tecnicas
 
 | Decisao | Opcao escolhida | Justificativa |
 |---------|-----------------|---------------|
-| Tool move com LBML direto | Modificar `move` para detectar LBML via regex e pular tradutor | Evita criar tool extra, mantem interface simples. O LLM gera LBML e envia via `move` |
-| Tool observe: formato de retorno | Mesmo padrao da camera - JSON com campo `image` + campo `proximity` | Permite reusar toda logica de injecao de imagem ja existente no agent |
-| Validacao de limites da arena | Delegado ao LLM via system prompt | Conforme business-spec, fora de escopo do backend |
-| Distancia de seguranca | Delegada ao LLM via system prompt (20cm em Tarefas) | Regra de comportamento, nao de codigo |
-| Aumento de max_steps | Default 100 no construtor do ReActAgent | Permite override se necessario, abordagem mais limpa |
-| Reescrita do prompt | Substituir SYSTEM_PROMPT em personality.py | Abordagem direta, sem necessidade de sistema de templates |
-| Validacao de LBML gerado pelo LLM | Usar regex existente `^(D\d+[FBLR];\|R\d+[LR];)+$` | Validacao consistente com tradutor, rejeita LBML invalido |
+| Local das validacoes | Dentro de agent.py (ReActAgent) | O agent loop ja orquestra tool calls, tem acesso ao historico de mensagens e pode injetar mensagens no contexto do LLM. Centralizar aqui evita acoplamento com o MCP server. |
+| Acesso a proximidade | Parse do historico de mensagens | Varredura reversa em `self._messages` para extrair a ultima leitura de proximidade. Zero latencia extra de rede. Leitura pode estar levemente desatualizada mas e suficiente para os checks de seguranca. |
+| Estado dos rastreadores | Atributos no ReActAgent | `self._last_proximity`, `self._last_position`, `self._consecutive_rotations`, `self._step_counter`. Simples e direto, sem novos arquivos. |
+| Funcoes LBML | Helpers no agent.py | Funcoes puras `_parse_lbml_distance()`, `_reduce_step()`, `_is_forward_command()`, `_is_rotation_command()` definidas no nivel do modulo (nao como metodos). Testaveis isoladamente. |
+| Limite de passos | Default alterado para 50 | `ReActAgent.__init__(max_steps=50)`. Alinhado com o business spec RF04. |
+| Testes | No test_agent.py existente | Segue o padrao de mock do OpenAI ja estabelecido. Novas classes: TestProximityParsing, TestCommandModification, TestLoopDetection, TestProximityGoal. |
 
 ## Dependencias entre Fases
 
-- Fase 01 (MCP Tools) -> Fase 02 (Agent + Prompt): Agent precisa das tools registradas
-- Fase 02 (Agent + Prompt) -> Fase 03 (Testes): Testes validam tudo que foi implementado
+- Fase 01 (Prompt) → Independente, pode rodar primeiro
+- Fase 02 (Core Safety) → Depende da Fase 01 para o prompt mencionar as regras que serao enforced no codigo
+- Fase 03 (Loop Control) → Depende da Fase 02 (usa os helpers de parse LBML e extracao de proximidade)
+- Fase 04 (Recovery) → Depende da Fase 03 (usa os rastreadores de estado: last_proximity, step counter)
 
 ## Mapa de Fases
 
-| Fase | Descricao | Modulo |
-|------|-----------|--------|
-| 01 | MCP Tools: criar `observe` e modificar `move` | mcp_server/tools |
-| 02 | Agent + Prompt: reescrever personality.py, atualizar agent.py | harness |
-| 03 | Testes: unitarios e integracao para todas as alteracoes | tests |
+| Fase | Descricao | Modulo | RFs |
+|------|-----------|--------|-----|
+| 01 | Prompt melhorado para aproximacao | personality.py | RF03 |
+| 02 | Bloqueio de avanco + reducao de passo | agent.py | RF02, RF06 |
+| 03 | Parada automatica + deteccao de loop + limite de passos | agent.py | RF01, RF04 |
+| 04 | Protocolo de recuperacao de perda de objeto | agent.py | RF05 |
