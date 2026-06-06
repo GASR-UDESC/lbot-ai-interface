@@ -4,6 +4,12 @@
     <h1 class="victory-title">PARABÉNS!</h1>
     <p class="victory-subtitle">Todos os níveis completos!</p>
 
+    <!-- Total time -->
+    <div class="total-time-display">
+      <span class="total-time-label">Tempo Total</span>
+      <span class="total-time-value">{{ formatTime(totalTime) }}</span>
+    </div>
+
     <!-- Per-level times table -->
     <div class="times-table">
       <div class="times-row times-header">
@@ -15,10 +21,6 @@
         <span class="level-num">{{ i + 1 }}</span>
         <span class="level-name-cell">{{ levelNames[i] || ('Nível ' + (i + 1)) }}</span>
         <span class="level-time">{{ formatTime(time) }}</span>
-      </div>
-      <div class="times-row total-row">
-        <span class="total-label" colspan="2">Total</span>
-        <span class="total-time">{{ formatTime(totalTime) }}</span>
       </div>
     </div>
 

@@ -1,6 +1,6 @@
 # Fase 02: Reescrever system prompt e atualizar agent
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Reescrever completamente o system prompt e as tool descriptions para guiar o LLM
 
 ## Tarefas
 
-- [ ] Tarefa 1: Reescrever o `SYSTEM_PROMPT` em `lbot-mcp/src/harness/personality.py`
+- [x] Tarefa 1: Reescrever o `SYSTEM_PROMPT` em `lbot-mcp/src/harness/personality.py`
   - Arquivo: `lbot-mcp/src/harness/personality.py`
   - O que fazer:
     - Reescrever completamente a constante `SYSTEM_PROMPT` com as seguintes secoes:
@@ -63,7 +63,7 @@ Reescrever completamente o system prompt e as tool descriptions para guiar o LLM
     - Comandos separados por `;`
     - Exemplos: `D30F;` (30cm para frente), `R90L;` (rotacao 90 graus a esquerda), `D50F;R90L;D30B;`
 
-- [ ] Tarefa 2: Atualizar `get_tools_description()` em `lbot-mcp/src/harness/personality.py`
+- [x] Tarefa 2: Atualizar `get_tools_description()` em `lbot-mcp/src/harness/personality.py`
   - Arquivo: `lbot-mcp/src/harness/personality.py`
   - O que fazer:
     - Adicionar a tool `observe` com parametros vazios (como `camera` e `proximity`)
@@ -72,7 +72,7 @@ Reescrever completamente o system prompt e as tool descriptions para guiar o LLM
     - Atualizar descricao do `proximity` para enfatizar que e para consultas simples
     - Ordem das tools: observe, camera, proximity, move (observe primeiro pois e a principal para Tarefas)
 
-- [ ] Tarefa 3: Atualizar handler de tools no `lbot-mcp/src/harness/agent.py`
+- [x] Tarefa 3: Atualizar handler de tools no `lbot-mcp/src/harness/agent.py`
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
     - Alterar `max_steps` default de 20 para 100 na linha 227
@@ -87,7 +87,7 @@ Reescrever completamente o system prompt e as tool descriptions para guiar o LLM
     - Manter o handler especial para `camera` (que ja existe)
     - Para outras tools (proximity): manter comportamento padrão (append como tool message)
 
-- [ ] Tarefa 4: Atualizar handler do CLI para `observe` em `lbot-mcp/src/harness/cli.py`
+- [x] Tarefa 4: Atualizar handler do CLI para `observe` em `lbot-mcp/src/harness/cli.py`
   - Arquivo: `lbot-mcp/src/harness/cli.py`
   - O que fazer:
     - O CLI ja exibe tool_call e tool_result genericamente, mas deve ser verificado se o output do `observe` (que e JSON grande com base64) precisa ser truncado ou formatado de forma especial no display
@@ -148,9 +148,11 @@ Reescrever completamente o system prompt e as tool descriptions para guiar o LLM
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-mcp/src/harness/agent.py` (corrigido variável `observe_img_content_ok` → `observe_img_content` na linha 618)
+  - `lbot-mcp/src/harness/cli.py` (movido `import json` para topo do arquivo, removido import inline)
+- Testes executados: `cd lbot-mcp && python -m pytest tests/ -x -v` → 47 passed, 3 skipped
+- Resultado: SUCESSO - todos os testes passaram, sem regressões
+- Pendencias: nenhuma (SYSTEM_PROMPT, get_tools_description(), max_steps=100 e observe handler já estavam implementados; apenas correção de bug e limpeza de código)

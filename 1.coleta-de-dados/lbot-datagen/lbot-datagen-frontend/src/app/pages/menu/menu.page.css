@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0a0e0a 0%, #0f1a0f 50%, #0a0e0a 100%);
+  background-color: var(--color-canvas);
   padding: 24px;
 }
 
@@ -22,116 +22,131 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .logo-icon {
-  font-size: 4rem;
+  font-size: 3.5rem;
   line-height: 1;
-  filter: drop-shadow(0 0 20px rgba(45, 122, 58, 0.6));
 }
 
 .title {
-  font-size: 3rem;
-  font-weight: 800;
-  color: #e8f5e8;
-  letter-spacing: -0.02em;
-  text-shadow: 0 0 40px rgba(45, 122, 58, 0.4);
+  font-size: 2rem;
+  font-weight: var(--typography-display-md-weight);
+  color: var(--color-ink);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 .subtitle {
-  font-size: 1rem;
-  color: #6a8f6a;
+  font-size: var(--typography-body-sm-size);
+  color: var(--color-muted);
   max-width: 320px;
   line-height: 1.5;
+  font-weight: var(--typography-body-sm-weight);
 }
 
 /* Navigation buttons */
 .menu-nav {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-base);
   width: 100%;
 }
 
 .menu-btn {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-base);
   padding: 20px 24px;
-  border-radius: 16px;
+  border-radius: var(--rounded-md);
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--color-hairline);
+  background-color: var(--color-canvas);
 }
 
 .menu-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-card-hover-float);
 }
 
 .menu-btn:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .btn-icon {
-  font-size: 1.8rem;
-  width: 40px;
-  text-align: center;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--rounded-sm);
+}
+
+.btn-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .btn-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  display: block;
+  font-size: var(--typography-title-md-size);
+  font-weight: var(--typography-title-md-weight);
   line-height: 1.2;
 }
 
 .btn-desc {
-  font-size: 0.8rem;
-  opacity: 0.75;
-  display: block;
-  margin-top: 2px;
+  font-size: var(--typography-body-sm-size);
+  font-weight: var(--typography-body-sm-weight);
+  line-height: 1.4;
 }
 
+/* Primary - Jogar */
 .btn-primary {
-  background: linear-gradient(135deg, #1e5c2a, #2d7a3a);
-  color: #e8f5e8;
-  border-color: rgba(45, 122, 58, 0.5);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.btn-primary .btn-icon {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #2d7a3a, #3d9a4a);
-  border-color: rgba(61, 154, 74, 0.7);
+  background-color: var(--color-primary-active);
+  border-color: var(--color-primary-active);
 }
 
-.btn-secondary {
-  background: linear-gradient(135deg, #1a1a2e, #252545);
-  color: #c8c8e8;
-  border-color: rgba(100, 100, 200, 0.3);
+.btn-primary .btn-desc {
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.btn-secondary:hover {
-  background: linear-gradient(135deg, #252545, #303065);
-  border-color: rgba(100, 100, 200, 0.5);
+/* Secondary - Leaderboard */
+.btn-secondary .btn-icon {
+  background-color: var(--color-surface-soft);
 }
 
-.btn-tertiary {
-  background: linear-gradient(135deg, #1a1a1a, #252525);
-  color: #c8c8c8;
-  border-color: rgba(255, 255, 255, 0.1);
+.btn-secondary .btn-desc {
+  color: var(--color-muted);
 }
 
-.btn-tertiary:hover {
-  background: linear-gradient(135deg, #252525, #303030);
-  border-color: rgba(255, 255, 255, 0.2);
+/* Tertiary - Modo Controle */
+.btn-tertiary .btn-icon {
+  background-color: var(--color-surface-soft);
+}
+
+.btn-tertiary .btn-desc {
+  color: var(--color-muted);
 }
 
 /* Footer */
 .menu-footer {
   text-align: center;
-  color: #3a5a3a;
-  font-size: 0.75rem;
+  color: var(--color-muted-soft);
+  font-size: var(--typography-micro-label-size);
+  font-weight: var(--typography-micro-label-weight);
 }

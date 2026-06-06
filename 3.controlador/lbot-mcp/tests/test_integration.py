@@ -180,6 +180,47 @@ class TestMoveTool:
             result = await move("comando invalido")
             assert "não entendi" in result
 
+    @pytest.mark.asyncio
+    async def test_move_lbml_direct_execution(self, setup_context, mock_backend):
+        from mcp_server.tools.movement import move
+
+        result = await move("D30F;")
+        assert "Comando executado" in result
+        assert "LBML direto" in result
+        mock_backend.execute_lbml.assert_called_once_with("D30F;")
+
+    @pytest.mark.asyncio
+    async def test_move_lbml_sequence_direct_execution(self, setup_context, mock_backend):
+        from mcp_server.tools.movement import move
+
+        result = await move("D50F;R90L;D50F;R90L;")
+        assert "Comando executado" in result
+        assert "LBML direto" in result
+        mock_backend.execute_lbml.assert_called_once_with("D50F;R90L;D50F;R90L;")
+
+    @pytest.mark.asyncio
+    async def test_move_invalid_lbml_still_uses_translator(self, setup_context, mock_backend):
+        from unittest.mock import MagicMock
+        from mcp_server.translator import TranslationError
+
+        mock_translator = MagicMock()
+        mock_translator.translate_verbose.side_effect = TranslationError("nao entendi")
+
+        with patch("mcp_server.tools.movement.get_translator", return_value=mock_translator):
+            from mcp_server.tools.movement import move
+
+            result = await move("abc")
+            assert "não entendi" in result
+
+    @pytest.mark.asyncio
+    async def test_move_lbml_direct_execution_rejected(self, setup_context, mock_backend):
+        mock_backend.execute_lbml = AsyncMock(side_effect=RuntimeError("falha na execucao"))
+
+        from mcp_server.tools.movement import move
+
+        result = await move("D30F;")
+        assert "Erro" in result
+
 
 class TestContextModule:
     def test_get_backend_raises_when_not_set(self):

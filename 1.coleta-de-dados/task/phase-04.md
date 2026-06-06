@@ -1,6 +1,6 @@
 # Fase 04: Overlay Components (Level Transition + Victory + Confirm Modal)
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Redesenhar os tres componentes de overlay (level-transition, victory-screen, con
 
 ## Tarefas
 
-- [ ] Tarefa 1: Redesenhar LevelTransition (RF05)
+- [x] Tarefa 1: Redesenhar LevelTransition (RF05)
   - Arquivo: `src/app/components/level-transition/level-transition.html`
   - O que fazer: Ajustar estrutura para estilo Airbnb:
     - Manter a estrutura de overlay + card
@@ -33,7 +33,7 @@ Redesenhar os tres componentes de overlay (level-transition, victory-screen, con
     - Animacao: manter fadeIn (0.3s) + scaleIn
     - Remover: cores dark (#1a1f1a, #6aba72, #e8f5e8, rgba com verde), bordas verdes, gradientes
 
-- [ ] Tarefa 2: Redesenhar VictoryScreen (RF06)
+- [x] Tarefa 2: Redesenhar VictoryScreen (RF06)
   - Arquivo: `src/app/components/victory-screen/victory-screen.html`
   - O que fazer: Ajustar estrutura para estilo Airbnb:
     - Icone de trofeu (emoji ou icone lucide) em tamanho grande
@@ -65,7 +65,7 @@ Redesenhar os tres componentes de overlay (level-transition, victory-screen, con
     - Animacao: manter fadeIn (0.4s) + scaleIn
     - Remover: todas as cores dark/neon, gradientes, bordas douradas
 
-- [ ] Tarefa 3: Redesenhar ConfirmModal (RF07)
+- [x] Tarefa 3: Redesenhar ConfirmModal (RF07)
   - Arquivo: `src/app/components/confirm-modal/confirm-modal.html`
   - O que fazer: Ajustar estrutura minimamente (esta praticamente correta ja):
     - Manter overlay + card + titulo + mensagem + botoes
@@ -97,13 +97,13 @@ Redesenhar os tres componentes de overlay (level-transition, victory-screen, con
 
 ## Criterios de Aceite
 
-- [ ] CA04: Level Transition Airbnb-style
+- [x] CA04: Level Transition Airbnb-style
   - Cenario: Ao completar um nivel, scrim 50% cobre a tela com card branco centralizado contendo pill badge "NIVEL X", titulo display-sm, tempo em rating-display, botao "Proximo Nivel" button-primary
-- [ ] CA05: Victory Screen Airbnb-style
+- [x] CA05: Victory Screen Airbnb-style
   - Cenario: Ao completar todos os niveis, scrim 50% cobre a tela com card branco contendo "PARABENS!" em display-xl, tempo total em rating-display, tabela de tempos com hairlines, input de nickname estilo text-input, e botoes button-primary/button-secondary
   - Cenario: Botao "Salvar" permanece disabled ate nickname preenchido
   - Cenario: Erro ao salvar exibe mensagem em primary-error-text com botao "Tentar novamente"
-- [ ] CA06: Confirm Modal Airbnb-style
+- [x] CA06: Confirm Modal Airbnb-style
   - Cenario: Ao tentar sair, scrim 50% cobre a tela com card branco contendo "Tem certeza?" em title-md, mensagem em body-md, botoes "Cancelar" button-secondary e "Sim, sair" button-primary
   - Cenario: Clicar no scrim fora do card cancela o modal
 
@@ -123,9 +123,13 @@ cd lbot-datagen/lbot-datagen-frontend && ng build --configuration local
 
 ## Registro de Execucao
 
-- Data:
+- Data: 2026-06-06
 - Arquivos criados:
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/app/components/level-transition/level-transition.css` - Full redesign: Airbnb tokens (scrim 50%, canvas card, uppercase-tag badge, display-sm title, rating-display time, button-primary)
+  - `src/app/components/victory-screen/victory-screen.html` - Added standalone total-time-display section above table; removed total-row from table
+  - `src/app/components/victory-screen/victory-screen.css` - Full redesign: Airbnb tokens (scrim 50%, canvas card, display-xl title, rating-display total, text-input style, button-primary/button-secondary, error styling)
+  - `src/app/components/confirm-modal/confirm-modal.css` - Full redesign: Airbnb tokens (scrim 50%, canvas card, title-md title, body-md message, button-secondary/button-primary)
+- Testes executados: `ng build --configuration local` - Build successful (3 static routes prerendered)
+- Resultado: Todos os 3 overlays redesenhados com tokens Airbnb. Build compila sem erros relacionados a esta fase.
+- Pendencias: Nenhuma

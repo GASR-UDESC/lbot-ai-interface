@@ -1,6 +1,6 @@
 # Fase 03: Chat Component + Game Page + HUD
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ Redesenhar o componente de chat (lbot-chat) com estilo Airbnb messaging e a pagi
 
 ## Tarefas
 
-- [ ] Tarefa 1: Redesenhar o componente LbotChat (RF11)
+- [x] Tarefa 1: Redesenhar o componente LbotChat (RF11)
   - Arquivo: `src/app/components/lbot-chat/lbot-chat.html`
   - O que fazer: Ajustar classes CSS e estrutura para estilo Airbnb:
     - Cabecalho: fundo canvas, hairline inferior, titulo em title-md ink, icone de bot
@@ -45,7 +45,7 @@ Redesenhar o componente de chat (lbot-chat) com estilo Airbnb messaging e a pagi
     - Remover TODAS as cores hard-coded (#007bff, #333, #999, etc.)
     - Remover gradientes e sombras dark
 
-- [ ] Tarefa 2: Redesenhar a Game Page layout (RF04)
+- [x] Tarefa 2: Redesenhar a Game Page layout (RF04)
   - Arquivo: `src/app/pages/game/game.page.html`
   - O que fazer: Ajustar estrutura HTML para:
     - Manter layout split (simulador a esquerda, chat a direita)
@@ -63,7 +63,7 @@ Redesenhar o componente de chat (lbot-chat) com estilo Airbnb messaging e a pagi
     - Responsive: em <744px, `.game-layout` vira `flex-direction: column`, chat abaixo do simulador
     - Remover todas as cores dark (#0a0e0a, #111411, etc.)
 
-- [ ] Tarefa 3: Redesenhar o HUD overlay sobre o simulador (RF04)
+- [x] Tarefa 3: Redesenhar o HUD overlay sobre o simulador (RF04)
   - Arquivo: `src/app/pages/game/game.page.css`
   - O que fazer: Redesenhar o HUD com estilo Airbnb:
     - `.hud`: fundo branco semi-transparente `rgba(255,255,255,0.92)`, `backdrop-filter: blur(6px)`, border 1px hairline, border-radius var(--rounded-md)
@@ -86,16 +86,16 @@ Redesenhar o componente de chat (lbot-chat) com estilo Airbnb messaging e a pagi
 
 ## Criterios de Aceite
 
-- [ ] CA03: Pagina de Game com Visual Airbnb
+- [x] CA03: Pagina de Game com Visual Airbnb
   - Cenario: Layout split com simulador a esquerda e chat a direita, separados por hairline, fundo canvas branco
   - Cenario: HUD sobre o simulador tem fundo branco semi-transparente com tipografia ink, sem escuridao
   - Cenario: Chat tem mensagens do usuario em bolhas Rausch com texto branco e mensagens do bot em bolhas surface-soft com texto ink
-- [ ] CA13: Chat com Estilo Airbnb Messaging
+- [x] CA13: Chat com Estilo Airbnb Messaging
   - Cenario: Mensagem do usuario: bolha Rausch, texto branco, alinhada a direita
   - Cenario: Mensagem do bot: bolha surface-soft, texto ink, alinhada a esquerda
   - Cenario: Estrelas de avaliacao em ink (#222222), nao amarelo
   - Cenario: Input de texto estilo Airbnb (56px, rounded.sm, hairline border)
-- [ ] CA10 (parcial): Responsividade Mobile do Game
+- [x] CA10 (parcial): Responsividade Mobile do Game
   - Cenario: Em <744px, game empilha verticalmente com chat abaixo do simulador
 
 ## Testes Esperados
@@ -115,9 +115,9 @@ cd lbot-datagen/lbot-datagen-frontend && ng build --configuration local
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
-- Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
+- Arquivos alterados: `src/app/components/lbot-chat/lbot-chat.css`, `src/app/pages/game/game.page.css`
+- Testes executados: `ng build --configuration local` - build OK (erro pre-existente no DatePipe do leaderboard durante SSR, nao relacionado a esta fase)
+- Resultado: Build compilou sem erros de CSS/template. LbotChat redesenhado com bolhas Rausch/surface-soft, estrelas ink, input Airbnb 56px, popups com scrim + card canvas. Game page com fundo canvas, split layout com hairline entre paineis, HUD branco semi-transparente com blur. Layout responsivo empilha em <744px.
+- Pendencias: Nenhuma

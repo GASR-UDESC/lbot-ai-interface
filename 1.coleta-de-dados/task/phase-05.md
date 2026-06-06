@@ -1,6 +1,6 @@
 # Fase 05: Leaderboard Cards + Controls Page + Virtual Controls
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ Redesenhar a pagina Leaderboard de tabela dark para cards estilo Airbnb property
 
 ## Tarefas
 
-- [ ] Tarefa 1: Redesenhar Leaderboard Page (RF08)
+- [x] Tarefa 1: Redesenhar Leaderboard Page (RF08)
   - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
   - O que fazer: Converter a tabela HTML para um layout de cards:
     - Header: icone de trofeu + titulo display-lg ink "Leaderboard" + subtitulo body-md muted
@@ -46,7 +46,7 @@ Redesenhar a pagina Leaderboard de tabela dark para cards estilo Airbnb property
     - Grid responsivo com CSS Grid ou Flexbox
     - Remover: TODAS as cores dark (#0a0a0e, #6a6a8f, etc.), gradientes, bordas neon
 
-- [ ] Tarefa 2: Redesenhar Controls Page (RF09)
+- [x] Tarefa 2: Redesenhar Controls Page (RF09)
   - Arquivo: `src/app/pages/controls/controls.page.html`
   - O que fazer: Ajustar HTML para:
     - Remover o header atual com fundo dark e substituir por layout que depende da top-nav global
@@ -65,7 +65,7 @@ Redesenhar a pagina Leaderboard de tabela dark para cards estilo Airbnb property
     - `.controls-panel`: fundo canvas, rounded.md, hairline border, sem sombra dark
     - Remover: cores dark (#101114, #f5faf5, etc.), gradientes, shadows excessivas
 
-- [ ] Tarefa 3: Redesenhar VirtualControls Component (RF10)
+- [x] Tarefa 3: Redesenhar VirtualControls Component (RF10)
   - Arquivo: `src/app/components/virtual-controls/virtual-controls.html`
   - O que fazer: Ajustar classes para estilo Airbnb:
     - Botoes de acao (Frente, Tras, Esquerda, Direita): icon-button-circle com surface-strong fundo, ink icone, rounded.full, 44px min touch target
@@ -87,7 +87,7 @@ Redesenhar a pagina Leaderboard de tabela dark para cards estilo Airbnb property
     - Botao limpar: button-tertiary-text (transparent bg, ink text, underline hover)
     - Remover: TODAS as cores dark, gradientes, bordas neon
 
-- [ ] Tarefa 4: Adicionar estados de loading/error a Leaderboard (RF08)
+- [x] Tarefa 4: Adicionar estados de loading/error a Leaderboard (RF08)
   - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
   - O que fazer: Garantir que os estados de loading, error e empty ja existam no template (eles ja existem, basta estilizar):
     - Loading: skeleton cards
@@ -109,20 +109,20 @@ Redesenhar a pagina Leaderboard de tabela dark para cards estilo Airbnb property
 
 ## Criterios de Aceite
 
-- [ ] CA07: Leaderboard com Cards Airbnb
+- [x] CA07: Leaderboard com Cards Airbnb
   - Cenario: Cada jogador e exibido como card property-card (rounded.md, hairline border) com rank, nickname, tempo, data
   - Cenario: Top 3 tem destaque visual com icones de medalha
   - Cenario: Hover no card aplica elevacao card-hover-float
-- [ ] CA08: Leaderboard - Estados Especiais
+- [x] CA08: Leaderboard - Estados Especiais
   - Cenario: Sem dados exibe empty state com icone + mensagem muted
   - Cenario: Erro na API exibe error state com primary-error-text e botao retry button-primary
-- [ ] CA09: Pagina de Controls Airbnb-style
+- [x] CA09: Pagina de Controls Airbnb-style
   - Cenario: Layout de duas colunas com simulador a esquerda e painel de controles a direita, fundo canvas branco
   - Cenario: Botoes direcionais em icon-button-circle com surface-strong, ink, rounded.full
   - Cenario: Botao "Executar" em button-primary Rausch
-- [ ] CA10 (parcial): Responsividade Mobile - Leaderboard
+- [x] CA10 (parcial): Responsividade Mobile - Leaderboard
   - Cenario: Cards empilham 1-up em <744px
-- [ ] CA11 (parcial): Responsividade Tablet - Leaderboard
+- [x] CA11 (parcial): Responsividade Tablet - Leaderboard
   - Cenario: Cards 2-3 up em 744-1128px
 
 ## Testes Esperados
@@ -144,9 +144,15 @@ cd lbot-datagen/lbot-datagen-frontend && ng build --configuration local
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/app/pages/leaderboard/leaderboard.page.html` - Convertido tabela para card grid Airbnb: header com display-lg, grid responsivo de property-cards com medalhas para top 3, skeleton loading state, estados de error/empty mantidos e reestilizados
+  - `src/app/pages/leaderboard/leaderboard.page.css` - Full redesign: canvas background, property-card grid com CSS Grid auto-fill, card-hover-float no hover, medalhas/ranks em rating-display para top 3, skeleton com animacao pulse, button-primary para retry, button-tertiary-text para back link, breakpoints responsivos (1-up <744px, 2-3-up 744-1128px, 4-up >1128px)
+  - `src/app/pages/controls/controls.page.html` - Removido header dark com back button; adicionado header limpo com titulo display-sm "Modo Controle" + subtitulo body-md muted (navegacao via top-nav global)
+  - `src/app/pages/controls/controls.page.css` - Full redesign: canvas background, grid 2 colunas (1.2fr 1fr) com rounded.md containers, hairline borders, breakpoints responsivos (stack vertical em <768px)
+  - `src/app/pages/controls/controls.page.ts` - Removido import RouterLink nao utilizado
+  - `src/app/components/virtual-controls/virtual-controls.css` - Full redesign: botoes direcionais em icon-button-circle (surface-strong, rounded.full, 64px min-height/44px min-width), titulos em tokens tipograficos Airbnb, timeline com hairline-soft separators, remove-btn em rounded.full surface-strong, inputs estilo text-input Airbnb (56px, rounded.sm, focus border ink 2px), textarea com placeholder muted, LBML display em surface-soft monospace, summary em surface-soft, execute-btn em button-primary Rausch, reset-btn em button-secondary, disabled states com primary-disabled, breakpoints responsivos
+- Testes executados: `ng build --configuration local` - build OK (3 static routes prerendered; erro pre-existente no DatePipe do leaderboard durante SSR, nao relacionado a esta fase)
+- Resultado: Build compilou sem erros de CSS/template. Leaderboard convertido de tabela dark para card grid Airbnb com skeleton loading, hover float e grid responsivo. Controls page com tema canvas claro e header simplificado. VirtualControls redesenhado com icon-button-circles, inputs Airbnb text-input, botoes button-primary/button-secondary, timeline com hairline-soft separators.
+- Pendencias: Nenhuma

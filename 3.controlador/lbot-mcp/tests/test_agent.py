@@ -300,3 +300,297 @@ class TestReActAgentCameraTool:
         assert result == "Foto tirada."
         assert "tool_call" in [e[0] for e in events]
         assert "tool_result" in [e[0] for e in events]
+
+
+class TestReActAgentObserveTool:
+    @pytest.fixture
+    def mock_mcp_client_observe(self):
+        client = MagicMock()
+        return client
+
+    @pytest.fixture
+    def observe_success_payload(self):
+        return json.dumps({
+            "image": "iVBORw0KGgo=" + "A" * 200,
+            "render_method": "2d",
+            "robot_position": {"x": 1.0, "z": 2.0, "rotation": 90.0},
+            "proximity": {"frente": 50.0, "tras": 200.0},
+        })
+
+    @pytest.fixture
+    def observe_camera_error_payload(self):
+        return json.dumps({
+            "camera_error": "camera indisponivel",
+            "proximity": {"frente": 50.0, "tras": 200.0},
+        })
+
+    @pytest.fixture
+    def observe_proximity_error_payload(self):
+        return json.dumps({
+            "image": "iVBORw0KGgo=" + "A" * 200,
+            "render_method": "2d",
+            "robot_position": {"x": 1.0, "z": 2.0, "rotation": 90.0},
+            "proximity_error": "sensor indisponivel",
+        })
+
+    @pytest.fixture
+    def observe_both_error_payload(self):
+        return json.dumps({
+            "camera_error": "camera fail",
+            "proximity_error": "prox fail",
+        })
+
+    @pytest.mark.asyncio
+    async def test_observe_success_injects_image_and_proximity(self, mock_mcp_client_observe, observe_success_payload):
+        mock_mcp_client_observe.call_tool = AsyncMock(return_value=observe_success_payload)
+        events: list[tuple[str, dict]] = []
+
+        def on_event(event: str, data: dict):
+            events.append((event, data))
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = "Observando..."
+            tc = MagicMock()
+            tc.id = "tc-obs-1"
+            tc.function.name = "observe"
+            tc.function.arguments = "{}"
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Vejo um objeto a 50cm."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client_observe, on_event=on_event)
+            result = await agent.run("observe a sala")
+
+        assert result == "Vejo um objeto a 50cm."
+
+        user_messages_with_image = [
+            m for m in agent._messages
+            if m.get("role") == "user" and isinstance(m.get("content"), list)
+        ]
+        assert len(user_messages_with_image) == 1
+        content = user_messages_with_image[0]["content"]
+        has_image = any(
+            isinstance(part, dict) and part.get("type") == "image_url"
+            for part in content
+        )
+        assert has_image
+
+        has_prox_text = any(
+            isinstance(part, dict)
+            and part.get("type") == "text"
+            and "50" in part.get("text", "")
+            for part in content
+        )
+        assert has_prox_text
+
+    @pytest.mark.asyncio
+    async def test_observe_camera_error_only_proximity(self, mock_mcp_client_observe, observe_camera_error_payload):
+        mock_mcp_client_observe.call_tool = AsyncMock(return_value=observe_camera_error_payload)
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = "Observando..."
+            tc = MagicMock()
+            tc.id = "tc-obs-2"
+            tc.function.name = "observe"
+            tc.function.arguments = "{}"
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Câmera falhou mas proximidade ok."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client_observe)
+            result = await agent.run("observe")
+
+        assert result == "Câmera falhou mas proximidade ok."
+
+        user_messages_with_image = [
+            m for m in agent._messages
+            if m.get("role") == "user" and isinstance(m.get("content"), list)
+        ]
+        assert len(user_messages_with_image) == 0
+
+    @pytest.mark.asyncio
+    async def test_observe_proximity_error_only_camera(self, mock_mcp_client_observe, observe_proximity_error_payload):
+        mock_mcp_client_observe.call_tool = AsyncMock(return_value=observe_proximity_error_payload)
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = "Observando..."
+            tc = MagicMock()
+            tc.id = "tc-obs-3"
+            tc.function.name = "observe"
+            tc.function.arguments = "{}"
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Imagem ok, proximidade falhou."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client_observe)
+            result = await agent.run("observe")
+
+        assert result == "Imagem ok, proximidade falhou."
+
+        user_messages_with_image = [
+            m for m in agent._messages
+            if m.get("role") == "user" and isinstance(m.get("content"), list)
+        ]
+        assert len(user_messages_with_image) == 1
+
+        content = user_messages_with_image[0]["content"]
+        has_prox_error_text = any(
+            isinstance(part, dict)
+            and part.get("type") == "text"
+            and "sensor indisponivel" in part.get("text", "")
+            for part in content
+        )
+        assert has_prox_error_text
+
+    @pytest.mark.asyncio
+    async def test_observe_both_error(self, mock_mcp_client_observe, observe_both_error_payload):
+        mock_mcp_client_observe.call_tool = AsyncMock(return_value=observe_both_error_payload)
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = "Observando..."
+            tc = MagicMock()
+            tc.id = "tc-obs-4"
+            tc.function.name = "observe"
+            tc.function.arguments = "{}"
+            msg1.tool_calls = [tc]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = "Ambos falharam."
+            msg2.tool_calls = None
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client_observe)
+            result = await agent.run("observe")
+
+        assert result == "Ambos falharam."
+
+    @pytest.mark.asyncio
+    async def test_observe_increments_steps_correctly(self, mock_mcp_client_observe, observe_success_payload):
+        mock_mcp_client_observe.call_tool = AsyncMock(return_value=observe_success_payload)
+        events: list[tuple[str, dict]] = []
+
+        def on_event(event: str, data: dict):
+            events.append((event, data))
+
+        with patch("harness.agent.OpenAI") as MockOpenAI:
+            mock_llm = MagicMock()
+
+            msg1 = MagicMock()
+            msg1.content = None
+            tc1 = MagicMock()
+            tc1.id = "tc-1"
+            tc1.function.name = "observe"
+            tc1.function.arguments = "{}"
+            msg1.tool_calls = [tc1]
+            choice1 = MagicMock()
+            choice1.message = msg1
+            choice1.finish_reason = "tool_calls"
+
+            msg2 = MagicMock()
+            msg2.content = None
+            tc2 = MagicMock()
+            tc2.id = "tc-2"
+            tc2.function.name = "observe"
+            tc2.function.arguments = "{}"
+            msg2.tool_calls = [tc2]
+            choice2 = MagicMock()
+            choice2.message = msg2
+            choice2.finish_reason = "tool_calls"
+
+            msg3 = MagicMock()
+            msg3.content = "Feito."
+            msg3.tool_calls = None
+            choice3 = MagicMock()
+            choice3.message = msg3
+            choice3.finish_reason = "stop"
+
+            mock_llm.chat.completions.create.side_effect = [
+                MagicMock(choices=[choice1]),
+                MagicMock(choices=[choice2]),
+                MagicMock(choices=[choice3]),
+            ]
+            MockOpenAI.return_value = mock_llm
+
+            agent = ReActAgent(mock_mcp_client_observe, on_event=on_event)
+            result = await agent.run("observe twice")
+
+        assert result == "Feito."
+        llm_request_events = [e for e in events if e[0] == "llm_request"]
+        assert len(llm_request_events) == 3
+
+
+class TestReActAgentMaxSteps:
+    def test_max_steps_default_is_100(self):
+        mock_client = MagicMock()
+        agent = ReActAgent(mock_client)
+        assert agent._max_steps == 100
+
+    def test_max_steps_override(self):
+        mock_client = MagicMock()
+        agent = ReActAgent(mock_client, max_steps=50)
+        assert agent._max_steps == 50

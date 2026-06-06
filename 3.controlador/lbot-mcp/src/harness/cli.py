@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json as _json
 import logging
 import signal
 import sys
@@ -116,7 +117,30 @@ def _print_event(event: str, data: dict) -> None:
         tool = data.get("tool", "?")
         result = data.get("result", "")
         print(f"  {_color('◀', 'yellow')} { _color(f'Resultado de {tool} (passo {step})', 'bold')}")
-        print(f"     {result}")
+        if tool == "observe" and result:
+            try:
+                obs = _json.loads(result)
+                if isinstance(obs, dict):
+                    has_image = bool(obs.get("image"))
+                    proximity = obs.get("proximity")
+                    prox_error = obs.get("proximity_error")
+                    camera_error = obs.get("camera_error")
+                    display_parts = []
+                    if has_image:
+                        display_parts.append("[imagem]")
+                    elif camera_error:
+                        display_parts.append(f"Câmera indisponível: {camera_error}")
+                    if proximity:
+                        display_parts.append(f"Frente: {proximity.get('frente', 'N/A')} cm | Trás: {proximity.get('tras', 'N/A')} cm")
+                    elif prox_error:
+                        display_parts.append(f"Proximidade indisponível: {prox_error}")
+                    print(f"     {' | '.join(display_parts) if display_parts else result}")
+                else:
+                    print(f"     {result}")
+            except Exception:
+                print(f"     {result}")
+        else:
+            print(f"     {result}")
     elif event == "final_answer":
         step = data.get("step", 0)
         content = data.get("content", "")

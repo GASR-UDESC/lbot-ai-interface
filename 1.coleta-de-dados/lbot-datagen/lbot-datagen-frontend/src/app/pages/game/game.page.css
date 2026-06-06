@@ -1,10 +1,9 @@
-/* ── Full-page game layout ──────────────────────────────────────── */
 :host {
   display: block;
   width: 100%;
   height: 100dvh;
   overflow: hidden;
-  background: #0a0e0a;
+  background: var(--color-canvas);
 }
 
 .game-layout {
@@ -14,7 +13,6 @@
   overflow: hidden;
 }
 
-/* ── Simulator panel (left ~65%) ───────────────────────────────── */
 .simulator-panel {
   position: relative;
   flex: 1 1 0;
@@ -30,7 +28,6 @@
   display: block;
 }
 
-/* ── HUD overlay (positioned over the canvas) ─────────────────── */
 .hud {
   position: absolute;
   top: 12px;
@@ -40,15 +37,15 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(110, 186, 114, 0.2);
-  border-radius: 12px;
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
   padding: 10px 18px;
-  pointer-events: none; /* let clicks pass through to the canvas */
+  pointer-events: none;
 }
 
-/* Reset button needs pointer events enabled */
 .hud-reset-btn {
   pointer-events: auto;
 }
@@ -60,47 +57,48 @@
 }
 
 .hud-label {
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: var(--typography-uppercase-tag-size);
+  font-weight: var(--typography-uppercase-tag-weight);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #6aba72;
+  letter-spacing: var(--typography-uppercase-tag-letter-spacing);
+  color: var(--color-ink);
+  line-height: var(--typography-uppercase-tag-line-height);
 }
 
 .hud-level-name {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #c8e6c9;
+  font-size: var(--typography-body-md-size);
+  font-weight: var(--typography-body-md-weight);
+  color: var(--color-muted);
+  line-height: var(--typography-body-md-line-height);
 }
 
 .hud-timer {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: var(--typography-title-md-size);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #e8f5e8;
-  letter-spacing: 0.05em;
+  color: var(--color-ink);
   min-width: 72px;
   text-align: center;
 }
 
 .hud-reset-btn {
   padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #c8e6c9;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-sm);
+  font-size: var(--typography-button-sm-size);
+  font-weight: var(--typography-button-sm-weight);
+  line-height: var(--typography-button-sm-line-height);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .hud-reset-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--color-surface-soft);
 }
 
-/* ── Top-left nav buttons ─────────────────────────────────────── */
 .hud-nav {
   position: absolute;
   top: 12px;
@@ -112,46 +110,44 @@
 
 .nav-link-btn {
   padding: 6px 14px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  color: #a0c4a0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  background: transparent;
+  color: var(--color-ink);
+  border: none;
+  border-radius: var(--rounded-sm);
+  font-size: var(--typography-button-sm-size);
+  font-weight: var(--typography-button-sm-weight);
+  line-height: var(--typography-button-sm-line-height);
   cursor: pointer;
   transition: all 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .nav-link-btn:hover {
-  background: rgba(0, 0, 0, 0.75);
-  color: #e8f5e8;
+  color: var(--color-muted);
 }
 
-/* ── Chat panel (right ~35%) ───────────────────────────────────── */
 .chat-panel {
   width: 380px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: #111411;
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-canvas);
+  border-left: 1px solid var(--color-hairline);
   overflow: hidden;
 }
 
-/* Estado de loading enquanto o chatId nao esta disponivel */
 .chat-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
-  font-size: 0.85rem;
+  color: var(--color-muted);
+  font-size: var(--typography-caption-sm-size);
   font-style: italic;
 }
 
-/* Responsive: stack vertically on small screens */
-@media (max-width: 768px) {
+@media (max-width: 744px) {
   .game-layout {
     flex-direction: column;
   }
@@ -164,7 +160,7 @@
     width: 100%;
     flex: 1;
     border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--color-hairline);
   }
 
   .hud {

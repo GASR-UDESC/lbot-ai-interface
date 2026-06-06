@@ -224,7 +224,7 @@ class ReActAgent:
         base_url: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
-        max_steps: int = 20,
+        max_steps: int = 100,
         verbose: bool = False,
         on_event: EventCallback = None,
     ):
@@ -504,6 +504,140 @@ class ReActAgent:
                                 "role": "tool",
                                 "tool_call_id": tc.id,
                                 "content": "Erro: a imagem capturada não pôde ser processada (dados de imagem inválidos ou ausentes).",
+                            })
+                    elif tool_name == "observe":
+                        observe_data = {}
+                        try:
+                            observe_data = json.loads(result)
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+
+                        if isinstance(observe_data, dict):
+                            camera_error = observe_data.get("camera_error")
+                            prox_error = observe_data.get("proximity_error")
+                            image_base64 = observe_data.get("image", "")
+                            proximity = observe_data.get("proximity")
+                            render_method = observe_data.get("render_method", "unknown")
+                            robot_position = observe_data.get("robot_position")
+
+                            parts: list[str] = []
+
+                            if camera_error and prox_error:
+                                self._messages.append({
+                                    "role": "tool",
+                                    "tool_call_id": tc.id,
+                                    "content": f"Erro no observe: câmera indisponível ({camera_error}), proximidade indisponível ({prox_error})",
+                                })
+                            elif camera_error:
+                                parts.append(f"Erro ao capturar imagem: {camera_error}")
+
+                                if proximity:
+                                    frente = proximity.get("frente", "N/A")
+                                    tras = proximity.get("tras", "N/A")
+                                    parts.append(f"Proximidade — Frente: {frente} cm | Trás: {tras} cm")
+                                elif prox_error:
+                                    parts.append(f"Proximidade indisponível: {prox_error}")
+
+                                self._messages.append({
+                                    "role": "tool",
+                                    "tool_call_id": tc.id,
+                                    "content": " | ".join(parts),
+                                })
+                            elif prox_error:
+                                if _is_valid_base64(image_base64):
+                                    render_desc = ""
+                                    if render_method == "2d":
+                                        render_desc = " A imagem é uma visão superior (mapa 2D) da arena — verde é o chão, marrom são paredes, azul é o robô."
+                                    elif render_method == "webgl":
+                                        render_desc = " A imagem é uma visão em primeira pessoa (3D) da câmera frontal do robô."
+
+                                    pos_text = ""
+                                    if robot_position:
+                                        pos_text = (
+                                            f" Posição do robô: x={robot_position.get('x', 0):.1f}, "
+                                            f"z={robot_position.get('z', 0):.1f}, "
+                                            f"rotação={robot_position.get('rotation', 0):.1f}°."
+                                        )
+
+                                    self._messages.append({
+                                        "role": "tool",
+                                        "tool_call_id": tc.id,
+                                        "content": f"Imagem capturada com sucesso. Proximidade indisponível: {prox_error}",
+                                    })
+
+                                    observe_img_content: list[dict[str, Any]] = [
+                                        {"type": "text", "text": f"Aqui está a imagem da câmera frontal do robô:{render_desc}{pos_text} (Proximidade indisponível: {prox_error})"},
+                                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}},
+                                    ]
+
+                                    self._messages.append({
+                                        "role": "user",
+                                        "content": observe_img_content,
+                                    })
+                                else:
+                                    self._messages.append({
+                                        "role": "tool",
+                                        "tool_call_id": tc.id,
+                                        "content": f"Proximidade indisponível: {prox_error}",
+                                    })
+                            else:
+                                if _is_valid_base64(image_base64):
+                                    render_desc = ""
+                                    if render_method == "2d":
+                                        render_desc = " A imagem é uma visão superior (mapa 2D) da arena — verde é o chão, marrom são paredes, azul é o robô."
+                                    elif render_method == "webgl":
+                                        render_desc = " A imagem é uma visão em primeira pessoa (3D) da câmera frontal do robô."
+
+                                    pos_text = ""
+                                    if robot_position:
+                                        pos_text = (
+                                            f" Posição do robô: x={robot_position.get('x', 0):.1f}, "
+                                            f"z={robot_position.get('z', 0):.1f}, "
+                                            f"rotação={robot_position.get('rotation', 0):.1f}°."
+                                        )
+
+                                    prox_text = ""
+                                    if proximity:
+                                        frente = proximity.get("frente", "N/A")
+                                        tras = proximity.get("tras", "N/A")
+                                        prox_text = f" Proximidade — Frente: {frente} cm | Trás: {tras} cm."
+
+                                    self._messages.append({
+                                        "role": "tool",
+                                        "tool_call_id": tc.id,
+                                        "content": f"Imagem capturada com sucesso.{prox_text}",
+                                    })
+
+                                    observe_img_content_ok: list[dict[str, Any]] = [
+                                        {"type": "text", "text": f"Aqui está a imagem da câmera frontal do robô:{render_desc}{pos_text}{prox_text}"},
+                                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}},
+                                    ]
+
+                                    self._messages.append({
+                                        "role": "user",
+                                        "content": observe_img_content_ok,
+                                    })
+                                elif proximity:
+                                    frente = proximity.get("frente", "N/A")
+                                    tras = proximity.get("tras", "N/A")
+                                    prox_text = f"Proximidade — Frente: {frente} cm | Trás: {tras} cm"
+
+                                    self._messages.append({
+                                        "role": "tool",
+                                        "tool_call_id": tc.id,
+                                        "content": f"Imagem não disponível. {prox_text}",
+                                    })
+                                else:
+                                    self._messages.append({
+                                        "role": "tool",
+                                        "tool_call_id": tc.id,
+                                        "content": "Erro: observe não retornou dados válidos.",
+                                    })
+                        else:
+                            self._messages.append({
+                                "role": "tool",
+                                "tool_call_id": tc.id,
+                                "content": result,
                             })
                     else:
                         self._messages.append({

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule, Play, Trophy, Gamepad2 } from 'lucide-angular';
 
 /**
  * Main menu page component.
@@ -8,8 +9,12 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-menu-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule],
   templateUrl: './menu.page.html',
   styleUrl: './menu.page.css'
 })
-export class MenuPage {}
+export class MenuPage {
+  public readonly PlayIcon = Play;
+  public readonly TrophyIcon = Trophy;
+  public readonly GamepadIcon = Gamepad2;
+}

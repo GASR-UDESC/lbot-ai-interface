@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { RoboSimulatorComponent } from '../../components/robo-simulator/robo-simulator';
 import { VirtualControlsComponent } from '../../components/virtual-controls/virtual-controls';
 
@@ -11,7 +10,7 @@ import { VirtualControlsComponent } from '../../components/virtual-controls/virt
 @Component({
   selector: 'app-controls-page',
   standalone: true,
-  imports: [RouterLink, RoboSimulatorComponent, VirtualControlsComponent],
+  imports: [RoboSimulatorComponent, VirtualControlsComponent],
   templateUrl: './controls.page.html',
   styleUrl: './controls.page.css'
 })
