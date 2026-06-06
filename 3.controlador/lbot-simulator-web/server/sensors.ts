@@ -2,6 +2,7 @@ import { ARENA_OBJECTS, getObjectAABB, type AABB } from '../shared/arena-objects
 
 const HALF_ARENA = 200;
 const MAX_SENSOR_DISTANCE = 400;
+const ROBOT_HALF_LENGTH = 15;
 
 function degToRad(degrees: number): number {
   return (degrees * Math.PI) / 180;
@@ -101,15 +102,11 @@ export function computeProximity(
   const frontDx = Math.sin(rad);
   const frontDz = Math.cos(rad);
 
-  let frente = rayClosestDistance(x, z, frontDx, frontDz);
-  if (frente > MAX_SENSOR_DISTANCE) {
-    frente = MAX_SENSOR_DISTANCE;
-  }
+  let frente = rayClosestDistance(x, z, frontDx, frontDz) - ROBOT_HALF_LENGTH;
+  frente = Math.max(0, Math.min(frente, MAX_SENSOR_DISTANCE));
 
-  let tras = rayClosestDistance(x, z, -frontDx, -frontDz);
-  if (tras > MAX_SENSOR_DISTANCE) {
-    tras = MAX_SENSOR_DISTANCE;
-  }
+  let tras = rayClosestDistance(x, z, -frontDx, -frontDz) - ROBOT_HALF_LENGTH;
+  tras = Math.max(0, Math.min(tras, MAX_SENSOR_DISTANCE));
 
   return { frente: Math.round(frente * 100) / 100, tras: Math.round(tras * 100) / 100 };
 }
