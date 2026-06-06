@@ -1,6 +1,6 @@
 # Fase 03: Parada automatica + deteccao de loop + limite de passos
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -16,14 +16,14 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
 
 ## Tarefas
 
-- [ ] Tarefa 1: Alterar max_steps default para 50
+- [x] Tarefa 1: Alterar max_steps default para 50
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
     - No `__init__` do `ReActAgent` (linha 227), alterar `max_steps: int = 100` para `max_steps: int = 50`
     - Atualizar o teste `test_max_steps_default_is_100` em `test_agent.py` para esperar 50 (renomear para `test_max_steps_default_is_50`)
     - Atualizar a mensagem de `max_steps_reached` (linha 656-658): "Atingi o numero maximo de 50 passos sem concluir o objetivo. Tente reformular o pedido ou verificar se o ambiente esta funcionando."
 
-- [ ] Tarefa 2: Adicionar rastreadores de estado no ReActAgent
+- [x] Tarefa 2: Adicionar rastreadores de estado no ReActAgent
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: No `__init__` do `ReActAgent` (apos `self._tools = ...`), adicionar:
     - `self._last_front_proximity: float | None = None` — ultima leitura de proximidade frontal conhecida
@@ -35,7 +35,7 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
     - `self._step_count: int = 0` — contador de passos (usado para o limite de 50)
   - Metodo `reset()` (linha 260): tambem resetar todos esses rastreadores
 
-- [ ] Tarefa 3: Implementar metodo `_update_state_from_result()`
+- [x] Tarefa 3: Implementar metodo `_update_state_from_result()`
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Metodo que atualiza os rastreadores apos cada tool result:
     1. Extrai proximidade frontal/traseira do resultado (usando `_extract_proximity_from_messages` ou parseando o resultado JSON da tool)
@@ -43,7 +43,7 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
     3. Atualiza `_last_front_proximity`, `_last_back_proximity`, `_last_position`
     4. Este metodo deve ser chamado no loop principal apos processar cada tool result de `observe`, `camera`, ou `proximity`
 
-- [ ] Tarefa 4: Implementar RF01 — Parada automatica por proximidade alvo
+- [x] Tarefa 4: Implementar RF01 — Parada automatica por proximidade alvo
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Metodo `_check_proximity_goal(self) -> str | None`:
     1. Se `_last_front_proximity` e None: retorna None (sem leitura)
@@ -62,7 +62,7 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
       - Emitir evento (pode ser um `tool_result` customizado ou um novo evento tipo `proximity_goal`)
       - Se `_goal_achieved`: na proxima iteracao do loop, o LLM deve responder textualmente sem tool_calls e o loop termina naturalmente. Alternativamente, forcar a parada imediata.
 
-- [ ] Tarefa 5: Implementar RF04 — Deteccao de loop de rotacao
+- [x] Tarefa 5: Implementar RF04 — Deteccao de loop de rotacao
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Metodo `_check_rotation_loop(self, command: str, parsed: list[dict]) -> str | None`:
     1. Se o comando e exclusivamente de rotacao (`_is_rotation_command(parsed)`):
@@ -79,7 +79,7 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
     - Se for LBML: chamar `_check_rotation_loop(command, parsed)`
     - Se retornar mensagem de alerta: injetar no contexto
 
-- [ ] Tarefa 6: Implementar RF04 — Limite de 50 passos com cancelamento
+- [x] Tarefa 6: Implementar RF04 — Limite de 50 passos com cancelamento
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
     - Incrementar `_step_count` a cada iteracao do loop (inicio do `while` loop)
@@ -88,7 +88,7 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
       - Retornar a mensagem: "Nao consegui completar a tarefa apos 50 passos. Tente reformular o pedido ou verificar se o ambiente esta funcionando."
       - NOTA: O loop ja tem `while step < max_steps` que cuida do limite. A mudanca principal e so o default 50 e a mensagem. O `_step_count` e redundante com `step` — podemos usar o `step` existente mesmo.
 
-- [ ] Tarefa 7: Adicionar testes
+- [x] Tarefa 7: Adicionar testes
   - Arquivo: `lbot-mcp/tests/test_agent.py`
   - O que fazer:
     - `TestProximityGoal` — testa `_check_proximity_goal()`:
@@ -110,11 +110,11 @@ Tambem inclui a alteracao do `max_steps` default de 100 para 50.
 
 ## Criterios de Aceite
 
-- [ ] CA01: Robo para ao atingir distancia alvo
+- [x] CA01: Robo para ao atingir distancia alvo
   - Cenario: Robo esta se aproximando, objeto centralizado na camera, leitura frontal entre 15-25cm → mensagem injetada no contexto instruindo o LLM a declarar sucesso
-- [ ] CA07: Limite de passos atingido
+- [x] CA07: Limite de passos atingido
   - Cenario: Robo executou 50 passos sem concluir → loop interrompido, usuario informado
-- [ ] CA08: Deteccao de loop de rotacao
+- [x] CA08: Deteccao de loop de rotacao
   - Cenario: 10 passos de rotacao consecutivos sem mudanca de posicao → alerta injetado no contexto
 
 ## Testes Esperados
@@ -137,11 +137,11 @@ cd lbot-mcp && python -m pytest tests/test_agent.py -v
 
 ## Registro de Execucao
 
-<Preenchido pelo agente durante a execucao>
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-mcp/src/harness/agent.py` — `max_steps` default alterado de 100 para 50. Adicionados 6 rastreadores de estado (`_last_front_proximity`, `_last_back_proximity`, `_last_position`, `_consecutive_rotations`, `_object_was_centered`, `_goal_achieved`) no `__init__`, `reset()`, e inicio de `run()`. Implementados metodos `_check_proximity_goal()` (RF01: parada automatica quando frente entre 15-25cm) e `_check_rotation_loop()` (RF04: deteccao de loop de rotacao apos 10 rotacoes consecutivas). Integradas validacoes no loop: deteccao de "objeto centralizado" no texto do LLM, rotacao check antes do move, e proximity goal check apos tool calls. Mensagem `max_steps_reached` atualizada.
+  - `lbot-mcp/tests/test_agent.py` — Teste `test_max_steps_default_is_100` renomeado para `test_max_steps_default_is_50` e ajustado. Adicionadas 4 novas classes: `TestProximityGoal` (6 tests), `TestLoopDetection` (7 tests), `TestStateReset` (1 test), `TestObjectCenteredDetection` (4 tests). Total: 65 tests.
+- Testes executados: `pytest tests/test_agent.py -v` — 65/65 passed; `pytest tests/test_personality.py -v` — 19/19 passed
+- Resultado: Todos os testes passaram. RF01 (parada automatica) e RF04 (deteccao de loop + limite de passos) implementados. Nenhum teste existente quebrado.
+- Pendencias: Nenhuma

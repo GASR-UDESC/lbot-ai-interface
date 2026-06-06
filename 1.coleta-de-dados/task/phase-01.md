@@ -1,6 +1,6 @@
 # Fase 01: Fundacao - CSS Variables + Top-Nav Global
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Atualizar todo o design system global (variaveis CSS, reset, tipografia) de tema
 
 ## Tarefas
 
-- [ ] Tarefa 1: Atualizar variaveis CSS globais em `styles.css`
+- [x] Tarefa 1: Atualizar variaveis CSS globais em `styles.css`
   - Arquivo: `src/styles.css`
   - O que fazer: Substituir TODOS os valores das variaveis `:root` para o tema BMW M:
     - **Cores**:
@@ -86,7 +86,7 @@ Atualizar todo o design system global (variaveis CSS, reset, tipografia) de tema
     - **Remover shadow**:
       - `--shadow-card-hover-float`: trocar para `0 0 0 1px var(--color-hairline)` (hairline border, sem sombra)
 
-- [ ] Tarefa 2: Criar componente `app-top-nav`
+- [x] Tarefa 2: Criar componente `app-top-nav`
   - Arquivos: `src/app/components/top-nav/top-nav.ts`, `top-nav.html`, `top-nav.css`
   - O que fazer:
     - Componente Angular standalone com `imports: [RouterLink, RouterLinkActive, LucideAngularModule]`
@@ -104,7 +104,7 @@ Atualizar todo o design system global (variaveis CSS, reset, tipografia) de tema
       - `border-bottom: none` (a faixa M substitui a borda)
       - Links: `font-size: var(--typography-nav-link-size)`, `weight: var(--typography-nav-link-weight)`, `tracking: var(--typography-nav-link-letter-spacing)`
 
-- [ ] Tarefa 3: Atualizar `app.component` para incluir top-nav
+- [x] Tarefa 3: Atualizar `app.component` para incluir top-nav
   - Arquivo: `src/app/app.ts`
   - O que fazer: Importar `TopNavComponent` e adicionar ao array `imports`
   - Arquivo: `src/app/app.html`
@@ -112,18 +112,18 @@ Atualizar todo o design system global (variaveis CSS, reset, tipografia) de tema
   - Arquivo: `src/app/app.css`
   - O que fazer: Adicionar `padding-top: 64px` ao `:host` para compensar a nav fixa. OU adicionar `padding-top` via var `--top-nav-height: 64px` e usar essa var nos layouts das paginas
 
-- [ ] Tarefa 4: Ajustar padding-top em todas as paginas
+- [x] Tarefa 4: Ajustar padding-top em todas as paginas
   - Arquivos: `src/app/pages/menu/menu.page.css`, `src/app/pages/game/game.page.css`, `src/app/pages/leaderboard/leaderboard.page.css`, `src/app/pages/controls/controls.page.css`
   - O que fazer: Garantir que cada pagina tenha `padding-top` ou `margin-top` suficiente para nao ficar escondida atras do top-nav fixo (64px). A maioria ja usa `100dvh` ou `min-height: 100dvh` — ajustar para `calc(100dvh - 64px)` ou adicionar `padding-top: 64px` ao conteudo
   - Para game.page que usa `height: 100dvh` no `:host`, mudar para `height: calc(100dvh - 64px)` ou adicionar padding
   - Para controls.page que usa `height: 100dvh`, mesma abordagem
   - Para menu.page e leaderboard.page que usam `min-height: 100dvh`, adicionar `padding-top: 64px` ao conteudo
 
-- [ ] Tarefa 5: Remover link "Voltar ao Menu" do leaderboard
+- [x] Tarefa 5: Remover link "Voltar ao Menu" do leaderboard
   - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
   - O que fazer: Remover ou atualizar o `<a class="lb-back-btn">` que faz navegacao manual para `/menu`, uma vez que o top-nav agora provê navegação global. Transformar em link stilizado BMW M ou remover.
 
-- [ ] Tarefa 6: Auditar e corrigir hover states globais
+- [x] Tarefa 6: Auditar e corrigir hover states globais
   - Arquivo: `src/styles.css`
   - O que fazer: Adicionar estilos globais para hover de botoes BMW M:
     - Botoes outline: hover -> `background: var(--color-surface-card)`, `border-color: var(--color-on-dark)`
@@ -170,9 +170,21 @@ Atualizar todo o design system global (variaveis CSS, reset, tipografia) de tema
 
 (Preenchido pelo agente durante a execucao)
 
-- Data:
+- Data: 2026-06-06
 - Arquivos criados:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/top-nav/top-nav.ts`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/top-nav/top-nav.html`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/top-nav/top-nav.css`
 - Arquivos alterados:
+  - `lbot-datagen/lbot-datagen-frontend/src/styles.css` - Substituicao completa das variaveis CSS para tema BMW M
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.ts` - Importado TopNavComponent
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.html` - Adicionado `<app-top-nav>` acima do router-outlet
+  - `lbot-datagen/lbot-datagen-frontend/src/app/app.css` - Adicionado `padding-top: var(--top-nav-height, 64px)` ao :host
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.css` - :host height ajustada para `calc(100dvh - var(--top-nav-height, 64px))`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/controls/controls.page.css` - .controls-page height ajustada para `calc(100dvh - var(--top-nav-height, 64px))`
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.html` - Removido footer com link "Voltar ao Menu"
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/leaderboard/leaderboard.page.ts` - Removido import RouterLink nao utilizado
 - Testes executados:
-- Resultado:
-- Pendencias:
+  - `npx ng build` - Build concluido com sucesso (0 erros, apenas warnings de budget CSS pre-existentes)
+- Resultado: Todos os criterios de aceite implementados. Tema escuro BMW M aplicado globalmente via variaveis CSS. Componente top-nav criado com suporte desktop/mobile (hamburger). Padding-top ajustado em todas as paginas para nao sobrepor conteudo. Link redundante removido do leaderboard.
+- Pendencias: Nenhuma.

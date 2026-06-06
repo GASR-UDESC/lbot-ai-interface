@@ -19,6 +19,84 @@ _APPROX_CHARS_PER_TOKEN = 4
 
 EventCallback = Callable[[str, dict[str, Any]], None] | None
 
+# ---------------------------------------------------------------------------
+# LBML helpers — parsing, inspection, modification
+# ---------------------------------------------------------------------------
+
+_LBML_CMD_RE = re.compile(r"([DR])(\d+)([FBLR]);")
+
+
+def _parse_lbml_command(command_str: str) -> list[dict[str, Any]]:
+    commands: list[dict[str, Any]] = []
+    for match in _LBML_CMD_RE.finditer(command_str):
+        commands.append({
+            "type": match.group(1),
+            "value": int(match.group(2)),
+            "direction": match.group(3),
+        })
+    return commands
+
+
+def _is_forward_command(parsed: list[dict[str, Any]]) -> bool:
+    return any(c["type"] == "D" and c["direction"] == "F" for c in parsed)
+
+
+def _is_rotation_command(parsed: list[dict[str, Any]]) -> bool:
+    if not parsed:
+        return False
+    return all(c["type"] == "R" for c in parsed)
+
+
+def _reduce_step(parsed: list[dict[str, Any]], max_distance: int) -> list[dict[str, Any]]:
+    result = []
+    for cmd in parsed:
+        copy = dict(cmd)
+        if cmd["type"] == "D" and cmd["direction"] == "F" and cmd["value"] > max_distance:
+            copy["value"] = max_distance
+        result.append(copy)
+    return result
+
+
+def _parsed_to_lbml(parsed: list[dict[str, Any]]) -> str:
+    return "".join(f"{c['type']}{c['value']}{c['direction']};" for c in parsed)
+
+
+_PROXIMITY_TEXT_RE = re.compile(
+    r"Frente:\s*([\d.]+)\s*cm.*?Tr[áa]s:\s*([\d.]+)\s*cm",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _extract_proximity_from_messages(messages: list[dict[str, Any]]) -> dict[str, float] | None:
+    for msg in reversed(messages):
+        content = msg.get("content", "")
+
+        if isinstance(content, str):
+            m = _PROXIMITY_TEXT_RE.search(content)
+            if m:
+                return {"frente": float(m.group(1)), "tras": float(m.group(2))}
+
+            try:
+                data = json.loads(content)
+                if isinstance(data, dict):
+                    proximity = data.get("proximity")
+                    if isinstance(proximity, dict):
+                        frente = proximity.get("frente")
+                        tras = proximity.get("tras")
+                        if frente is not None and tras is not None:
+                            return {"frente": float(frente), "tras": float(tras)}
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        elif isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "text":
+                    text = part.get("text", "")
+                    m = _PROXIMITY_TEXT_RE.search(text)
+                    if m:
+                        return {"frente": float(m.group(1)), "tras": float(m.group(2))}
+    return None
+
 
 def _summarize_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return a copy of messages with base64 images truncated for display."""
@@ -224,7 +302,7 @@ class ReActAgent:
         base_url: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
-        max_steps: int = 100,
+        max_steps: int = 50,
         verbose: bool = False,
         on_event: EventCallback = None,
     ):
@@ -247,6 +325,13 @@ class ReActAgent:
         self._model = model
         self._tools = get_tools_description()
 
+        self._last_front_proximity: float | None = None
+        self._last_back_proximity: float | None = None
+        self._last_position: dict | None = None
+        self._consecutive_rotations: int = 0
+        self._object_was_centered: bool = False
+        self._goal_achieved: bool = False
+
     def _emit(self, event: str, data: dict[str, Any]) -> None:
         if self._on_event is not None:
             try:
@@ -259,6 +344,136 @@ class ReActAgent:
 
     def reset(self):
         self._messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        self._last_front_proximity = None
+        self._last_back_proximity = None
+        self._last_position = None
+        self._consecutive_rotations = 0
+        self._object_was_centered = False
+        self._goal_achieved = False
+
+    def _validate_and_adjust_move(self, command: str) -> tuple[str | None, str | None]:
+        proximity = _extract_proximity_from_messages(self._messages)
+        if proximity is None:
+            return (command, None)
+
+        parsed = _parse_lbml_command(command)
+        if not parsed:
+            return (command, None)
+
+        frente = proximity["frente"]
+
+        if frente <= 20 and _is_forward_command(parsed):
+            return (
+                None,
+                f"Bloqueado: distancia frontal e de {frente:.0f}cm, "
+                "ja esta dentro da faixa de aproximacao (15-25cm). Objetivo alcancado.",
+            )
+
+        if not _is_forward_command(parsed):
+            return (command, None)
+
+        original_command = command
+        if 20 < frente <= 40:
+            reduced = _reduce_step(parsed, 10)
+            new_command = _parsed_to_lbml(reduced)
+            if new_command != original_command:
+                return (
+                    new_command,
+                    f"Comando ajustado: {original_command} reduzido para {new_command} "
+                    "(proximo ao alvo, passo reduzido por seguranca)",
+                )
+        elif 40 < frente <= 80:
+            reduced = _reduce_step(parsed, 15)
+            new_command = _parsed_to_lbml(reduced)
+            if new_command != original_command:
+                return (
+                    new_command,
+                    f"Comando ajustado: {original_command} reduzido para {new_command} "
+                    "(proximo ao alvo, passo reduzido por seguranca)",
+                )
+
+        return (command, None)
+
+    def _detect_object_loss(self, current_front: float, previous_front: float | None) -> str | None:
+        if previous_front is None:
+            return None
+
+        if previous_front <= 25 and current_front > 30:
+            self._object_was_centered = False
+            self._consecutive_rotations = 0
+            return (
+                f"**[CONTROLE AUTOMATICO]** ALERTA DE PERDA DE OBJETO: "
+                f"A distancia frontal saltou de {previous_front:.0f}cm para {current_front:.0f}cm "
+                f"(aumento > 5cm a partir da zona de aproximacao). "
+                f"Voce pode ter passado do objeto ou ele saiu do seu campo de visao. "
+                f"Protocolo de recuperacao: (1) Recue 20cm com D20B; "
+                f"(2) Faca observe() para re-localizar o objeto; "
+                f"(3) Se encontrado, centralize e retome a aproximacao com passos de no maximo 10cm; "
+                f"(4) Se nao encontrado apos 360 graus de busca, informe que o objeto foi perdido."
+            )
+        return None
+
+    def _check_proximity_goal(self) -> str | None:
+        proximity = _extract_proximity_from_messages(self._messages)
+        if proximity is None:
+            return None
+
+        frente = proximity["frente"]
+
+        previous_front = self._last_front_proximity
+        loss_msg = self._detect_object_loss(frente, previous_front)
+
+        self._last_front_proximity = frente
+        self._last_back_proximity = proximity["tras"]
+
+        if loss_msg:
+            return loss_msg
+
+        if 15 <= frente <= 25:
+            self._goal_achieved = True
+            return (
+                f"**[CONTROLE AUTOMATICO]** Proximidade frontal: {frente:.0f}cm "
+                f"(faixa alvo: 15-25cm). Voce chegou perto o suficiente do objeto. "
+                f"Declare sucesso e informe o usuario que o objetivo foi alcancado."
+            )
+        elif frente < 15:
+            if self._object_was_centered:
+                self._object_was_centered = False
+                self._consecutive_rotations = 0
+                return (
+                    f"**[CONTROLE AUTOMATICO]** ALERTA DE PERDA DE OBJETO: "
+                    f"Proximidade frontal {frente:.0f}cm — voce passou do alvo "
+                    f"(overshooting). Protocolo de recuperacao: (1) Recue 20cm "
+                    f"com D20B; (2) Faca observe() para re-localizar o objeto; "
+                    f"(3) Se encontrado, centralize e retome a aproximacao com "
+                    f"passos de no maximo 10cm; (4) Se nao encontrado apos "
+                    f"360 graus de busca, informe que o objeto foi perdido."
+                )
+            else:
+                return (
+                    f"Cuidado: muito perto de um obstaculo ({frente:.0f}cm). "
+                    f"Recue um pouco e tente centralizar o alvo na camera."
+                )
+        return None
+
+    def _check_rotation_loop(self, command: str, parsed: list[dict]) -> str | None:
+        if not parsed:
+            return None
+
+        if _is_rotation_command(parsed):
+            self._consecutive_rotations += 1
+        else:
+            self._consecutive_rotations = 0
+
+        if self._consecutive_rotations >= 10:
+            self._consecutive_rotations = 0
+            return (
+                "**[CONTROLE AUTOMATICO]** Voce executou 10 rotacoes consecutivas sem "
+                "mudanca significativa de posicao. Voce pode estar em um loop de rotacao. "
+                "Tente uma estrategia diferente: recue 20cm, faca um observe(), ou gire "
+                "em angulos maiores (ex: 30-45 graus)."
+            )
+        return None
 
     @property
     def history(self) -> list[dict[str, Any]]:
@@ -301,6 +516,13 @@ class ReActAgent:
     async def run(self, goal: str, max_steps: int | None = None) -> str:
         max_steps = max_steps if max_steps is not None else self._max_steps
         self._cancelled = False
+
+        self._last_front_proximity = None
+        self._last_back_proximity = None
+        self._last_position = None
+        self._consecutive_rotations = 0
+        self._object_was_centered = False
+        self._goal_achieved = False
 
         self._messages.append({"role": "user", "content": goal})
         self._messages = _trim_messages(self._messages, _MAX_CONTEXT_TOKENS)
@@ -355,6 +577,15 @@ class ReActAgent:
 
             message = response.choices[0].message
             finish_reason = response.choices[0].finish_reason
+
+            if message.content and not self._object_was_centered:
+                centered_keywords = [
+                    "centralizado", "centralizei", "no centro",
+                    "esta centralizado", "objeto esta no centro",
+                ]
+                content_lower = message.content.lower()
+                if any(kw in content_lower for kw in centered_keywords):
+                    self._object_was_centered = True
 
             self._emit(
                 "llm_response",
@@ -419,9 +650,22 @@ class ReActAgent:
 
                     try:
                         if tool_name == "move":
-                            result = await self._mcp.call_tool(
-                                "move", {"command": raw_args.get("command", "")}
-                            )
+                            command = raw_args.get("command", "")
+                            parsed = _parse_lbml_command(command)
+
+                            loop_msg = self._check_rotation_loop(command, parsed)
+                            if loop_msg:
+                                self._messages.append({"role": "user", "content": loop_msg})
+
+                            adjusted_command, info_msg = self._validate_and_adjust_move(command)
+                            if adjusted_command is None:
+                                result = info_msg or "Comando bloqueado."
+                            else:
+                                result = await self._mcp.call_tool(
+                                    "move", {"command": adjusted_command}
+                                )
+                                if info_msg:
+                                    result = info_msg + "\n" + result
                         else:
                             result = await self._mcp.call_tool(tool_name, raw_args)
                     except Exception as e:
@@ -461,6 +705,8 @@ class ReActAgent:
                             render_method = camera_data.get("render_method", "unknown")
                             robot_position = camera_data.get("robot_position")
                             camera_error = camera_data.get("error")
+                            if robot_position:
+                                self._last_position = robot_position
                         elif isinstance(result, str) and _is_valid_base64(result):
                             image_base64 = result
 
@@ -519,6 +765,8 @@ class ReActAgent:
                             proximity = observe_data.get("proximity")
                             render_method = observe_data.get("render_method", "unknown")
                             robot_position = observe_data.get("robot_position")
+                            if robot_position:
+                                self._last_position = robot_position
 
                             parts: list[str] = []
 
@@ -645,6 +893,9 @@ class ReActAgent:
                             "tool_call_id": tc.id,
                             "content": result,
                         })
+                goal_msg = self._check_proximity_goal()
+                if goal_msg:
+                    self._messages.append({"role": "user", "content": goal_msg})
             else:
                 if message.content:
                     self._messages.append({"role": "assistant", "content": message.content})
@@ -654,6 +905,6 @@ class ReActAgent:
 
         self._emit("max_steps_reached", {"max_steps": max_steps})
         return (
-            "Atingi o número máximo de passos sem concluir o objetivo. "
-            "Tente reformular o pedido ou verificar se o ambiente está funcionando."
+            f"Nao consegui completar a tarefa apos {max_steps} passos. "
+            "Tente reformular o pedido ou verificar se o ambiente esta funcionando."
         )

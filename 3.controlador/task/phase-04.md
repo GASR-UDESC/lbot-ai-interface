@@ -1,6 +1,6 @@
 # Fase 04: Protocolo de recuperacao de perda de objeto
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ O agente detecta a perda (proximidade frontal salta de <25cm para >30cm, ou obje
 
 ## Tarefas
 
-- [ ] Tarefa 1: Implementar metodo `_detect_object_loss()`
+- [x] Tarefa 1: Implementar metodo `_detect_object_loss()`
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Metodo `_detect_object_loss(self, current_front: float, previous_front: float | None) -> str | None`:
     1. Se `previous_front` e None: retorna None (primeira leitura, nao ha como detectar perda)
@@ -26,7 +26,7 @@ O agente detecta a perda (proximidade frontal salta de <25cm para >30cm, ou obje
     3. Senao: retorna None
   - Chamar este metodo no loop principal apos `_update_state_from_result()` (criado na Fase 03), passando a leitura de proximidade mais recente.
 
-- [ ] Tarefa 2: Integrar deteccao de perda no loop principal
+- [x] Tarefa 2: Integrar deteccao de perda no loop principal
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
     - Apos processar tool result de `observe` ou `proximity`:
@@ -39,7 +39,7 @@ O agente detecta a perda (proximidade frontal salta de <25cm para >30cm, ou obje
       4. Atualiza `_last_front_proximity = current_front`
     - O fluxo fica: processa tool result → update_state → check_proximity_goal → detect_object_loss → proxima iteracao do loop
 
-- [ ] Tarefa 3: Ajustar `_check_proximity_goal()` para cooperar com perda de objeto
+- [x] Tarefa 3: Ajustar `_check_proximity_goal()` para cooperar com perda de objeto
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
     - No cenario onde `_last_front_proximity < 15` E `_object_was_centered == True`:
@@ -47,7 +47,7 @@ O agente detecta a perda (proximidade frontal salta de <25cm para >30cm, ou obje
       - A mensagem deve incluir a sugestao de recuo de 20cm e re-observacao
     - Atualizar `_object_was_centered = False` nesse caso
 
-- [ ] Tarefa 4: Rastrear "objeto centralizado" via mensagens do LLM
+- [x] Tarefa 4: Rastrear "objeto centralizado" via mensagens do LLM
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer:
     - Como a deteccao de "objeto centralizado" depende da interpretacao visual do LLM (premissa do business spec), o agente precisa inferir isso das respostas do LLM
@@ -55,7 +55,7 @@ O agente detecta a perda (proximidade frontal salta de <25cm para >30cm, ou obje
     - Se encontrar: define `_object_was_centered = True`
     - Esta verificacao ocorre na parte do loop onde `message.content` existe (antes de processar tool calls)
 
-- [ ] Tarefa 5: Adicionar testes
+- [x] Tarefa 5: Adicionar testes
   - Arquivo: `lbot-mcp/tests/test_agent.py`
   - O que fazer: Criar classe `TestObjectLossDetection`:
     - `test_no_loss_on_first_reading` — previous_front=None, retorna None
@@ -80,7 +80,7 @@ O agente detecta a perda (proximidade frontal salta de <25cm para >30cm, ou obje
 
 ## Criterios de Aceite
 
-- [ ] CA06: Recuperacao de perda de objeto
+- [x] CA06: Recuperacao de perda de objeto
   - Cenario: Robo esta a < 25cm do objeto e perde o objeto de vista (distancia salta para > 30cm ou objeto some da camera) → agente detecta a perda, injeta instrucao de recuperacao no contexto (recuar 20cm, re-observar, re-centralizar)
 
 ## Testes Esperados
@@ -105,11 +105,11 @@ cd lbot-mcp && python -m pytest tests/test_agent.py -v
 
 ## Registro de Execucao
 
-<Preenchido pelo agente durante a execucao>
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-mcp/src/harness/agent.py` — Adicionado metodo `_detect_object_loss()` no `ReActAgent` (RF05: detecta salto de proximidade de <=25cm para >30cm). Modificado `_check_proximity_goal()` para chamar `_detect_object_loss()` antes de atualizar estado de proximidade. Mensagem de overshooting atualizada para usar protocolo completo de recuperacao com reset de `_object_was_centered` e `_consecutive_rotations`.
+  - `lbot-mcp/tests/test_agent.py` — Adicionadas 2 novas classes: `TestObjectLossDetection` (9 tests) e `TestRecoveryIntegration` (1 test). Total: 75 tests (agent) + 19 tests (personality) = 94 tests.
+- Testes executados: `pytest tests/test_agent.py tests/test_personality.py -v` — 94/94 passed
+- Resultado: Todos os testes passaram. RF05 (protocolo de recuperacao de perda de objeto) implementado. Tarefa 4 (rastrear "objeto centralizado") ja estava implementada desde a Fase 03. Nenhum teste existente quebrado.
+- Pendencias: Nenhuma

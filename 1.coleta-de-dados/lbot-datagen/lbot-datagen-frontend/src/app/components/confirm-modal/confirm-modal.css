@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,8 +16,9 @@
 }
 
 .modal-card {
-  background: var(--color-canvas, #ffffff);
-  border-radius: var(--rounded-md, 14px);
+  background: var(--color-surface-card);
+  border-radius: 0;
+  border: 1px solid var(--color-hairline);
   padding: var(--spacing-xl, 32px);
   max-width: 400px;
   width: 100%;
@@ -32,17 +33,18 @@
 
 .modal-title {
   font-size: var(--typography-title-md-size, 16px);
-  font-weight: var(--typography-title-md-weight, 600);
+  font-weight: 700;
   line-height: var(--typography-title-md-line-height, 1.25);
-  color: var(--color-ink, #222222);
+  color: var(--color-ink);
+  text-transform: uppercase;
   margin: 0 0 12px;
 }
 
 .modal-message {
   font-size: var(--typography-body-md-size, 16px);
-  font-weight: var(--typography-body-md-weight, 400);
+  font-weight: 300;
   line-height: var(--typography-body-md-line-height, 1.5);
-  color: var(--color-body, #3f3f3f);
+  color: var(--color-body);
   margin: 0 0 28px;
 }
 
@@ -55,30 +57,33 @@
 .modal-btn {
   padding: 12px 28px;
   border: none;
-  border-radius: var(--rounded-sm, 8px);
+  border-radius: 0;
   font-size: var(--typography-button-md-size, 16px);
-  font-weight: var(--typography-button-md-weight, 500);
-  line-height: var(--typography-button-md-line-height, 1.25);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 100px;
 }
 
 .cancel-btn {
-  background: var(--color-canvas, #ffffff);
-  color: var(--color-ink, #222222);
-  border: 1px solid var(--color-hairline, #dddddd);
+  background: transparent;
+  color: var(--color-on-dark);
+  border: 1px solid var(--color-on-dark);
 }
 
 .cancel-btn:hover {
-  background: var(--color-surface-soft, #f7f7f7);
+  background: var(--color-surface-elevated);
 }
 
 .confirm-btn {
-  background: var(--color-primary, #ff385c);
-  color: var(--color-on-primary, #ffffff);
+  background: var(--color-on-dark);
+  color: var(--color-canvas);
+  border: 1px solid var(--color-on-dark);
 }
 
 .confirm-btn:hover {
-  background: var(--color-primary-active, #e00b41);
+  background: var(--color-surface-elevated);
+  color: var(--color-ink);
 }

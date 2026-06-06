@@ -1,6 +1,6 @@
 # Fase 03: Layouts de Jogo - Game + Controls
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Adicionar headers contextuais nas paginas de Game e Controls, padronizar os layo
 
 ## Tarefas
 
-- [ ] Tarefa 1: Adicionar header contextual ao Game Page (RF03)
+- [x] Tarefa 1: Adicionar header contextual ao Game Page (RF03)
   - Arquivo: `src/app/pages/game/game.page.html`
   - O que fazer:
     - Adicionar um header contextual acima do `.game-layout`:
@@ -67,7 +67,7 @@ Adicionar headers contextuais nas paginas de Game e Controls, padronizar os layo
       - Remover border-radius (antes nao tinha, confirmar)
     - Atualizar `.chat-loading`: cor `var(--color-body)` (body text)
 
-- [ ] Tarefa 2: Adicionar header contextual ao Controls Page (RF02)
+- [x] Tarefa 2: Adicionar header contextual ao Controls Page (RF02)
   - Arquivo: `src/app/pages/controls/controls.page.html`
   - O que fazer:
     - Atualizar o header existente para estilo BMW M:
@@ -96,13 +96,13 @@ Adicionar headers contextuais nas paginas de Game e Controls, padronizar os layo
       - `border: 1px solid var(--color-hairline)`
       - `background: var(--color-surface-card)` ou `var(--color-canvas)`
 
-- [ ] Tarefa 3: Padronizar gap/padding entre Game e Controls (RF03)
+- [x] Tarefa 3: Padronizar gap/padding entre Game e Controls (RF03)
   - Arquivo: `src/app/pages/game/game.page.css`
   - O que fazer: Garantir que o gap entre simulador e chat panel use `var(--spacing-lg)` (24px), o mesmo padrao do Controls. Adicionar padding adequado ao `.page-header`.
   - Arquivo: `src/app/pages/controls/controls.page.css`
   - O que fazer: Confirmar que o gap `.controls-layout` usa `var(--spacing-lg)` (24px, ja e esse valor) e que o padding esta consistente
 
-- [ ] Tarefa 4: Aplicar tema escuro ao Simulator Frame (RF04)
+- [x] Tarefa 4: Aplicar tema escuro ao Simulator Frame (RF04)
   - Arquivo: `src/app/components/simulator-frame/simulator-frame.css`
   - O que fazer:
     - `border-radius: 0` (remover qualquer rounded)
@@ -122,15 +122,15 @@ Adicionar headers contextuais nas paginas de Game e Controls, padronizar os layo
 
 ## Criterios de Aceite
 
-- [ ] CA04: Layout padronizado do Modo Controle
+- [x] CA04: Layout padronizado do Modo Controle
   - Cenario: Dado que o usuario navega para /controls / Quando a pagina carrega / Entao o top-nav global aparece no topo e abaixo dele o header contextual "MODO CONTROLE" em uppercase com subtitulo, seguido do grid com gap/padding entre simulador e painel de controles.
-- [ ] CA05: Layout padronizado do Modo Jogar
+- [x] CA05: Layout padronizado do Modo Jogar
   - Cenario: Dado que o usuario navega para /game / Quando a pagina carrega / Entao o top-nav global aparece no topo e abaixo dele o header contextual "JOGAR" em uppercase com subtitulo, seguido do layout com gap/padding entre simulador e chat panel.
-- [ ] CA06: Navegacao redundante removida do HUD
+- [x] CA06: Navegacao redundante removida do HUD
   - Cenario: Dado que o usuario esta na pagina de jogo / Quando a partida esta em andamento / Entao o HUD mostra apenas nivel, timer e botao de reset, SEM os links "← Menu" e "Ranking".
-- [ ] CA07: Tema escuro nas paginas de jogo e controle
+- [x] CA07: Tema escuro nas paginas de jogo e controle
   - Cenario: Fundo preto, texto branco, borders hairline #3c3c3c, border-radius 0 nos containers.
-- [ ] CA10: Faixa tricolor M como divisor
+- [x] CA10: Faixa tricolor M como divisor
   - Cenario: A faixa M tricolor aparece como divisor entre o header e o conteudo nas paginas Game e Controls.
 
 ## Testes Esperados
@@ -149,11 +149,14 @@ Adicionar headers contextuais nas paginas de Game e Controls, padronizar os layo
 
 ## Registro de Execucao
 
-(Preenchido pelo agente durante a execucao)
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.html` — Adicionado page-header ("JOGAR" + subtitulo + m-stripe), removido .hud-nav com links "← Menu" e "Ranking"
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/game/game.page.css` — :host flex column, novos estilos .page-header/.page-title/.page-subtitle, HUD dark overlay rgba(0,0,0,0.85) border-radius 0, hud-reset-btn outline BMW, removidos .hud-nav/.nav-link-btn, chat-panel surface-soft, chat-loading color body
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/controls/controls.page.html` — Header atualizado para .page-header com "MODO CONTROLE" uppercase + subtitulo + m-stripe
+  - `lbot-datagen/lbot-datagen-frontend/src/app/pages/controls/controls.page.css` — .controls-header/.controls-title/.controls-subtitle substituidos por .page-header/.page-title/.page-subtitle BMW M; simulator-container e controls-panel border-radius 0; controls-panel background surface-card
+  - `lbot-datagen/lbot-datagen-frontend/src/app/components/simulator-frame/simulator-frame.css` — border-radius 0, background var(--color-canvas), border hairline
+- Testes executados: `npx ng build` — Build successful, 0 erros (warnings de budget CSS pre-existentes: leaderboard +906B, victory-screen +1.6kB, virtual-controls +2.96kB, lbot-chat +3.56kB)
+- Resultado: Sucesso. Header contextual adicionado em ambas as paginas com faixa M tricolor. HUD do game com tema escuro e sem navegacao redundante. Containers com border-radius 0. Layout padronizado entre Game e Controls.
+- Pendencias: Nenhuma

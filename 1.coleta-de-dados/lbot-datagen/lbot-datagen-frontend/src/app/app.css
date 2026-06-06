@@ -2,6 +2,7 @@
   display: block;
   height: 100dvh;
   width: 100vw;
+  padding-top: var(--top-nav-height, 64px);
   background-color: var(--color-canvas);
   font-family: 'Inter', -apple-system, system-ui, Roboto, 'Helvetica Neue', sans-serif;
 }

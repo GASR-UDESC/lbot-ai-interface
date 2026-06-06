@@ -1,6 +1,6 @@
 # Fase 02: Bloqueio de avanco + reducao de passo
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando too
 
 ## Tarefas
 
-- [ ] Tarefa 1: Criar funcoes helper de parse e modificacao de LBML
+- [x] Tarefa 1: Criar funcoes helper de parse e modificacao de LBML
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Adicionar NO TOPO do arquivo (abaixo dos imports e constantes existentes, antes da classe `ReActAgent`) as seguintes funcoes:
     - `_parse_lbml_command(command_str: str) -> list[dict]` — parseia string LBML (ex: "D30F;R90L;") em lista de `{"type": "D"|"R", "value": int, "direction": str}`. Usar regex similar ao `LBML_SEQUENCE_RE` em `movement.py`.
@@ -29,7 +29,7 @@ Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando too
       - Resultado de `proximity()` como texto: `"Frente: 50 cm | Trás: 200 cm"`
       - Retorna `{"frente": float, "tras": float}` ou `None` se nao encontrar
 
-- [ ] Tarefa 2: Implementar metodo `_validate_and_adjust_move()` no ReActAgent
+- [x] Tarefa 2: Implementar metodo `_validate_and_adjust_move()` no ReActAgent
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: Adicionar metodo `_validate_and_adjust_move(self, command: str) -> tuple[str, str | None]` que:
     1. Extrai a ultima leitura de proximidade do historico via `_extract_proximity_from_messages(self._messages)`
@@ -46,7 +46,7 @@ Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando too
        - Retorna `(lbml_modificado, mensagem_informativa)` onde a mensagem diz "Comando ajustado: D20F reduzido para D10F (proximo ao alvo, passo reduzido por seguranca)"
     7. Comandos de recuo (D*B) e rotacao (R*) NAO sao modificados
 
-- [ ] Tarefa 3: Integrar validacao no loop principal
+- [x] Tarefa 3: Integrar validacao no loop principal
   - Arquivo: `lbot-mcp/src/harness/agent.py`
   - O que fazer: No metodo `run()`, dentro do loop que processa tool_calls (linhas 407-430), modificar o tratamento da tool `"move"`:
     - ANTES de chamar `self._mcp.call_tool("move", ...)`, chamar `adjusted_command, block_msg = self._validate_and_adjust_move(raw_args.get("command", ""))`
@@ -59,7 +59,7 @@ Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando too
       - Apos a execucao, adicionar a mensagem informativa ao resultado OU como tool_result adicional
     - Se nenhuma modificacao: executar normalmente como ja faz hoje
 
-- [ ] Tarefa 4: Adicionar testes
+- [x] Tarefa 4: Adicionar testes
   - Arquivo: `lbot-mcp/tests/test_agent.py`
   - O que fazer: Criar novas classes de teste no final do arquivo:
     - `TestLBMLHelpers` — testa `_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml`
@@ -80,17 +80,17 @@ Ambos sao validados ANTES do comando ser enviado ao simulador, interceptando too
 
 ## Criterios de Aceite
 
-- [ ] CA02: Bloqueio de avanco por proximidade minima
+- [x] CA02: Bloqueio de avanco por proximidade minima
   - Cenario: Ultima leitura de proximidade frontal <= 20cm, LLM envia D<dist>F → comando bloqueado, mensagem informativa retornada
-- [ ] CA03: Reducao de passo perto do alvo (frente ~35cm)
+- [x] CA03: Reducao de passo perto do alvo (frente ~35cm)
   - Cenario: Frente = 35cm, LLM envia D20F → modificado para D10F, LLM informado
-- [ ] CA04: Reducao de passo em zona intermediaria (frente ~60cm)
+- [x] CA04: Reducao de passo em zona intermediaria (frente ~60cm)
   - Cenario: Frente = 60cm, LLM envia D20F → modificado para D15F, LLM informado
-- [ ] CA05: Aproximacao normal fora de zona de reducao (frente > 80cm)
+- [x] CA05: Aproximacao normal fora de zona de reducao (frente > 80cm)
   - Cenario: Frente = 100cm, LLM envia D20F → executado sem modificacao
-- [ ] CA09: Comandos de recuo e rotacao nao sao bloqueados
+- [x] CA09: Comandos de recuo e rotacao nao sao bloqueados
   - Cenario: Frente <= 20cm, LLM envia D20B ou R90L → executado normalmente
-- [ ] CA10: Funcionamento sem sensor de proximidade
+- [x] CA10: Funcionamento sem sensor de proximidade
   - Cenario: Sem leitura de proximidade no historico → comando executado sem modificacao (fallback)
 
 ## Testes Esperados
@@ -120,11 +120,11 @@ cd lbot-mcp && python -m pytest tests/test_agent.py -v
 
 ## Registro de Execucao
 
-<Preenchido pelo agente durante a execucao>
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-mcp/src/harness/agent.py` — Adicionadas 6 funcoes helper de LBML (`_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml`, `_extract_proximity_from_messages`) e metodo `_validate_and_adjust_move()` no `ReActAgent`. Integrada validacao no loop principal (move tool handling com bloqueio e reducao de passo).
+  - `lbot-mcp/tests/test_agent.py` — Adicionadas 3 novas classes de teste: `TestLBMLHelpers` (13 tests), `TestProximityExtraction` (6 tests), `TestCommandModification` (8 tests). Import atualizado para incluir as novas funcoes helper.
+- Testes executados: `pytest tests/test_agent.py -v` — 47/47 passed
+- Resultado: Todos os testes passaram. Nenhum teste existente quebrado. RF02 (bloqueio de avanco) e RF06 (reducao de passo) implementados.
+- Pendencias: Nenhuma

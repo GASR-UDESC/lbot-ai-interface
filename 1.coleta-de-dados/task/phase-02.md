@@ -1,6 +1,6 @@
 # Fase 02: Paginas Estaticas - Menu + Leaderboard
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Redesenhar as paginas Menu e Leaderboard para o estilo editorial BMW M: canvas p
 
 ## Tarefas
 
-- [ ] Tarefa 1: Redesenhar pagina Menu (RF08)
+- [x] Tarefa 1: Redesenhar pagina Menu (RF08)
   - Arquivo: `src/app/pages/menu/menu.page.html`
   - O que fazer:
     - Manter a estrutura centralizada mas redesenhar:
@@ -42,7 +42,7 @@ Redesenhar as paginas Menu e Leaderboard para o estilo editorial BMW M: canvas p
     - `.menu-footer`: cor `var(--color-muted)`
     - Remover todos os `border-radius: var(--rounded-md)` ou `var(--rounded-sm)` que nao sejam icones circulares
 
-- [ ] Tarefa 2: Atualizar pagina Leaderboard (RF09)
+- [x] Tarefa 2: Atualizar pagina Leaderboard (RF09)
   - Arquivo: `src/app/pages/leaderboard/leaderboard.page.html`
   - O que fazer:
     - Trofeu emoji `🏆` pode ser mantido ou substituido por icone Lucide `Trophy`
@@ -66,7 +66,7 @@ Redesenhar as paginas Menu e Leaderboard para o estilo editorial BMW M: canvas p
     - Remover todos os `border-radius: var(--rounded-md)` -> `border-radius: 0`
     - Remover hover transform/scale e box-shadow; usar apenas border highlight
 
-- [ ] Tarefa 3: Garantir padding-top para top-nav nas paginas Menu e Leaderboard
+- [x] Tarefa 3: Garantir padding-top para top-nav nas paginas Menu e Leaderboard
   - Arquivo: `src/app/pages/menu/menu.page.css`
   - O que fazer: `.menu-wrapper` ja tem `min-height: 100dvh` e `padding: 24px`. Adicionar `padding-top: calc(var(--top-nav-height, 64px) + 24px)` ou ajustar para compensar a nav fixa
   - Arquivo: `src/app/pages/leaderboard/leaderboard.page.css`
@@ -84,15 +84,15 @@ Redesenhar as paginas Menu e Leaderboard para o estilo editorial BMW M: canvas p
 
 ## Criterios de Aceite
 
-- [ ] CA07: Tema escuro nas paginas Menu e Leaderboard
+- [x] CA07: Tema escuro nas paginas Menu e Leaderboard
   - Cenario: Dado que o usuario navega para /menu ou /leaderboard / Quando a pagina carrega / Entao o fundo e preto, o texto principal e branco, cards usam #1a1a1a, hairlines usam #3c3c3c.
-- [ ] CA08: Tipografia BMW M nos titulos
+- [x] CA08: Tipografia BMW M nos titulos
   - Cenario: Dado que o usuario esta em /menu ou /leaderboard / Quando visualiza os titulos / Entao estao em uppercase, weight 700, e tracking ajustado.
-- [ ] CA09: Cantos retos BMW nas paginas
+- [x] CA09: Cantos retos BMW nas paginas
   - Cenario: Dado que o usuario visualiza cards e botoes / Entao todos tem border-radius 0.
-- [ ] CA12: Menu redesenhado no estilo BMW M
+- [x] CA12: Menu redesenhado no estilo BMW M
   - Cenario: Dado que o usuario navega para /menu / Entao o menu exibe canvas preto, titulo "LBOT ARENA" em display uppercase, botoes retangulares com outline, sem bordas arredondadas.
-- [ ] CA13: Leaderboard atualizado para tema escuro
+- [x] CA13: Leaderboard atualizado para tema escuro
   - Cenario: Dado que o usuario navega para /leaderboard / Entao a leaderboard exibe fundo preto, cards com surface-card, border-radius 0, texto branco e titulo uppercase.
 
 ## Testes Esperados
@@ -110,11 +110,12 @@ Redesenhar as paginas Menu e Leaderboard para o estilo editorial BMW M: canvas p
 
 ## Registro de Execucao
 
-(Preenchido pelo agente durante a execucao)
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/app/pages/menu/menu.page.html` — Titulo "LBOT ARENA" uppercase, botoes unificados no estilo card BMW, icones em circulos (btn-icon-circle)
+  - `src/app/pages/menu/menu.page.css` — Rewrite BMW M: canvas preto, display-lg title 700 uppercase tracking -0.5px, subtitle 300 body, botoes surface-card border-radius 0, btn-icon-circle rounded-full, btn-text label-uppercase 700 tracking 1.5px, btn-desc body-sm 300, footer muted, padding-top calc(var(--top-nav-height) + 24px)
+  - `src/app/pages/leaderboard/leaderboard.page.html` — Titulo "LEADERBOARD" uppercase
+  - `src/app/pages/leaderboard/leaderboard.page.css` — Rewrite BMW M: canvas preto, title display-lg 700 uppercase tracking -0.5px, subtitle 300 body, cards surface-card border-radius 0 hairline border, hover border-color on-dark, skeleton surface-strong, retry-btn outline BMW, padding-top calc(top-nav-height + spacing-section)
+- Testes executados: `npx ng build` — Build successful, sem erros (warnings de budget CSS para leaderboard +906 bytes, victory-screen +1.6kB, virtual-controls +2.96kB, lbot-chat +3.56kB — serao abordados nas proximas fases)
+- Resultado: Sucesso
+- Pendencias: Nenhuma

@@ -1,6 +1,6 @@
 # Fase 05: Tipografia Final + Auditoria Border-Radius + Polish
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
 
 ## Tarefas
 
-- [ ] Tarefa 1: Auditoria de tipografia em TODOS os componentes
+- [x] Tarefa 1: Auditoria de tipografia em TODOS os componentes
   - Arquivos: Todos os arquivos CSS dos componentes
   - O que fazer:
     - **Headings/titulos de pagina**: Devem ser `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: -0.5px` (para display-lg e acima)
@@ -32,7 +32,7 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
       - `confirm-modal.css`: buttons uppercase tracking 1.5px
     - Auditar hardcoded font-size/weight que nao usam variaveis CSS e substituir por variaveis
 
-- [ ] Tarefa 2: Auditoria de border-radius em TODOS os componentes
+- [x] Tarefa 2: Auditoria de border-radius em TODOS os componentes
   - Arquivos: Todos os arquivos CSS dos componentes
   - O que fazer:
     - Buscar por TODOS os usos de `border-radius` em todos os CSS
@@ -48,7 +48,7 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
     - Menu buttons: `border-radius: 0`
     - Leaderboard cards: `border-radius: 0`
 
-- [ ] Tarefa 3: Auditoria da faixa M tricolor
+- [x] Tarefa 3: Auditoria da faixa M tricolor
   - Arquivos: Todos os templates HTML
   - O que fazer:
     - Verificar que a faixa M tricolor aparece:
@@ -60,7 +60,7 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
       - Superficie/card background
     - Verificar que nao ha uso duplicado ou indevido da faixa
 
-- [ ] Tarefa 4: Auditoria de responsividade
+- [x] Tarefa 4: Auditoria de responsividade
   - Arquivos: Todos os arquivos CSS com media queries
   - O que fazer:
     - **Mobile (<768px)**:
@@ -80,7 +80,7 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
     - Verificar que a top-nav nao sobrepoem conteudo em nenhum breakpoint
     - Verificar que chat-panel no game page empilha corretamente em mobile
 
-- [ ] Tarefa 5: Auditoria de cores hardcoded e cleanup final
+- [x] Tarefa 5: Auditoria de cores hardcoded e cleanup final
   - Arquivos: Todos os arquivos CSS
   - O que fazer:
     - Buscar por qualquer valor hex hardcoded (ex: `#222222`, `#3f3f3f`, `#6a6a6a`, `#929292`, `#dddddd`, `#ebebeb`, `#c1c1c1`, `#ffffff`, `#f7f7f7`, `#f2f2f2`, `#ff385c`, `#e00b41`, `#ffd1da`, `#c13515`, `rgba(0, 0, 0, 0.5)`, `rgba(193, 53, 21, 0.08)`, etc.)
@@ -99,7 +99,7 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
     - Verificar que componentes que tinham fallbacks inline (ex: `var(--color-canvas, #ffffff)`) agora usam apenas `var(--color-canvas)` sem fallback
     - Remover shadows remanescentes (`box-shadow`, `--shadow-card-hover-float`)
 
-- [ ] Tarefa 6: Atualizar jogo HUD overlay (RF03 + RF10)
+- [x] Tarefa 6: Atualizar jogo HUD overlay (RF03 + RF10)
   - Arquivo: `src/app/pages/game/game.page.css`
   - O que fazer:
     - O HUD ja foi parcialmente atualizado na Fase 03. Verificar:
@@ -117,19 +117,19 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
 
 ## Criterios de Aceite
 
-- [ ] CA05: Layout padronizado do Modo Jogar
+- [x] CA05: Layout padronizado do Modo Jogar
   - Cenario: Header contextual "JOGAR" em uppercase, gap/padding padronizado com Controls.
-- [ ] CA07: Tema escuro BMW M em toda a aplicacao
+- [x] CA07: Tema escuro BMW M em toda a aplicacao
   - Cenario: Sem cores hardcoded do tema claro; todas as cores via variaveis CSS BMW M.
-- [ ] CA08: Tipografia BMW M com Inter
+- [x] CA08: Tipografia BMW M com Inter
   - Cenario: Headings em uppercase weight 700, body text weight 300, buttons uppercase tracking 1.5px.
-- [ ] CA09: Cantos retos BMW em todos os componentes
+- [x] CA09: Cantos retos BMW em todos os componentes
   - Cenario: Nenhum border-radius > 0 em botoes, cards, inputs, containers (exceto icones circulares).
-- [ ] CA10: Faixa tricolor M como acento de marca
+- [x] CA10: Faixa tricolor M como acento de marca
   - Cenario: Faixa M aparece na borda inferior do top-nav e como divisor nas paginas Game e Controls.
-- [ ] CA11: Faixa tricolor nao usada como fundo ou texto
+- [x] CA11: Faixa tricolor nao usada como fundo ou texto
   - Cenario: A tricolor M nao aparece como background de botoes, cor de texto ou superficie.
-- [ ] CA16: Responsividade mantida em todos os breakpoints
+- [x] CA16: Responsividade mantida em todos os breakpoints
   - Cenario: Layout se adapta em mobile (<768px), tablet (768-1024px) e desktop (>1024px).
 
 ## Testes Esperados
@@ -151,11 +151,13 @@ Auditoria final de toda a aplicacao: garantir que a tipografia BMW M esta consis
 
 ## Registro de Execucao
 
-(Preenchido pelo agente durante a execucao)
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/app/components/level-transition/level-transition.css` — Removida regra `.level-complete-title` duplicada com hardcoded fallbacks (`#222222`, `600`); unificada com weight 700 e letter-spacing -0.5px
+  - `src/app/components/victory-screen/victory-screen.css` — Removidos fallbacks antigos (`#f7f7f7`, `#dddddd`, `#222222`) em `.total-row`, `.total-label`, `.total-time`; weight 600→700 em `.level-num` e `.total-label`; tamanhos hardcoded substituidos por variaveis
+  - `src/app/components/lbot-chat/lbot-chat.css` — `border-top` de tema claro `rgba(0,0,0,0.08)` → `var(--color-hairline-soft)`; `.star-btn.selected` `#ffffff` → `var(--color-ink)`
+  - `src/app/components/virtual-controls/virtual-controls.css` — Removidas regras duplicadas de `.execute-btn:hover:not(:disabled)` e `.execute-btn:disabled` com referencias a variaveis antigas (`--color-primary-active`, `--color-on-primary`)
+- Testes executados: `npx ng build` — Build successful, 0 erros (warnings de budget CSS: virtual-controls +2.83kB, leaderboard +906B, victory-screen +1.09kB, lbot-chat +3.60kB — preexistentes, nao bloqueantes)
+- Resultado: Auditoria completa realizada. Tipografia, border-radius, M-stripe, responsividade e cores auditados. Corrigidos: regra duplicada no level-transition, 5 fallbacks hex obsoletos no victory-screen, 1 border-top hardcoded + 1 cor hardcoded no lbot-chat, 2 regras duplicadas com variaveis antigas no virtual-controls. robo-simulator.css fora de escopo (iframe com cores hardcoded, conforme decisao na tech-spec).
+- Pendencias: Nenhuma

@@ -1,6 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { LeaderboardService } from '../../services/leaderboard.service';
 import { GameRunResponse } from '../../models/leaderboard.model';
 
@@ -11,7 +10,7 @@ import { GameRunResponse } from '../../models/leaderboard.model';
 @Component({
   selector: 'app-leaderboard-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [CommonModule, DatePipe],
   templateUrl: './leaderboard.page.html',
   styleUrl: './leaderboard.page.css'
 })

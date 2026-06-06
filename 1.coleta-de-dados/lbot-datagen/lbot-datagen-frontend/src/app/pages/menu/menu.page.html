@@ -2,31 +2,37 @@
   <div class="menu-card">
     <div class="logo-area">
       <div class="logo-icon">🤖</div>
-      <h1 class="title">LBot Arena</h1>
+      <h1 class="title">LBOT ARENA</h1>
       <p class="subtitle">Comande o robô com linguagem natural e vença os 5 níveis</p>
     </div>
 
     <nav class="menu-nav">
-      <a routerLink="/game" class="menu-btn btn-primary">
-        <lucide-icon [img]="PlayIcon" [size]="24" class="btn-icon"></lucide-icon>
+      <a routerLink="/game" class="menu-btn">
+        <div class="btn-icon-circle">
+          <lucide-icon [img]="PlayIcon" [size]="24"></lucide-icon>
+        </div>
         <div class="btn-content">
-          <span class="btn-text">Jogar</span>
+          <span class="btn-text">JOGAR</span>
           <span class="btn-desc">5 níveis com temas e dificuldade progressiva</span>
         </div>
       </a>
 
-      <a routerLink="/leaderboard" class="menu-btn btn-secondary">
-        <lucide-icon [img]="TrophyIcon" [size]="24" class="btn-icon"></lucide-icon>
+      <a routerLink="/leaderboard" class="menu-btn">
+        <div class="btn-icon-circle">
+          <lucide-icon [img]="TrophyIcon" [size]="24"></lucide-icon>
+        </div>
         <div class="btn-content">
-          <span class="btn-text">Leaderboard</span>
+          <span class="btn-text">LEADERBOARD</span>
           <span class="btn-desc">Veja os melhores tempos globais</span>
         </div>
       </a>
 
-      <a routerLink="/controls" class="menu-btn btn-tertiary">
-        <lucide-icon [img]="GamepadIcon" [size]="24" class="btn-icon"></lucide-icon>
+      <a routerLink="/controls" class="menu-btn">
+        <div class="btn-icon-circle">
+          <lucide-icon [img]="GamepadIcon" [size]="24"></lucide-icon>
+        </div>
         <div class="btn-content">
-          <span class="btn-text">Modo Controle</span>
+          <span class="btn-text">MODO CONTROLE</span>
           <span class="btn-desc">Controle manual para geração de dados</span>
         </div>
       </a>

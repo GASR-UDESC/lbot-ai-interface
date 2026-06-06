@@ -40,6 +40,28 @@ class TestSystemPrompt:
     def test_get_system_prompt_returns_prompt(self):
         assert get_system_prompt() is SYSTEM_PROMPT
 
+    def test_prompt_contains_centralization_before_sensor(self):
+        assert "centralize" in SYSTEM_PROMPT
+        assert "ANTES" in SYSTEM_PROMPT
+        assert "MAIS PRÓXIMO" in SYSTEM_PROMPT or "mais próximo" in SYSTEM_PROMPT
+
+    def test_prompt_contains_stop_zone(self):
+        assert "15cm" in SYSTEM_PROMPT
+        assert "25cm" in SYSTEM_PROMPT
+        assert "já está" in SYSTEM_PROMPT.lower() or "JÁ ESTÁ" in SYSTEM_PROMPT
+
+    def test_prompt_contains_distance_zones(self):
+        assert "40cm" in SYSTEM_PROMPT
+        assert "80cm" in SYSTEM_PROMPT
+        assert "ZONAS DE APROXIMAÇÃO" in SYSTEM_PROMPT
+        assert "10cm" in SYSTEM_PROMPT
+
+    def test_prompt_contains_anti_rotation_loop(self):
+        assert "ANTI-LOOP DE ROTAÇÃO" in SYSTEM_PROMPT or "anti-loop" in SYSTEM_PROMPT.lower()
+        assert "R5L" in SYSTEM_PROMPT
+        assert "R5R" in SYSTEM_PROMPT
+        assert "3" in SYSTEM_PROMPT  # max 3 rotacoes
+
 
 class TestToolsDescription:
     def test_tools_include_observe(self):

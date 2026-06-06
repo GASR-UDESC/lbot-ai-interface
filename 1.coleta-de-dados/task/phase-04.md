@@ -1,6 +1,6 @@
 # Fase 04: Componentes - Chat, Controles Virtuais, Overlays
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -185,11 +185,19 @@ Atualizar todos os componentes filhos para o tema BMW M: lbot-chat, virtual-cont
 
 ## Registro de Execucao
 
-(Preenchido pelo agente durante a execucao)
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: (nenhum)
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/styles.css` - Adicionado `--color-surface-elevated: #262626`
+  - `src/app/components/lbot-chat/lbot-chat.html` - Labels em uppercase (ENVIAR, CANCELAR, FINALIZAR CHAT, CONFIRMAR, ALTERAR AVALIAÇÃO, OBSERVAÇÕES)
+  - `src/app/components/lbot-chat/lbot-chat.css` - Tema escuro BMW M completo (surface-soft wrapper, surface-card header, surface-elevated mensagens user, surface-soft mensagens bot, border-radius 0, botao outline, estrelas brancas, overlay rgba(0,0,0,0.85))
+  - `src/app/components/virtual-controls/virtual-controls.html` - Labels em uppercase (CONTROLES VIRTUAIS, LIMPAR TUDO, EXECUTAR, EXECUTANDO)
+  - `src/app/components/virtual-controls/virtual-controls.css` - Tema escuro BMW M (surface-card sections, border-radius 0, botoes retangulares, surface-elevated ctrls, hover hairline)
+  - `src/app/components/victory-screen/victory-screen.html` - Labels uppercase (TEMPO TOTAL, NÍVEL, NOME, TEMPO, SEU NOME NO LEADERBOARD, JOGAR NOVAMENTE, SALVAR NO LEADERBOARD)
+  - `src/app/components/victory-screen/victory-screen.css` - Tema escuro BMW M (overlay 0.85, surface-card, border-radius 0, border hairline, botoes outline, input 48px)
+  - `src/app/components/level-transition/level-transition.html` - Labels uppercase (TEMPO, PRÓXIMO, PRÓXIMO NÍVEL →)
+  - `src/app/components/level-transition/level-transition.css` - Tema escuro BMW M (overlay 0.85, surface-card, border-radius 0, badge pill, botoes filled on-dark)
+  - `src/app/components/confirm-modal/confirm-modal.css` - Rewrite completo para BMW M (overlay 0.85, surface-card, border-radius 0, text-transform uppercase, letter-spacing 1.5px, botoes outline)
+- Testes executados: `npx ng build` - Sucesso (sem erros, apenas warnings de budget CSS)
+- Resultado: Build OK, todos os 5 componentes atualizados para tema escuro BMW M
+- Pendencias: CSS budget warnings (nao bloqueantes) em lbot-chat.css (+3.57kB), virtual-controls.css (+3.00kB), victory-screen.css (+1.08kB)

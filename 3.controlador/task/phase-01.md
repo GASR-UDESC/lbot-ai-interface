@@ -1,6 +1,6 @@
 # Fase 01: Prompt melhorado para aproximacao
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Atualizar o `SYSTEM_PROMPT` em `personality.py` com instrucoes mais fortes e esp
 
 ## Tarefas
 
-- [ ] Tarefa 1: Atualizar a secao "REGRAS PARA TAREFAS" do SYSTEM_PROMPT
+- [x] Tarefa 1: Atualizar a secao "REGRAS PARA TAREFAS" do SYSTEM_PROMPT
   - Arquivo: `lbot-mcp/src/harness/personality.py`
   - O que fazer:
     - **Enfatizar que o sensor de proximidade mede o objeto mais proximo naquela direcao**, nao necessariamente o alvo. Adicionar instrucao explicita: "sempre centralize o alvo na camera ANTES de confiar na leitura de proximidade" (ja existe parcialmente — reforcar com mais enfase)
@@ -26,7 +26,7 @@ Atualizar o `SYSTEM_PROMPT` em `personality.py` com instrucoes mais fortes e esp
     - **Manter o texto em portugues**, seguindo o estilo e tom do prompt existente
     - **NAO remover regras existentes**, apenas adicionar/esclarecer
 
-- [ ] Tarefa 2: Atualizar testes do prompt
+- [x] Tarefa 2: Atualizar testes do prompt
   - Arquivo: `lbot-mcp/tests/test_personality.py`
   - O que fazer:
     - Adicionar assertions que validam a presenca das novas instrucoes no SYSTEM_PROMPT:
@@ -45,9 +45,9 @@ Atualizar o `SYSTEM_PROMPT` em `personality.py` com instrucoes mais fortes e esp
 
 ## Criterios de Aceite
 
-- [ ] CA11: Prompt orienta centralizacao antes de confiar no sensor
+- [x] CA11: Prompt orienta centralizacao antes de confiar no sensor
   - Cenario: O SYSTEM_PROMPT contem instrucao explicita para centralizar o objeto na camera ANTES de confiar na leitura do sensor de proximidade
-- [ ] CA12: Passos reduzidos na zona de aproximacao
+- [x] CA12: Passos reduzidos na zona de aproximacao
   - Cenario: O SYSTEM_PROMPT instrui o LLM a usar passos de no maximo 10cm quando estiver a < 40cm do objeto
 
 ## Testes Esperados
@@ -65,11 +65,11 @@ cd lbot-mcp && python -m pytest tests/test_personality.py -v
 
 ## Registro de Execucao
 
-<Preenchido pelo agente durante a execucao>
-
-- Data:
-- Arquivos criados:
+- Data: 2026-06-06
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `lbot-mcp/src/harness/personality.py` — Secao "REGRAS PARA TAREFAS" atualizada com zonas de aproximacao, parada automatica (15-25cm), anti-loop de rotacao, e protocolo de aproximacao gradual por zona
+  - `lbot-mcp/tests/test_personality.py` — Adicionados 4 novos testes: centralizacao antes do sensor, zona de parada, zonas de distancia, anti-loop de rotacao
+- Testes executados: `pytest tests/test_personality.py -v` — 19/19 passed
+- Resultado: Todos os testes passaram. Nenhum teste existente quebrado.
+- Pendencias: Nenhuma
