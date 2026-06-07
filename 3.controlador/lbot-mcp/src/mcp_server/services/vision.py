@@ -11,6 +11,8 @@ def build_vision_message(image_base64: str, description: str) -> dict:
                 "type": "text",
                 "text": (
                     "Analise esta imagem da camera frontal do robo. "
+                    "A camera do robo nao e de muita qualidade, "
+                    "nao seja excessivamente detalhista na analise. "
                     "Ha um(a) \"" + description + "\" visivel nesta imagem? "
                     "O objeto pode estar ao fundo, parcialmente visivel, "
                     "distante ou parcialmente obstruido. "

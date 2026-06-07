@@ -22,8 +22,10 @@ MAX_RESCANS = 2
 MIN_SAFE_DISTANCE_CM = 20
 TARGET_DISTANCE_CM = 50
 CAMERA_TIMEOUT = 5.0
-LLM_FORWARD_STEP_CM = 30
-MAX_LLM_FORWARD_RESCANS = 3
+EXPLORE_OFFSET_CM = 50
+MAX_EXPLORE_DIRECTIONS = 4
+OPENCV_RETRY_FORWARD_1 = 50
+OPENCV_RETRY_FORWARD_2 = 30
 
 
 class SearchOrchestrator:
@@ -48,16 +50,15 @@ class SearchOrchestrator:
 
         scan_result = await self._scan(self._object_type, self._object_color)
 
+        if scan_result is None and not self._llm_spotted:
+            scan_result = await self._explore_offsets(
+                self._object_type, self._object_color
+            )
+
         if scan_result is None and self._llm_spotted:
-            for forward_attempt in range(MAX_LLM_FORWARD_RESCANS):
-                self._steps_taken.append(f"llm_forward_rescan_{forward_attempt + 1}")
-                await self._move_forward(LLM_FORWARD_STEP_CM)
-                self._llm_spotted = False
-                scan_result = await self._scan(self._object_type, self._object_color)
-                if scan_result is not None:
-                    break
-                if not self._llm_spotted:
-                    break
+            scan_result = await self._opencv_retry_with_advance(
+                self._object_type, self._object_color
+            )
 
         if scan_result is None:
             return {
@@ -177,6 +178,96 @@ class SearchOrchestrator:
         self._steps_taken.append(f"forward_{cm}cm")
         await asyncio.sleep(MOVE_DELAY_SECONDS)
 
+    async def _move_backward(self, cm: int) -> None:
+        cmd = f"D{cm}B;"
+        await self._backend.execute_lbml(cmd)
+        self._steps_taken.append(f"backward_{cm}cm")
+        await asyncio.sleep(MOVE_DELAY_SECONDS)
+
+    async def _explore_offsets(
+        self, object_type: str, object_color: str | None
+    ) -> dict | None:
+        for direction in range(MAX_EXPLORE_DIRECTIONS):
+            self._steps_taken.append(f"explore_direction_{direction}")
+            await self._rotate(90)
+
+            await self._move_forward(EXPLORE_OFFSET_CM)
+
+            frame = await self._capture_frame()
+            if frame is None:
+                await self._move_backward(EXPLORE_OFFSET_CM)
+                continue
+
+            try:
+                camera_data = await asyncio.wait_for(
+                    self._backend.get_camera(), timeout=CAMERA_TIMEOUT
+                )
+            except (asyncio.TimeoutError, Exception):
+                await self._move_backward(EXPLORE_OFFSET_CM)
+                continue
+
+            image_base64 = camera_data["image"]
+            llm_description = self._original_description
+            if not llm_description:
+                llm_description = f"{object_color} {object_type}" if object_color else object_type
+
+            llm_sees = await ask_llm_if_object_visible(
+                self._llm_client, self._llm_model,
+                image_base64, llm_description,
+            )
+
+            if not llm_sees:
+                self._steps_taken.append(f"explore_dir_{direction}_llm_not_found")
+                await self._move_backward(EXPLORE_OFFSET_CM)
+                continue
+
+            self._steps_taken.append(f"explore_dir_{direction}_llm_detected")
+            result = detect_object(frame, object_type, object_color)
+
+            if result is not None:
+                self._steps_taken.append(f"explore_cv_confirmed_dir_{direction}")
+                return {"object": result, "angle": direction * 90}
+
+            self._steps_taken.append(f"explore_cv_not_confirmed_dir_{direction}")
+            self._llm_spotted = True
+            await self._move_backward(EXPLORE_OFFSET_CM)
+
+        return None
+
+    async def _opencv_retry_with_advance(
+        self, object_type: str, object_color: str | None
+    ) -> dict | None:
+        self._steps_taken.append("opencv_retry_start")
+        self._llm_spotted = False
+
+        frame = await self._capture_frame()
+        if frame is not None:
+            result = detect_object(frame, object_type, object_color)
+            if result is not None:
+                self._steps_taken.append("opencv_retry_found_initial")
+                return {"object": result, "angle": 0}
+
+        self._steps_taken.append("opencv_retry_forward_50cm")
+        await self._move_forward(OPENCV_RETRY_FORWARD_1)
+        frame = await self._capture_frame()
+        if frame is not None:
+            result = detect_object(frame, object_type, object_color)
+            if result is not None:
+                self._steps_taken.append("opencv_retry_found_after_50cm")
+                return {"object": result, "angle": 0}
+
+        self._steps_taken.append("opencv_retry_forward_30cm")
+        await self._move_forward(OPENCV_RETRY_FORWARD_2)
+        frame = await self._capture_frame()
+        if frame is not None:
+            result = detect_object(frame, object_type, object_color)
+            if result is not None:
+                self._steps_taken.append("opencv_retry_found_after_30cm")
+                return {"object": result, "angle": 0}
+
+        self._steps_taken.append("opencv_retry_not_found")
+        return None
+
     async def _center(self, object_center: tuple[int, int]) -> bool:
         cx, cy = object_center
 
@@ -210,7 +301,6 @@ class SearchOrchestrator:
         return False
 
     async def _approach(self, object_type: str, object_color: str | None) -> dict:
-        planned_steps = [100, 50, 20]
         step_count = 0
         rescan_count = 0
 
@@ -224,26 +314,17 @@ class SearchOrchestrator:
                 return {"status": "not_found", "reason": "obstacle too close"}
 
             if distance <= TARGET_DISTANCE_CM:
-                self._steps_taken.append("approach_target_reached")
-                return {"status": "found", "final_distance_cm": distance}
+                self._steps_taken.append("approach_target_reached_confirming")
+                confirmed = await self._confirm_via_camera()
+                if confirmed:
+                    self._steps_taken.append("camera_confirmed_object")
+                    return {"status": "found", "final_distance_cm": distance}
+                self._steps_taken.append("camera_did_not_confirm")
+                return {"status": "not_found", "reason": "camera did not confirm object"}
 
-            if distance > 400:
-                frame = await self._capture_frame()
-                if frame is not None:
-                    result = detect_object(frame, object_type, object_color)
-                    if result is not None:
-                        self._last_bbox = result["bbox"]
-                        return {"status": "not_found", "reason": "object too far"}
-
-            step = distance / 2
-            for s in planned_steps:
-                if s <= distance:
-                    step = s
-                    break
-
-            cmd = f"D{max(5, int(step))}F;"
-            await self._backend.execute_lbml(cmd)
-            await asyncio.sleep(MOVE_DELAY_SECONDS)
+            step = max(5, int(distance / 3))
+            self._steps_taken.append(f"approach_step_{step}cm")
+            await self._move_forward(step)
             step_count += 1
 
             frame = await self._capture_frame()
@@ -261,6 +342,8 @@ class SearchOrchestrator:
                 if scan_result is None:
                     if rescan_count >= MAX_RESCANS:
                         return {"status": "not_found", "reason": "lost tracking after rescan"}
+                    if not self._llm_spotted:
+                        return {"status": "not_found", "reason": "lost tracking after rescan"}
                     continue
                 obj = scan_result["object"]
                 cx, cy = obj["center"]
@@ -269,20 +352,43 @@ class SearchOrchestrator:
                 cx, cy = result["center"]
                 self._last_bbox = result["bbox"]
 
-            erro_x = cx - FRAME_WIDTH / 2
-            if abs(erro_x) >= CENTER_THRESHOLD_PX:
-                centered = await self._center((cx, cy))
-                if not centered:
-                    self._steps_taken.append("tracking_lost_center_failed")
+            centered = await self._center((cx, cy))
+            if not centered:
+                self._steps_taken.append("recenter_failed")
+                if rescan_count >= MAX_RESCANS:
+                    return {"status": "not_found", "reason": "lost tracking after rescan"}
+                rescan_count += 1
+                scan_result = await self._scan(object_type, object_color)
+                if scan_result is None:
                     if rescan_count >= MAX_RESCANS:
                         return {"status": "not_found", "reason": "lost tracking after rescan"}
-                    rescan_count += 1
-                    scan_result = await self._scan(object_type, object_color)
-                    if scan_result is None:
-                        if rescan_count >= MAX_RESCANS:
-                            return {"status": "not_found", "reason": "lost tracking after rescan"}
-                        continue
-                    obj = scan_result["object"]
-                    self._last_bbox = obj["bbox"]
+                    if not self._llm_spotted:
+                        return {"status": "not_found", "reason": "lost tracking after rescan"}
+                    continue
+                obj = scan_result["object"]
+                self._last_bbox = obj["bbox"]
 
         return {"status": "not_found", "reason": "max approach steps exceeded"}
+
+    async def _confirm_via_camera(self) -> bool:
+        self._steps_taken.append("camera_confirmation_check")
+        try:
+            camera_data = await asyncio.wait_for(
+                self._backend.get_camera(), timeout=CAMERA_TIMEOUT
+            )
+            image_base64 = camera_data["image"]
+        except (asyncio.TimeoutError, Exception):
+            self._steps_taken.append("camera_confirmation_error")
+            return False
+
+        llm_description = self._original_description
+        if not llm_description:
+            llm_description = (
+                f"{self._object_color} {self._object_type}"
+                if self._object_color else self._object_type
+            )
+
+        return await ask_llm_if_object_visible(
+            self._llm_client, self._llm_model,
+            image_base64, llm_description,
+        )
