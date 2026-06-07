@@ -24,6 +24,7 @@ MIN_SAFE_DISTANCE_CM = 20
 TARGET_DISTANCE_CM = 50
 CAMERA_TIMEOUT = 5.0
 EXPLORE_OFFSET_CM = 50
+EXPLORE_OFFSET_CM_2 = 75
 MAX_EXPLORE_DIRECTIONS = 4
 OPENCV_RETRY_FORWARD_1 = 50
 OPENCV_RETRY_FORWARD_2 = 30
@@ -69,9 +70,15 @@ class SearchOrchestrator:
                     _log(f"  [FASE 1b] OpenCV detectou na posicao atual! bbox={result['bbox']}")
 
         if scan_result is None:
-            _log("[FASE 1c] Ainda nao encontrou. Iniciando exploracao em cruz (explore_offsets)")
+            _log("[FASE 1c] Ainda nao encontrou. Iniciando exploracao em cruz 50cm (explore_offsets)")
             scan_result = await self._explore_offsets(
                 self._object_type, self._object_color
+            )
+
+        if scan_result is None:
+            _log("[FASE 1d] Cruz 50cm nao encontrou. Iniciando exploracao em cruz 75cm (explore_offsets)")
+            scan_result = await self._explore_offsets(
+                self._object_type, self._object_color, offset=EXPLORE_OFFSET_CM_2
             )
 
         if scan_result is None:
@@ -221,21 +228,21 @@ class SearchOrchestrator:
         await asyncio.sleep(MOVE_DELAY_SECONDS)
 
     async def _explore_offsets(
-        self, object_type: str, object_color: str | None
+        self, object_type: str, object_color: str | None, offset: int = EXPLORE_OFFSET_CM
     ) -> dict | None:
-        _log(f"  [explore] Iniciando exploracao em {MAX_EXPLORE_DIRECTIONS} direcoes, offset={EXPLORE_OFFSET_CM}cm")
+        _log(f"  [explore] Iniciando exploracao em {MAX_EXPLORE_DIRECTIONS} direcoes, offset={offset}cm")
         for direction in range(MAX_EXPLORE_DIRECTIONS):
             self._steps_taken.append(f"explore_direction_{direction}")
             _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Girando 90 graus para nova direcao")
             await self._rotate(90)
 
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Avancando {EXPLORE_OFFSET_CM}cm")
-            await self._move_forward(EXPLORE_OFFSET_CM)
+            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Avancando {offset}cm")
+            await self._move_forward(offset)
 
             frame = await self._capture_frame()
             if frame is None:
                 _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Frame vazio, voltando")
-                await self._move_backward(EXPLORE_OFFSET_CM)
+                await self._move_backward(offset)
                 continue
 
             try:
@@ -244,7 +251,7 @@ class SearchOrchestrator:
                 )
             except (asyncio.TimeoutError, Exception):
                 _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Camera falhou, voltando")
-                await self._move_backward(EXPLORE_OFFSET_CM)
+                await self._move_backward(offset)
                 continue
 
             image_base64 = camera_data["image"]
@@ -260,8 +267,8 @@ class SearchOrchestrator:
 
             if not llm_sees:
                 self._steps_taken.append(f"explore_dir_{direction}_llm_not_found")
-                _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] LLM: NAO VIU. Voltando {EXPLORE_OFFSET_CM}cm")
-                await self._move_backward(EXPLORE_OFFSET_CM)
+                _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] LLM: NAO VIU. Voltando {offset}cm")
+                await self._move_backward(offset)
                 continue
 
             self._steps_taken.append(f"explore_dir_{direction}_llm_detected")
@@ -274,8 +281,8 @@ class SearchOrchestrator:
                 return {"object": result, "angle": direction * 90}
 
             self._steps_taken.append(f"explore_cv_not_confirmed_dir_{direction}")
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] OpenCV: NAO CONFIRMOU. Voltando {EXPLORE_OFFSET_CM}cm")
-            await self._move_backward(EXPLORE_OFFSET_CM)
+            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] OpenCV: NAO CONFIRMOU. Voltando {offset}cm")
+            await self._move_backward(offset)
 
         _log("  [explore] Fim da exploracao em cruz. Nada encontrado")
         return None

@@ -7,6 +7,7 @@ from mcp_server.services.search_orchestrator import (
     CAMERA_TIMEOUT,
     CENTER_THRESHOLD_PX,
     EXPLORE_OFFSET_CM,
+    EXPLORE_OFFSET_CM_2,
     MAX_EXPLORE_DIRECTIONS,
     OPENCV_RETRY_FORWARD_1,
     OPENCV_RETRY_FORWARD_2,
@@ -237,6 +238,23 @@ class TestExploreOffsets:
 
         assert result is None
         assert not orchestrator._llm_spotted
+
+    @pytest.mark.asyncio
+    async def test_custom_offset_75cm(
+        self, orchestrator, mock_backend, sample_camera_response,
+    ):
+        mock_backend.get_camera.return_value = sample_camera_response
+
+        with patch(
+            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
+            return_value=True,
+        ), patch(
+            "mcp_server.services.search_orchestrator.detect_object",
+            return_value=_make_detection(),
+        ):
+            await orchestrator._explore_offsets("cubo", "vermelho", offset=EXPLORE_OFFSET_CM_2)
+
+        mock_backend.execute_lbml.assert_any_call(f"D{EXPLORE_OFFSET_CM_2}F;")
 
 
 class TestRetryDetectWithAdvance:
@@ -661,7 +679,7 @@ class TestRunFullFlow:
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
         ) as mock_llm:
-            mock_llm.side_effect = [True] * 4 + [False] * 4
+            mock_llm.side_effect = [True] * 4 + [False] * 8
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
@@ -703,7 +721,7 @@ class TestRunFullFlow:
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
         ) as mock_llm:
-            mock_llm.side_effect = [False] * 4 + [True, True]
+            mock_llm.side_effect = [False] * 4 + [True] * 2
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
@@ -715,3 +733,29 @@ class TestRunFullFlow:
         assert any(
             "explore_cv_confirmed" in step for step in orchestrator._steps_taken
         )
+
+    @pytest.mark.asyncio
+    async def test_explore_two_passes_second_finds(
+        self, orchestrator, mock_backend, sample_camera_response,
+    ):
+        mock_backend.get_camera.return_value = sample_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": TARGET_DISTANCE_CM, "tras": 400,
+        }
+
+        with patch(
+            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
+        ) as mock_llm:
+            mock_llm.side_effect = [False] * 8 + [True] * 2
+
+            with patch(
+                "mcp_server.services.search_orchestrator.detect_object",
+                return_value=_make_detection(),
+            ):
+                result = await orchestrator.run("cubo vermelho")
+
+        assert result["status"] == "found"
+        assert any(
+            "explore_cv_confirmed" in step for step in orchestrator._steps_taken
+        )
+        mock_backend.execute_lbml.assert_any_call(f"D{EXPLORE_OFFSET_CM_2}F;")
