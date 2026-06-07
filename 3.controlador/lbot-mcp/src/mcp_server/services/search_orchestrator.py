@@ -28,6 +28,8 @@ EXPLORE_OFFSET_CM_2 = 75
 MAX_EXPLORE_DIRECTIONS = 4
 OPENCV_RETRY_FORWARD_1 = 50
 OPENCV_RETRY_FORWARD_2 = 30
+TARGETED_SWEEP_ADVANCE_CM = 50
+TARGETED_SWEEP_ANGLE = 45
 
 
 def _log(msg: str) -> None:
@@ -47,6 +49,7 @@ class SearchOrchestrator:
         self._object_type: str = "cubo"
         self._object_color: str | None = None
         self._llm_spotted: bool = False
+        self._llm_spotted_angle: int | None = None
 
     async def run(self, description: str) -> dict:
         t0 = time.monotonic()
@@ -60,14 +63,8 @@ class SearchOrchestrator:
         scan_result = await self._scan(self._object_type, self._object_color)
 
         if scan_result is None and self._llm_spotted:
-            _log("[FASE 1b] LLM avistou mas OpenCV nao confirmou. Tentando detect rapido na posicao atual...")
-            frame = await self._capture_frame()
-            if frame is not None:
-                result = detect_object(frame, self._object_type, self._object_color)
-                if result is not None:
-                    self._last_bbox = result["bbox"]
-                    scan_result = {"object": result, "angle": 0}
-                    _log(f"  [FASE 1b] OpenCV detectou na posicao atual! bbox={result['bbox']}")
+            _log("[FASE 1b] LLM avistou mas OpenCV nao confirmou. Iniciando varredura direcionada +-45graus (targeted_opencv_sweep)")
+            scan_result = await self._targeted_opencv_sweep()
 
         if scan_result is None:
             _log("[FASE 1c] Ainda nao encontrou. Iniciando exploracao em cruz 50cm (explore_offsets)")
@@ -183,6 +180,7 @@ class SearchOrchestrator:
             self._steps_taken.append(f"cv_not_confirmed_at_{angle}deg")
             _log(f"  [scan {i}/4] OpenCV: NAO CONFIRMOU. Marcando llm_spotted=True e continuando")
             self._llm_spotted = True
+            self._llm_spotted_angle = angle
             if i < 3:
                 _log(f"  [scan {i}/4] Girando -90 graus (esquerda)")
                 await self._rotate(-90)
@@ -226,6 +224,49 @@ class SearchOrchestrator:
         await self._backend.execute_lbml(cmd)
         self._steps_taken.append(f"backward_{cm}cm")
         await asyncio.sleep(MOVE_DELAY_SECONDS)
+
+    async def _targeted_opencv_sweep(self) -> dict | None:
+        _log(f"  [targeted_sweep] LLM avistou a ~{self._llm_spotted_angle}graus. Varredura direcionada +-45graus + {TARGETED_SWEEP_ADVANCE_CM}cm")
+        self._steps_taken.append("targeted_sweep_start")
+
+        _log(f"  [targeted_sweep] Girando -{TARGETED_SWEEP_ANGLE}graus (esquerda)")
+        await self._rotate(-TARGETED_SWEEP_ANGLE)
+        _log(f"  [targeted_sweep] Avancando {TARGETED_SWEEP_ADVANCE_CM}cm")
+        await self._move_forward(TARGETED_SWEEP_ADVANCE_CM)
+
+        frame = await self._capture_frame()
+        if frame is not None:
+            _log("  [targeted_sweep] Tentando OpenCV apos -45graus + 50cm...")
+            result = detect_object(frame, self._object_type, self._object_color)
+            if result is not None:
+                self._steps_taken.append("targeted_sweep_found_left")
+                _log(f"  [targeted_sweep] OpenCV: DETECTOU! bbox={result['bbox']}")
+                return {"object": result, "angle": self._llm_spotted_angle}
+            _log("  [targeted_sweep] OpenCV: NAO detectou")
+
+        _log(f"  [targeted_sweep] Voltando {TARGETED_SWEEP_ADVANCE_CM}cm")
+        await self._move_backward(TARGETED_SWEEP_ADVANCE_CM)
+
+        _log(f"  [targeted_sweep] Girando +{TARGETED_SWEEP_ANGLE * 2}graus (direita, passando pelo centro)")
+        await self._rotate(TARGETED_SWEEP_ANGLE * 2)
+        _log(f"  [targeted_sweep] Avancando {TARGETED_SWEEP_ADVANCE_CM}cm")
+        await self._move_forward(TARGETED_SWEEP_ADVANCE_CM)
+
+        frame = await self._capture_frame()
+        if frame is not None:
+            _log("  [targeted_sweep] Tentando OpenCV apos +45graus + 50cm...")
+            result = detect_object(frame, self._object_type, self._object_color)
+            if result is not None:
+                self._steps_taken.append("targeted_sweep_found_right")
+                _log(f"  [targeted_sweep] OpenCV: DETECTOU! bbox={result['bbox']}")
+                return {"object": result, "angle": self._llm_spotted_angle}
+            _log("  [targeted_sweep] OpenCV: NAO detectou")
+
+        _log(f"  [targeted_sweep] Voltando {TARGETED_SWEEP_ADVANCE_CM}cm")
+        await self._move_backward(TARGETED_SWEEP_ADVANCE_CM)
+
+        _log("  [targeted_sweep] Fim da varredura direcionada. Nada encontrado")
+        return None
 
     async def _explore_offsets(
         self, object_type: str, object_color: str | None, offset: int = EXPLORE_OFFSET_CM

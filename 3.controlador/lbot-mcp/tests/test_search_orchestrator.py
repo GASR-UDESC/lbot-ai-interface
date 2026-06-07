@@ -600,6 +600,69 @@ class TestConfirmViaCamera:
         assert result is False
 
 
+class TestTargetedOpencvSweep:
+
+    @pytest.fixture(autouse=True)
+    def _patch_sleep(self):
+        with patch("mcp_server.services.search_orchestrator.asyncio.sleep"):
+            yield
+
+    @pytest.mark.asyncio
+    async def test_finds_on_left(
+        self, orchestrator, mock_backend, sample_camera_response,
+    ):
+        mock_backend.get_camera.return_value = sample_camera_response
+        orchestrator._llm_spotted_angle = 90
+
+        with patch(
+            "mcp_server.services.search_orchestrator.detect_object"
+        ) as mock_detect:
+            mock_detect.side_effect = [_make_detection()]
+            result = await orchestrator._targeted_opencv_sweep()
+
+        assert result is not None
+        mock_backend.execute_lbml.assert_any_call("R45L;")
+        mock_backend.execute_lbml.assert_any_call("D50F;")
+        backward_calls = [
+            c for c in mock_backend.execute_lbml.call_args_list
+            if "B;" in str(c[0][0])
+        ]
+        assert len(backward_calls) == 0
+
+    @pytest.mark.asyncio
+    async def test_finds_on_right(
+        self, orchestrator, mock_backend, empty_camera_response,
+    ):
+        mock_backend.get_camera.return_value = empty_camera_response
+        orchestrator._llm_spotted_angle = 180
+
+        with patch(
+            "mcp_server.services.search_orchestrator.detect_object"
+        ) as mock_detect:
+            mock_detect.side_effect = [None, _make_detection()]
+            result = await orchestrator._targeted_opencv_sweep()
+
+        assert result is not None
+        assert mock_backend.execute_lbml.call_count >= 5
+
+    @pytest.mark.asyncio
+    async def test_not_found(
+        self, orchestrator, mock_backend, empty_camera_response,
+    ):
+        mock_backend.get_camera.return_value = empty_camera_response
+        orchestrator._llm_spotted_angle = 90
+
+        with patch(
+            "mcp_server.services.search_orchestrator.detect_object",
+            return_value=None,
+        ):
+            result = await orchestrator._targeted_opencv_sweep()
+
+        assert result is None
+        mock_backend.execute_lbml.assert_any_call("D50F;")
+        mock_backend.execute_lbml.assert_any_call("D50B;")
+
+
 class TestRunFullFlow:
 
     @pytest.fixture(autouse=True)
@@ -647,7 +710,7 @@ class TestRunFullFlow:
         assert result["bounding_box"] is None
 
     @pytest.mark.asyncio
-    async def test_llm_spotted_simple_detect_succeeds(
+    async def test_llm_spotted_targeted_sweep_finds(
         self, orchestrator, mock_backend, sample_camera_response,
     ):
         mock_backend.get_camera.return_value = sample_camera_response
@@ -662,16 +725,17 @@ class TestRunFullFlow:
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object"
             ) as mock_detect:
-                mock_detect.side_effect = [
-                    None, None, None, None,
-                    _make_detection(),
-                ]
-                result = await orchestrator.run("cubo vermelho")
+                mock_detect.side_effect = [None, None, None, None]
+                with patch.object(
+                    orchestrator, "_targeted_opencv_sweep",
+                    return_value={"object": _make_detection(), "angle": 90},
+                ):
+                    result = await orchestrator.run("cubo vermelho")
 
         assert result["status"] == "found"
 
     @pytest.mark.asyncio
-    async def test_llm_spotted_simple_detect_fails_then_explore(
+    async def test_targeted_sweep_fails_then_explore(
         self, orchestrator, mock_backend, empty_camera_response,
     ):
         mock_backend.get_camera.return_value = empty_camera_response
@@ -683,6 +747,9 @@ class TestRunFullFlow:
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
+                return_value=None,
+            ), patch.object(
+                orchestrator, "_targeted_opencv_sweep",
                 return_value=None,
             ):
                 result = await orchestrator.run("cubo vermelho")
