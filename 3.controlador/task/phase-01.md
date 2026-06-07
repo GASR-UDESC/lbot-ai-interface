@@ -1,106 +1,117 @@
-# Fase 01: Estrutura base do harness (prompt + messages + tool_handler)
+# Fase 01: Estrutura Base — Backend, Detector e Tool Skeleton
 
 ## Status: CONCLUIDO
 
 ## Objetivo
 
-Criar os três novos módulos do harness que substituirão partes de `agent.py` e `personality.py`:
-- `prompt.py`: System prompt (~30-50 linhas, português) + definições das 3 ferramentas MCP
-- `messages.py`: Formatação de mensagens e injeção de imagens
-- `tool_handler.py`: Handlers para cada tool call (camera, proximity, move com tradução)
-
-Nesta fase os arquivos são apenas criados — ainda não são integrados ao `agent.py`.
+Estabelecer a infraestrutura base para o `search_object`: adicionar dependencias, metodo de sensor numerico no backend, implementar o detector OpenCV, criar o esqueleto do tool e registra-lo no servidor.
 
 ## Pre-requisitos
 
-- Nenhum (fase inicial, apenas criação de arquivos novos)
+- Nenhum (fase inicial)
 
 ## Tarefas
 
-- [x] Tarefa 1: Criar `prompt.py`
-  - Arquivo: `lbot-mcp/src/harness/prompt.py`
-  - O que fazer: Escrever system prompt em português (~30-50 linhas) adequado a modelo ~8B:
-    - Identidade do robô E-Puck em arena 4m x 4m
-    - Descrição clara e simples das 3 ferramentas: `camera()`, `proximity()`, `move(comando)`
-    - Regras de segurança essenciais (distância mínima, verificar antes de mover)
-    - Sem classificações de ações, sem protocolo de busca, sem formato LBML
-    - Instrução para responder em português
-  - Incluir função `get_system_prompt() -> str`
-  - Incluir função `get_tools_description() -> list[dict]` com definições OpenAI-format para 3 ferramentas:
-    - `camera()`: sem parâmetros, retorna imagem frontal
-    - `proximity()`: sem parâmetros, retorna distâncias dos sensores
-    - `move(command: string)`: recebe comando em linguagem natural (ex: "ande 30cm para frente")
+- [ ] Tarefa 1: Adicionar `opencv-python-headless` como dependencia fixa no pyproject.toml
+  - Arquivo: `lbot-mcp/pyproject.toml`
+  - O que fazer: Adicionar `"opencv-python-headless>=4.8"` na lista `dependencies`. Adicionar `"pytest-asyncio>=0.24"` em `dev` para suporte a testes async.
 
-- [x] Tarefa 2: Criar `messages.py`
-  - Arquivo: `lbot-mcp/src/harness/messages.py`
-  - O que fazer: Implementar funções de manipulação de mensagens:
-    - `build_initial_messages(system_prompt: str) -> list[dict]`: cria lista com mensagem system inicial
-    - `append_user_message(messages: list, content: str) -> list`: adiciona mensagem do usuário
-    - `append_assistant_message(messages: list, content: str, tool_calls=None) -> list`: adiciona resposta do assistente
-    - `append_tool_result(messages: list, tool_call_id: str, tool_name: str, content: str) -> list`: adiciona resultado de tool
-    - `inject_camera_image(messages: list, image_base64: str, render_method: str, robot_position: dict) -> list`: adiciona imagem da câmera como user message com `image_url` (para modelos multimodais)
-    - `summarize_for_display(messages: list) -> list[dict]`: versão truncada das mensagens para output no terminal (imagens → `[imagem]`, conteúdo → 200 chars)
+- [ ] Tarefa 2: Adicionar metodo `get_proximity_sensor()` ao LBotBackend ABC
+  - Arquivo: `lbot-mcp/src/mcp_server/backends/base.py`
+  - O que fazer: Adicionar metodo abstrato `async def get_proximity_sensor(self) -> dict: ...` que retorna `{'frente': float, 'tras': float}` com valores numericos brutos (MAX_DISTANCE = 400).
 
-- [x] Tarefa 3: Criar `tool_handler.py`
-  - Arquivo: `lbot-mcp/src/harness/tool_handler.py`
-  - O que fazer: Implementar handlers assíncronos para cada tool call:
-    - `async handle_camera(mcp_client) -> dict`: chama `mcp.call_tool("camera", {})`, faz parse JSON, retorna dict com `image`, `render_method`, `robot_position`
-    - `async handle_proximity(mcp_client) -> str`: chama `mcp.call_tool("proximity", {})`, retorna string formatada
-    - `async handle_move(mcp_client, command_nl: str) -> str`: 
-      1. Chama `mcp.call_tool("translate", {"command": command_nl})` para obter LBML
-      2. Se resultado for `"ERRO"` ou vazio, lança `TranslationError`
-      3. Chama `mcp.call_tool("move", {"command": lbml_text})` com o LBML
-      4. Retorna resultado do movimento
-    - Definir exceção `class TranslationError(Exception)`
+- [ ] Tarefa 3: Implementar `get_proximity_sensor()` no SimulatorBackend
+  - Arquivo: `lbot-mcp/src/mcp_server/backends/simulator.py`
+  - O que fazer: Implementar o novo metodo. Reutiliza o mesmo endpoint `GET /api/sensors` mas retorna o dict numerico diretamente (`data["readings"]`), sem formatacao de string. Tratar erros igual `get_proximity()`.
 
-## Arquivos Referência
+- [ ] Tarefa 4: Criar modulo `services/` com `__init__.py`
+  - Arquivo: `lbot-mcp/src/mcp_server/services/__init__.py`
+  - O que fazer: Criar arquivo vazio.
 
-- `lbot-mcp/src/harness/personality.py` — System prompt e tool definitions atuais (para referência do que remover/melhorar)
-- `lbot-mcp/src/harness/agent.py` — Funções `_strip_images` (L142-164), `_summarize_messages` (L101-129) como base para `messages.py`; handlers de tool call no loop `run()` (L652-895) como base para `tool_handler.py`
-- `lbot-mcp/src/mcp_server/translator/__init__.py` — Interface do `TranslatorWrapper` (para entender o contrato do translate)
-- `lbot-mcp/src/harness/mcp_client.py` — Interface do `MCPClient` (`call_tool`, `list_tools`)
+- [ ] Tarefa 5: Implementar `detector.py` com logica OpenCV
+  - Arquivo: `lbot-mcp/src/mcp_server/services/detector.py`
+  - O que fazer: Implementar funcoes:
+    - `decode_frame(image_base64: str) -> np.ndarray`: decodifica base64 PNG para numpy array BGR 640x480
+    - `COLOR_RANGES: dict[str, tuple]`: dicionario de faixas HSV (vermelho, azul, verde, amarelo, laranja, roxo) conforme business-spec
+    - `apply_color_mask(frame, color: str) -> np.ndarray`: aplica mascara HSV para a cor especificada
+    - `detect_spheres(frame, color: str | None) -> list[dict]`: HoughCircles, retorna lista de circulos com centro e raio
+    - `detect_cubes(frame, color: str | None) -> list[dict]`: approxPolyDP com ~4 vertices
+    - `detect_cones(frame, color: str | None) -> list[dict]`: approxPolyDP com ~3 vertices
+    - `detect_object(frame, object_type: str, object_color: str | None) -> dict | None`: funcao principal que orquestra deteccao. Se objeto detectado, retorna `{'type': str, 'color': str | None, 'bbox': (x,y,w,h), 'center': (cx,cy)}`. Se nao, retorna None.
+    - `select_best_match(matches: list[dict]) -> dict`: seleciona o de maior bounding box area
+    - `parse_description(description: str) -> tuple[str, str | None]`: extrai tipo (`cubo`, `esfera`, `cone`) e cor opcional do texto. Se nao encontrar tipo, retorna (`"cubo"`, None) como fallback.
+  - Ver frame escuro/claro: aplicar `cv2.equalizeHist()` se deteccao falhar inicialmente
+  - Constantes: FRAME_WIDTH=640, FRAME_HEIGHT=480
 
-## Critérios de Aceite
+- [ ] Tarefa 6: Criar tool skeleton `search_object.py`
+  - Arquivo: `lbot-mcp/src/mcp_server/tools/search_object.py`
+  - O que fazer: Criar tool com decorator `@mcp.tool()`, funcao `async def search_object(description: str) -> str`. Por enquanto retorna `json.dumps({"status": "not_implemented"})`. Importa de `..server import mcp`. Estrutura de erro basica.
 
-- [x] CA01: `prompt.py` importa sem erros e `get_system_prompt()` retorna string ≤ 50 linhas em português
-  - Cenario: Dado o arquivo prompt.py / Quando importado e chamado get_system_prompt() / Então retorna string ≤ 50 linhas, em português, sem menção a LBML, sem classificações de ações, sem protocolo de busca
+- [ ] Tarefa 7: Registrar novo tool em server.py
+  - Arquivo: `lbot-mcp/src/mcp_server/server.py`
+  - O que fazer: Adicionar `import mcp_server.tools.search_object  # noqa: F401` junto aos imports existentes. Atualizar log para mencionar `search_object`.
 
-- [x] CA02: `get_tools_description()` retorna exatamente 3 ferramentas
-  - Cenario: Dado prompt.py / Quando chamado get_tools_description() / Então retorna lista com 3 itens: camera, proximity, move (sem observe)
+## Arquivos Referencia
 
-- [x] CA03: `messages.py` injeta imagem corretamente como user message
-  - Cenario: Dado uma lista de mensagens / Quando inject_camera_image() é chamado / Então adiciona user message com image_url content block
+- `lbot-mcp/src/mcp_server/tools/camera.py` — padrao de tool simples com decorator `@mcp.tool()` e acesso a backend
+- `lbot-mcp/src/mcp_server/tools/proximity.py` — pattern de tool com acesso a backend, tratamento de erro
+- `lbot-mcp/src/mcp_server/backends/base.py` — LBotBackend ABC, padrao de metodo abstrato
+- `lbot-mcp/src/mcp_server/backends/simulator.py` — implementacao concreta, pattern de chamada HTTP com httpx
+- `lbot-mcp/src/mcp_server/server.py` — registro de tools via import side-effect
 
-- [x] CA04: `tool_handler.py` faz parse correto do resultado da camera
-  - Cenario: Dado JSON `{"image": "...", "render_method": "three", "robot_position": {...}}` / Quando handle_camera processa / Então retorna dict com os 3 campos
+## Criterios de Aceite
 
-- [x] CA05: `handle_move` lança `TranslationError` se translate retornar "ERRO"
-  - Cenario: Dado mcp_client mock que retorna "ERRO" para translate / Quando handle_move é chamado / Então lança TranslationError
+- [ ] CA01: `get_proximity_sensor()` retorna dict `{'frente': float, 'tras': float}` com valores numericos
+  - Cenario: Given backend conectado ao simulador, when `get_proximity_sensor()` chamado, then retorna dict com valores float (ou 400 se sem obstaculo)
+- [ ] CA02: `detect_object(frame, "cubo", "vermelho")` detecta cubo vermelho em frame sintetico
+  - Cenario: Given frame com retangulo vermelho, when chamado, then retorna dict com bbox e centro
+- [ ] CA03: `parse_description("cubo vermelho")` retorna `("cubo", "vermelho")`
+  - Cenario: Given string "cubo vermelho", when parseada, then extrai tipo e cor corretamente
+- [ ] CA04: `parse_description("esfera")` retorna `("esfera", None)`
+  - Cenario: Given string "esfera" sem cor, when parseada, then tipo=esfera, cor=None
+- [ ] CA05: Server inicia com `search_object` tool registrada
+  - Cenario: Given servidor iniciado, when `mcp.list_tools()`, then search_object aparece na lista
+- [ ] CA06: `opencv-python-headless` listado nas dependencias
+  - Cenario: Given pyproject.toml, when lido, then contem opencv-python-headless
 
 ## Testes Esperados
 
-(Nesta fase não há testes automatizados — RF02 remove todos os testes. A validação é via import check e revisão de código.)
+- `test_get_proximity_sensor_returns_dict` — valida formato do retorno
+- `test_get_proximity_sensor_no_obstacle` — valida valor 400 quando sem obstaculo
+- `test_decode_frame` — valida decodificacao base64 -> numpy array
+- `test_parse_description_with_color` — "cubo vermelho" -> tipo + cor
+- `test_parse_description_no_color` — "esfera" -> tipo sem cor
+- `test_parse_description_unknown` — "foobar" -> fallback cubo
+- `test_detect_spheres_basic` — frame com circulo detectado
+- `test_detect_cubes_basic` — frame com retangulo detectado
+- `test_detect_cones_basic` — frame com triangulo detectado
+- `test_color_mask_red` — mascara HSV vermelha isola regiao correta
+- `test_select_best_match` — seleciona maior area entre 2 deteccoes
 
-## Comandos pós-fase
+## Comandos pos-fase
 
 ```bash
-# Verificar que os módulos importam sem erros
-cd lbot-mcp && python -c "from harness.prompt import get_system_prompt, get_tools_description; print(len(get_system_prompt().splitlines()), 'linhas'); print(len(get_tools_description()), 'ferramentas')"
-python -c "from harness.messages import build_initial_messages, inject_camera_image, summarize_for_display; print('messages OK')"
-python -c "from harness.tool_handler import handle_camera, handle_proximity, handle_move, TranslationError; print('tool_handler OK')"
+cd lbot-mcp && uv pip install -e ".[dev]"
+cd lbot-mcp && python -c "from mcp_server.services.detector import detect_object; print('OK')"
+cd lbot-mcp && python -m pytest tests/ -v
+cd lbot-mcp && python -m mypy src/
 ```
 
-## Registro de Execução
+## Registro de Execucao
 
 - Data: 2026-06-06
 - Arquivos criados:
-  - `lbot-mcp/src/harness/prompt.py` — System prompt (27 linhas, português) + 3 tool definitions
-  - `lbot-mcp/src/harness/messages.py` — build_initial_messages, append_user_message, append_assistant_message, append_tool_result, inject_camera_image, summarize_for_display
-  - `lbot-mcp/src/harness/tool_handler.py` — handle_camera, handle_proximity, handle_move (com TranslationError)
+  - `lbot-mcp/src/mcp_server/services/__init__.py`
+  - `lbot-mcp/src/mcp_server/services/detector.py`
+  - `lbot-mcp/src/mcp_server/tools/search_object.py`
 - Arquivos alterados:
-  - Nenhum (apenas criação de novos arquivos)
+  - `lbot-mcp/pyproject.toml` (adicionado opencv-python-headless>=4.8, pytest-asyncio>=0.24)
+  - `lbot-mcp/src/mcp_server/backends/base.py` (adicionado get_proximity_sensor())
+  - `lbot-mcp/src/mcp_server/backends/simulator.py` (implementado get_proximity_sensor())
+  - `lbot-mcp/src/mcp_server/server.py` (registrado search_object tool)
 - Testes executados:
-  - Import check: todos os 3 módulos importam sem erros
-  - Validação de conteúdo: prompt não contém classificações de ações, protocolo de busca, formato LBML; tools contém exatamente 3 ferramentas (sem observe)
-- Resultado: Aprovado (todos os critérios de aceite atendidos)
-- Pendências: Nenhuma
+  - `pytest tests/ -v`: 0 tests (diretorio tests/ ainda nao criado — sera feito na Fase 03)
+  - `mypy src/`: 4 erros pre-existentes, nenhum nos arquivos novos/alterados
+  - `python -c "from mcp_server.services.detector import detect_object; print('OK')"`: OK
+- Resultado: Todas as 7 tarefas concluidas com sucesso
+- Pendencias: Nenhuma

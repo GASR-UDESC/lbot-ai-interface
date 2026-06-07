@@ -46,6 +46,25 @@ class SimulatorBackend(LBotBackend):
             "robot_position": data.get("robotPosition"),
         }
 
+    async def get_proximity_sensor(self) -> dict:
+        """Retorna leituras numericas brutas dos sensores frontal e traseiro."""
+        try:
+            response = await self.client.get(f"{self.base_url}/api/sensors")
+            response.raise_for_status()
+            data = response.json()
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"{ERROR_SENSOR_UNAVAILABLE}: {e}") from e
+
+        if data.get("readings") is None:
+            error = data.get("error", ERROR_SENSOR_UNAVAILABLE)
+            raise RuntimeError(error)
+
+        readings = data["readings"]
+        return {
+            "frente": float(readings.get("frente", 400)),
+            "tras": float(readings.get("tras", 400)),
+        }
+
     async def get_proximity(self) -> dict:
         try:
             response = await self.client.get(f"{self.base_url}/api/sensors")

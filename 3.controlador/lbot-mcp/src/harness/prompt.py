@@ -75,4 +75,29 @@ def get_tools_description() -> list[dict]:
                 },
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_object",
+                "description": (
+                    "Busca um objeto na arena de forma autonoma. "
+                    "O robo faz varredura 360 graus, centraliza o objeto no frame "
+                    "e se aproxima ate ~50cm. Use quando o usuario pedir para "
+                    "encontrar algo (ex: 'ache o cubo vermelho')."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string",
+                            "description": (
+                                "Descricao do objeto a buscar "
+                                "(ex: 'cubo vermelho', 'esfera azul', 'cone')."
+                            ),
+                        },
+                    },
+                    "required": ["description"],
+                },
+            },
+        },
     ]

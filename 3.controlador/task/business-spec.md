@@ -1,240 +1,215 @@
-# Especificação de Negócio: Refatoração Completa do Harness
+# Especificacao de Negocio: Busca de Objetos na Arena
 
 ## Contexto
 
-O harness é o módulo de orquestração do robô E-Puck — um agente ReAct que conecta uma LLM a ferramentas MCP (câmera, sensores, movimento). Atualmente o código está concentrado em arquivos muito grandes (`agent.py` com 909 linhas, `personality.py` com 235 linhas), com validações programáticas que deveriam ser delegadas à LLM, protocolos rígidos de busca, geração de LBML pela própria LLM (ignorando o tradutor Seq2Seq existente), e testes que consomem tokens desnecessariamente.
+O robô LBot hoje consegue capturar imagens da câmera (`camera()`), medir distâncias com sensores de proximidade (`proximity()`) e executar movimentos via LBML (`move()`). Porém, não existe funcionalidade autônoma de busca de objetos. O usuário precisa manualmente orquestrar rotações, capturas e avanços para encontrar algo.
 
-O objetivo é refatorar completamente o harness aplicando princípios de Clean Code, simplificando sua arquitetura, delegando responsabilidades corretamente, e otimizando o prompt para um modelo de linguagem pequeno (~8B parâmetros).
-
----
+Esta feature adiciona um novo MCP tool `search_object` que automatiza o fluxo completo de busca: varredura da arena com OpenCV, centralização do objeto no frame e aproximação progressiva até o alvo. A LLM coordena o fluxo em alto nível (interpreta o pedido do usuário, chama o tool, comunica resultados), mas **não processa imagens nem calcula ângulos** — isso fica a cargo do OpenCV e de cálculos matemáticos no servidor.
 
 ## Requisitos Funcionais
 
-### RF01 — Arquivos com responsabilidade única (~150-200 linhas cada)
+### RF01 — Tool `search_object` (End-to-End)
 
-O harness atual tem arquivos grandes (`agent.py` 909 linhas, `personality.py` 235 linhas) que misturam múltiplas responsabilidades. Após a refatoração, cada arquivo deve ter uma única responsabilidade bem definida e tamanho máximo de ~150-200 linhas.
-
-**Regras:**
-- Cada classe ou função pública deve ter um único motivo para mudar (SRP)
-- Agrupar funcionalidades coesas: loop ReAct, prompt, gerenciamento de ferramentas, tradução NL→LBML, parsers LBML, comunicação MCP
-- Nenhum arquivo deve ultrapassar ~200 linhas
-- Seguir os princípios do Clean Code: nomes significativos, funções pequenas, poucos argumentos, evitar efeitos colaterais
-
-### RF02 — Remoção de todos os testes
-
-Todos os testes existentes (Python e TypeScript) devem ser removidos do repositório, incluindo arquivos de configuração de teste e dependências associadas.
+O MCP server expõe um novo tool `search_object(description: str)` que executa o ciclo completo de busca. A LLM chama este tool quando o usuário pede para encontrar algo na arena.
 
 **Regras:**
-- Remover toda a pasta `lbot-mcp/tests/` e seu conteúdo
-- Remover toda a pasta `lbot-simulator-web/tests/` e seu conteúdo
-- Remover configurações de teste do `pyproject.toml` (seção `[tool.pytest.ini_options]`)
-- Remover `vitest.config.ts` do `lbot-simulator-web/`
-- Remover `.pytest_cache/` e quaisquer outros artefatos de teste
-- Remover dependências de teste dos `package.json` e `pyproject.toml`
-
-### RF03 — Remoção de validações programáticas
-
-Todas as validações de segurança atualmente implementadas em código devem ser removidas. A LLM é responsável por decidir o que é seguro, guiada pelo system prompt.
-
-**Validações a remover:**
-- `_validate_and_adjust_move()` — bloqueio de movimento frontal se <20cm de obstáculo, ajuste de step size
-- `_check_proximity_goal()` — verificação de distância alvo (15-25cm)
-- `_check_rotation_loop()` — detecção de loops de rotação excessiva
-- `_detect_object_loss()` — detecção de perda de objeto (spike de distância)
-- `_is_valid_base64()` — validação de formato base64 de imagens
-
-**Regras:**
-- A LLM recebe no system prompt as regras de segurança para auto-regular seu comportamento
-- O harness não intervém nas decisões de movimento da LLM
-- Se houver colisão real, o backend/simulador retorna erro e o harness repassa à LLM
-
-### RF04 — Remoção da funcionalidade de busca
-
-O protocolo de busca (girar 360°, andar em zigue-zague para encontrar objetos) deve ser removido do system prompt e de qualquer lógica codificada.
-
-**Regras:**
-- Remover seções do prompt que descrevem protocolos de busca/navegação
-- A LLM decide livremente como explorar o ambiente usando as ferramentas disponíveis (camera + proximity)
-- Nenhum comportamento de busca é imposto pelo harness
-
-### RF05 — Tradutor como único gerador de LBML
-
-A LLM NUNCA deve gerar LBML. O tradutor Seq2Seq (`LBotTranslatorV7`) é a única fonte de geração de comandos LBML.
-
-**Regras:**
-- A ferramenta `move()` recebe linguagem natural (ex: "ande 30cm para frente, vire 90 graus para direita")
-- O harness chama o tradutor automaticamente para converter NL → LBML antes de executar o movimento
-- Se o tradutor falhar, a missão é abortada com mensagem de erro
-- A LLM nunca vê o formato LBML nem recebe instruções sobre como gerá-lo
-- O system prompt deve instruir a LLM a usar `move()` com linguagem natural clara e direta
+- O parâmetro `description` é texto livre com a descrição do objeto alvo (ex: "cubo vermelho", "esfera azul", "cone", "cubo")
+- A LLM é responsável por extrair tipo e/ou cor da fala do usuário e passar como `description`
+- O tool retorna um dicionário com `status` ("found" | "not_found"), `object_type`, `object_color` (se detectado), `bounding_box` (se detectado), `final_distance_cm` (se aproximou), e `steps_taken` (resumo das etapas executadas)
+- O tool executa internamente 4 fases: varredura → centralização → aproximação → resultado
+- A LLM recebe o retorno e elabora a mensagem final para o usuário em linguagem natural
 
 **Cenários de erro:**
-- Tradutor falha na tradução: abortar a missão, informar o usuário que o comando não pôde ser traduzido
+- `description` vazia ou inválida: tool retorna erro de validação
+- Backend do simulador indisponível: tool propaga o erro de conexão
+- Câmera indisponível: tool retorna erro "camera unavailable"
 
-### RF06 — System prompt otimizado para modelo pequeno
+### RF02 — Fase 1: Varredura (Scan)
 
-O system prompt deve ser reescrito para:
-- Ser curto e direto (~30-50 linhas)
-- Ser em português
-- Ser autoexplicativo e adequado a um modelo ~8B parâmetros
-
-**Regras:**
-- Sem classificações complexas de ações (remover "Movimento Bem Definido / Ambíguo / Tarefa")
-- Sem protocolos rígidos (busca, zonas de segurança)
-- Sem formato LBML — o modelo nunca deve ver LBML
-- Explicar de forma clara e simples as ferramentas disponíveis: `camera()`, `proximity()`, `move()`
-- Incluir regras de segurança essenciais para auto-regulação da LLM
-- Máximo de 50 linhas de system prompt
-
-### RF07 — Conjunto simplificado de ferramentas MCP
-
-As ferramentas expostas à LLM devem ser simplificadas.
-
-**Ferramentas mantidas:**
-- `camera()` — retorna a imagem da câmera frontal (base64 PNG)
-- `proximity()` — retorna leituras dos sensores de proximidade
-- `move(comando_nl)` — executa movimento a partir de linguagem natural (tradução interna para LBML)
-
-**Ferramentas removidas:**
-- `observe()` — removida; a LLM usa `camera()` e `proximity()` separadamente
+O robô gira 360° em 4 passos de 90° para a esquerda, capturando um frame a cada rotação e processando com OpenCV para detectar o objeto alvo.
 
 **Regras:**
-- Imagens continuam sendo enviadas como base64 inline, sem alteração de qualidade
-- O modelo multimodal (~8B) deve conseguir interpretar as imagens
+- O robô começa na orientação atual (rotação 0° relativa)
+- A cada iteração: captura frame → processa OpenCV → se detectado, interrompe a varredura e avança para centralização
+- Se o objeto for detectado, registra em qual ângulo acumulado (0°, 90°, 180° ou 270°) foi encontrado
+- Após cada comando `R90L;`, aguarda 2 segundos fixos para o movimento completar antes de capturar a câmera
+- Se após as 4 rotações (0°, 90°, 180°, 270°) nenhum objeto for detectado, o tool retorna `status: "not_found"` e a LLM informa o usuário
+- Se houver múltiplos objetos do mesmo tipo/cor no frame, seleciona o de maior bounding box (mais próximo)
 
-### RF08 — Remoção de anti-loop detection e context trimming
+**Cenários de erro:**
+- Nenhum objeto detectado após 360°: tool retorna `not_found`
+- Erro ao rotacionar (LBML inválido ou backend falhou): tool aborta e retorna erro
+- Timeout na captura da câmera (5s): pula a iteração atual e continua para a próxima rotação
 
-Funcionalidades de proteção que limitam a autonomia da LLM devem ser removidas.
+### RF03 — Fase 2: Detecção OpenCV
 
-**A remover:**
-- `_check_rotation_loop()` — detecção de loops de rotação
-- `_trim_messages()` — corte de mensagens antigas para caber no contexto
-- `_sanitize_messages()` — validação de integridade da conversa
-- `_estimate_tokens()` — estimativa de tokens para trimming
-- Variável de ambiente `LBOT_MAX_CONTEXT_TOKENS`
-
-**Regras:**
-- A LLM gerencia seu próprio contexto (modelo ~8B decide o que é relevante)
-- O harness não descarta mensagens automaticamente
-- Se o contexto estourar, o erro da LLM é repassado ao usuário
-
-### RF09 — CLI simplificado
-
-A interface de linha de comando deve ser enxuta.
-
-**A manter:**
-- Loop REPL básico (entrada do usuário → output)
-- Comando `/exit` para sair
-
-**A remover:**
-- Cores e formatação ANSI no terminal
-- Banner de boas-vindas
-- Comandos `/help`, `/history`, `/reset`
-- Estilização visual dos outputs
+A detecção de objetos usa exclusivamente OpenCV, sem envolvimento da LLM. O tipo de detector depende do objeto buscado.
 
 **Regras:**
-- Output mostra cada step do loop de forma concisa: tool chamada + resultado resumido
-- Sem cores ou formatação especial
+- **Esferas**: `cv2.HoughCircles` sobre o frame (em escala de cinza ou com blur prévio)
+- **Cubos**: `cv2.approxPolyDP` sobre contornos — busca contornos com aproximadamente 4 vértices (quadriláteros)
+- **Cones**: `cv2.approxPolyDP` sobre contornos — busca contornos com aproximadamente 3 vértices (triângulos)
+- **Filtro por cor**: se a LLM especificar uma cor no `description`, aplica-se máscara HSV antes da detecção de forma. O tool possui um dicionário interno de faixas HSV:
+  - `vermelho`: lower=[0,100,100], upper=[10,255,255] + lower=[160,100,100], upper=[180,255,255]
+  - `azul`: lower=[100,100,100], upper=[130,255,255]
+  - `verde`: lower=[40,100,100], upper=[80,255,255]
+  - `amarelo`: lower=[20,100,100], upper=[35,255,255]
+  - `laranja`: lower=[10,100,100], upper=[25,255,255]
+  - `roxo`: lower=[130,100,100], upper=[160,255,255]
+  - Sem cor especificada: detecta por forma sem máscara HSV
+- **Múltiplos matches**: se houver mais de um objeto do mesmo tipo no frame (ex: dois cubos), seleciona o de maior área de bounding box (proxy de proximidade)
+- O resultado da detecção é o centro do bounding box `(cx, cy)` do objeto selecionado
 
----
+**Cenários de erro:**
+- Frame muito escuro ou claro que impeça detecção: tenta equalização de histograma antes de detectar
+- Objeto parcialmente ocluído (ex: atrás de outro): pode não ser detectado — isso é esperado. O robô seguirá para a próxima rotação
+
+### RF04 — Fase 3: Centralização
+
+Com o objeto detectado, calcula-se quantos graus o robô precisa girar para centralizá-lo no frame. O cálculo é puramente matemático, sem LLM.
+
+**Regras:**
+- O cálculo usa aproximação por FOV (câmera não calibrada):
+  - `erro_x = cx - (largura_frame / 2)`
+  - `graus = (erro_x / largura_frame) * fov_horizontal`
+  - `fov_horizontal = 100` (FOV da PerspectiveCamera do simulador)
+  - Sinal: positivo = girar para direita, negativo = girar para esquerda
+- O valor de `graus` é enviado diretamente como comando LBML `R{graus}{L|R};`
+- A LLM **não participa** do cálculo de graus
+- Limite de 5 tentativas de centralização. Se após 5 ajustes o objeto não estiver dentro do threshold, considera falha
+- O threshold de centralização é `|erro_x| < 64px` (10% da largura do frame 640px)
+
+**Cenários de erro:**
+- Excedeu 5 tentativas sem centralizar: retorna `not_found` com motivo "could not center"
+- Objeto detectado mas `erro_x` calculado resulta em rotação menor que 1°: considera centralizado (evita micro-ajustes)
+
+### RF05 — Fase 4: Aproximação
+
+Com o objeto centralizado, o robô avança em passos progressivamente menores, validando visualmente a centralização a cada passo.
+
+**Regras:**
+- Passos planejados: 100cm → 50cm → 20cm
+- Passos são **adaptativos**: se `distância_do_sensor < passo_planejado`, o passo é reduzido para `distância_do_sensor / 2`
+  - Ex: sensor=80cm e passo planejado=100cm → anda 40cm
+- Critério de parada: sensor de distância frontal ≤ 50cm
+- A cada avanço:
+  1. Executa comando `D{passo}F;` (deslocamento frontal)
+  2. Aguarda 2 segundos para o movimento completar
+  3. Captura frame e re-valida com OpenCV que o objeto ainda está visível e centralizado (`|erro_x| < 64px`)
+  4. Se saiu do threshold: volta ao passo RF04 (centralização) ANTES de continuar avançando
+  5. Lê sensor de proximidade frontal
+- Se o sensor retornar "sem obstáculo (>400cm)" mas o OpenCV detecta o objeto: **reporta distância excessiva** (objeto está muito longe para aproximação segura)
+- Limite máximo de 10 passos de avanço (somando todas as tentativas)
+- O sensor frontal mede o obstáculo mais próximo na direção do robô. Como o objeto está centralizado na câmera, assume-se que a leitura do sensor é a distância até o objeto-alvo (não uma parede atrás dele)
+
+**Cenários de erro:**
+- Perda de tracking durante aproximação (OpenCV não detecta mais o objeto): volta para RF02 (re-varredura completa). Máximo 2 re-varreduras totais. Se falhar em ambas, retorna `not_found`
+- Sensor frontal detecta obstáculo a < 20cm antes de atingir o critério de parada (50cm): aborta aproximação para evitar colisão, retorna `not_found` com "obstacle too close"
+- Excedeu 10 passos sem atingir distância ≤ 50cm: retorna `not_found` com "max approach steps exceeded"
+
+### RF06 — Comunicação de Resultados
+
+Após o tool `search_object` concluir (sucesso ou falha), a LLM comunica o resultado ao usuário.
+
+**Regras:**
+- **Sucesso**: LLM informa que encontrou o objeto, qual era (tipo + cor), e que está próximo (≈50cm). Ex: "Encontrei o cubo vermelho! Estou a aproximadamente 50cm dele."
+- **Não encontrado**: LLM informa que não encontrou o objeto na arena. Ex: "Não encontrei o cubo vermelho. A arena parece estar vazia ou o objeto não está visível."
+- **Falha técnica**: LLM reporta o tipo de falha (câmera indisponível, erro de movimento, etc.)
+- A LLM NÃO comunica detalhes técnicos (pixels, graus, coordenadas) a menos que o usuário peça
 
 ## Requisitos Não-Funcionais
 
-- **Tamanho de arquivos:** máximo ~150-200 linhas por arquivo
-- **Princípios Clean Code:** SRP, nomes significativos, funções pequenas, poucos argumentos
-- **Compatibilidade:** manter arquitetura MCP existente (client-server via stdio)
-- **Backend:** manter abstração de backend (`SimulatorBackend`) para suportar futuros backends
-- **Limite de iterações:** manter máximo de 50 steps no loop ReAct
-- **Sem testes:** zero arquivos ou configurações de teste no repositório
+- **Latência**: A detecção OpenCV deve processar um frame 640x480 em < 500ms
+- **Precisão**: A centralização deve posicionar o objeto dentro de 10% do centro do frame (64px) em no máximo 5 iterações
+- **Segurança**: O robô não deve colidir com obstáculos. Distância mínima de segurança: 20cm do sensor
+- **OpenCV**: Deve ser adicionado como dependência no `pyproject.toml` (`opencv-python-headless`)
 
----
+## Glossario / Definicoes
 
-## Glossário / Definições
-
-- **Harness:** módulo de orquestração do robô (`lbot-mcp/src/harness/`) que implementa o loop ReAct conectando LLM → ferramentas MCP
-- **LLM:** Large Language Model, o "cérebro" do robô. Neste contexto, modelo ~8B parâmetros rodando via LM Studio com capacidade multimodal (visão)
-- **MCP:** Model Context Protocol — arquitetura client-server via stdio para expor ferramentas do robô
-- **LBML:** LBot Markup Language — formato de comando para movimentos do robô. Ex: `D30F;R90L;` (andar 30cm frente, rotacionar 90° esquerda)
-- **Tradutor / TranslatorWrapper:** modelo Seq2Seq `LBotTranslatorV7` que converte linguagem natural em LBML
-- **ReAct:** padrão Reasoning + Acting — a LLM alterna entre pensar e executar ferramentas
-- **System prompt:** instrução inicial enviada à LLM que define personalidade, ferramentas e regras do robô
-- **Backend:** camada de abstração que conecta o MCP server ao simulador web (HTTP)
-
----
+- **LBML**: LBot Markup Language — formato de comandos de movimento (`D<cm><F|B|L|R>;` para deslocamento, `R<graus><L|R>;` para rotação)
+- **FOV**: Field of View — ângulo de visão horizontal da câmera (100° no simulador)
+- **Threshold de centralização**: margem em pixels a partir do centro do frame onde o objeto é considerado "centralizado" (64px)
+- **Passo adaptativo**: redução do passo de avanço quando o sensor indica distância menor que a planejada
+- **Bounding box**: retângulo que envolve o objeto detectado, definido por (x, y, width, height). O centro é (cx, cy)
 
 ## Premissas
 
-- O tradutor Seq2Seq (`LBotTranslatorV7`) pode ser invocado diretamente do harness (atualmente está no MCP server)
-- O modelo pequeno (~8B multimodal) é capaz de interpretar imagens base64
-- O modelo pequeno consegue operar com o system prompt simplificado de ~30-50 linhas
-- O simulador web (`lbot-simulator-web`) continua funcionando e não será alterado nesta tarefa
-- O backend `SimulatorBackend` e sua API HTTP permanecem inalterados
-- A arquitetura MCP (client-server via stdio com FastMCP) é mantida como está
-- O tradutor Seq2Seq em si não será modificado — apenas seu ponto de invocação muda
-
----
+- A câmera do simulador retorna frames 640x480 em base64 PNG (comportamento atual mantido)
+- O FOV horizontal da câmera é 100° (valor fixo do `PerspectiveCamera` no Three.js)
+- A câmera NÃO é calibrada com `cv2.calibrateCamera`. Usa-se aproximação por FOV para converter pixels em graus
+- Os objetos da arena são opacos e de cores sólidas (sem texturas), o que favorece detecção por forma e máscara HSV
+- O sensor de proximidade mede a distância até o obstáculo mais próximo na direção frontal do robô
+- O robô começa a busca da orientação atual. Não se reposiciona antes de iniciar
+- O simulador está rodando e acessível via HTTP (backend `SimulatorBackend`)
+- OpenCV será instalado como `opencv-python-headless` (sem dependências GUI)
 
 ## Fora de escopo
 
-- Alterações no simulador web (`lbot-simulator-web/`)
-- Modificações no modelo Seq2Seq do tradutor
-- Alterações na API HTTP do backend/simulador
-- Alterações no servidor MCP além da remoção da ferramenta `observe()`
-- Novas funcionalidades para o robô (câmera, sensores, movimento)
-- Correção de bugs existentes (a menos que surjam como consequência direta da refatoração)
-- Otimização de performance do tradutor ou da comunicação MCP
-- Criação de documentação ou README
+- Calibração de câmera com `cv2.calibrateCamera` e uso de `camera_matrix` para cálculo de graus (usar apenas aproximação FOV)
+- Navegação com desvio de obstáculos (path planning). O robô só avança em linha reta na direção do objeto
+- Busca com movimentação lateral ou traseira. Apenas rotação + avanço frontal
+- Detecção de objetos atrás de outros objetos (oclusão total)
+- Suporte a backends reais (hardware físico). Apenas o `SimulatorBackend` é suportado nesta iteração
+- Persistência ou histórico de buscas anteriores
 
----
+## Cenarios de Aceite
 
-## Cenários de Aceite
+### CA01 — Busca bem-sucedida: objeto visível na primeira orientação
+**Dado** que há um cubo vermelho na arena, visível na orientação atual do robô
+**Quando** o usuário pede "ache o cubo vermelho"
+**Então** o robô detecta o cubo no primeiro frame, centraliza (≤ 5 ajustes), avança em passos adaptativos até ≈50cm, e a LLM informa "Encontrei o cubo vermelho! Estou próximo dele."
 
-### CA01 — Estrutura de arquivos limpa
-**Dado** o código do harness refatorado
-**Quando** inspeciono os arquivos em `lbot-mcp/src/harness/`
-**Então** nenhum arquivo ultrapassa ~200 linhas e cada arquivo tem uma única responsabilidade clara
+### CA02 — Busca bem-sucedida: objeto encontrado após rotação
+**Dado** que há uma esfera azul na arena, fora do campo de visão atual (ex: atrás do robô)
+**Quando** o usuário pede "ache a esfera azul"
+**Então** o robô rotaciona e detecta a esfera na 2ª ou 3ª rotação (após 90° ou 180°), centraliza, aproxima, e informa sucesso
 
-### CA02 — Testes removidos
-**Dado** o repositório após a refatoração
-**Quando** busco por arquivos ou configurações de teste
-**Então** não existem pastas `tests/`, nem configurações de pytest/vitest, nem dependências de teste
+### CA03 — Objeto não encontrado (arena sem o objeto)
+**Dado** que a arena não contém cones
+**Quando** o usuário pede "ache o cone laranja"
+**Então** o robô faz a varredura completa de 360° (4 rotações), não detecta nada, e a LLM informa "Não encontrei o cone laranja"
 
-### CA03 — LLM gera movimento em linguagem natural
-**Dado** o system prompt simplificado
-**Quando** a LLM decide executar um movimento
-**Então** ela chama `move()` com linguagem natural (ex: "ande 30cm para frente"), nunca com LBML
+### CA04 — Objeto não encontrado (arena vazia)
+**Dado** que a arena está vazia (sem objetos)
+**Quando** o usuário pede "ache o cubo"
+**Então** o robô faz a varredura completa, não detecta nada, e a LLM informa que não encontrou
 
-### CA04 — Tradutor converte NL para LBML
-**Dado** um comando de movimento em linguagem natural (ex: "ande 50cm para frente e vire 90 graus para direita")
-**Quando** o harness processa a chamada `move()`
-**Então** o tradutor Seq2Seq é chamado, gera o LBML correspondente (ex: `D50F;R90R;`), e o movimento é executado
+### CA05 — Múltiplos objetos do mesmo tipo: seleciona o mais próximo
+**Dado** que há dois cubos vermelhos na arena (um a 80cm, outro a 150cm), ambos no frame
+**Quando** o usuário pede "ache o cubo vermelho"
+**Então** o OpenCV detecta ambos e seleciona o de maior bounding box (mais próximo) para centralizar e aproximar
 
-### CA05 — Tradutor falha → missão abortada
-**Dado** um comando NL que o tradutor não consegue processar
-**Quando** o harness chama o tradutor e recebe erro
-**Então** a missão é abortada e o usuário recebe uma mensagem de erro clara
+### CA06 — Centralização converge em múltiplos ajustes
+**Dado** que o objeto está a 150px do centro do frame (fora do threshold de 64px)
+**Quando** o robô detecta o objeto e inicia a centralização
+**Então** o robô calcula os graus, rotaciona, reavalia, e converge para dentro do threshold em no máximo 5 iterações
 
-### CA06 — Sem validações programáticas
-**Dado** qualquer chamada de movimento
-**Quando** o harness processa a ação
-**Então** nenhuma validação de proximidade, loop ou distância é aplicada — a LLM decide livremente
+### CA07 — Aproximação com passos adaptativos
+**Dado** que o objeto está centralizado e o sensor indica 80cm
+**Quando** o robô inicia a aproximação (passo planejado: 100cm)
+**Então** o passo é reduzido para 40cm (80/2), o robô avança, re-valida centralização, lê o sensor novamente e continua até ≤ 50cm
 
-### CA07 — Prompt curto e adequado para modelo pequeno
-**Dado** o system prompt
-**Quando** verifico seu conteúdo
-**Então** tem no máximo ~50 linhas, está em português, não contém formato LBML, não contém protocolo de busca, não contém classificação de ações, e explica as 3 ferramentas de forma clara
+### CA08 — Perda de tracking durante aproximação
+**Dado** que o robô está se aproximando do objeto, mas após um avanço o OpenCV não detecta mais o objeto
+**Quando** o robô re-valida o frame após o avanço
+**Então** volta para a fase de varredura (360°), tenta reencontrar. Se encontrar, retoma centralização e aproximação. Se falhar em 2 re-varreduras, retorna `not_found`
 
-### CA08 — Ferramenta observe() removida
-**Dado** as ferramentas disponíveis para a LLM
-**Quando** a LLM precisa de informação do ambiente
-**Então** ela usa `camera()` e/ou `proximity()` separadamente — `observe()` não existe mais
+### CA09 — Objeto visível mas muito longe (>400cm do sensor)
+**Dado** que o OpenCV detecta o objeto, mas o sensor de proximidade retorna "sem obstáculo (>400cm)"
+**Quando** o robô tenta iniciar a aproximação
+**Então** o tool retorna "object too far" e a LLM informa que o objeto está muito distante para aproximação segura
 
-### CA09 — CLI simplificado
-**Dado** o CLI do harness
-**Quando** inicio uma sessão interativa
-**Então** não há cores, banner, comandos `/help`, `/history` ou `/reset` — apenas loop REPL básico com `/exit`
+### CA10 — Limite de iterações de centralização excedido
+**Dado** que o objeto foi detectado, mas após 5 ajustes de rotação ainda está fora do threshold de 64px
+**Quando** o robô atinge o limite de 5 tentativas
+**Então** o tool retorna `not_found` com motivo "could not center"
 
-### CA10 — Output de steps conciso
-**Dado** o harness em execução
-**Quando** a LLM executa cada step do loop ReAct
-**Então** o terminal mostra de forma concisa qual ferramenta foi chamada e o resultado resumido, sem formatação especial
+### CA11 — Limite de passos de aproximação excedido
+**Dado** que o robô avança repetidamente mas o sensor nunca chega a ≤ 50cm (ex: objeto recuando ou erro de medição)
+**Quando** o robô atinge 10 passos de avanço
+**Então** o tool retorna `not_found` com motivo "max approach steps exceeded"
+
+### CA12 — Busca de cone
+**Dado** que há um cone laranja na arena
+**Quando** o usuário pede "ache o cone laranja"
+**Então** o OpenCV detecta o cone usando approxPolyDP com ~3 vértices (forma triangular), centraliza e aproxima até ≈50cm

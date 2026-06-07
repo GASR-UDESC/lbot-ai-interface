@@ -1,154 +1,180 @@
-# Fase 03: Refatorar agent.py (loop ReAct limpo)
+# Fase 03: Testes, Harness e Integracao
 
 ## Status: CONCLUIDO
 
 ## Objetivo
 
-Reescrever `agent.py` para ~150 linhas contendo apenas o loop ReAct (`run()`). Remover todas as validações programáticas, message trimming, sanitization, token estimation, e parsing LBML. O agente passa a usar `prompt.py`, `messages.py` e `tool_handler.py`.
-
-Também deletar `personality.py` (substituído por `prompt.py`).
+Integrar o tool `search_object` ao harness (tool_handler + prompt), criar testes unitarios e de integracao com mock do backend, e finalizar a feature com todos os cenarios de aceite cobertos.
 
 ## Pre-requisitos
 
-- Fase 01 concluída (prompt.py, messages.py, tool_handler.py existem)
-- Fase 02 concluída (translate tool disponível no MCP server)
+- Fase 02 concluida (orquestracao completa, tool funcional)
 
 ## Tarefas
 
-- [x] Tarefa 1: Reescrever `agent.py`
-  - Arquivo: `lbot-mcp/src/harness/agent.py`
-  - O que fazer: Reescrever completamente o arquivo (~150 linhas) mantendo apenas:
-    - **Classe `ReActAgent`** com:
-      - `__init__(self, mcp_client, base_url, api_key, model, max_steps=50, verbose=False, on_event=None)`:
-        - Inicializa cliente OpenAI (OpenAI-compatible)
-        - Carrega system prompt e tools via `prompt.py`
-        - Inicializa `_messages` com system prompt
-        - Inicializa flags: `_cancelled`, `_verbose`
-      - `_emit(self, event, data)`: dispara callback de evento
-      - `cancel(self)`: seta `_cancelled = True`
-      - `reset(self)`: reseta `_messages` para apenas system prompt
-      - `history` (property): retorna cópia de `_messages`
-      - `async run(self, goal: str, max_steps=None) -> str`: **loop ReAct principal**:
-        1. Resetar estado, adicionar user message com goal
-        2. Loop `for step in range(1, max_steps+1)`:
-           - Se `_cancelled`: emitir "cancelled", retornar "Interrompido"
-           - Emitir "llm_request"
-           - Chamar LLM com `messages` + `tools` (tool_choice="auto")
-           - Em erro: retornar mensagem de erro
-           - Extrair `message` e `finish_reason` da resposta
-           - Emitir "llm_response"
-           - Se tem `content` e NÃO tem `tool_calls` → **terminal**: emitir "final_answer", retornar content
-           - Se tem `tool_calls`:
-             - Adicionar assistant message ao histórico
-             - Para cada tool_call:
-               - Emitir "tool_call"
-               - **`camera`**: chamar `handle_camera(mcp_client)`, usar `inject_camera_image()` para adicionar imagem
-               - **`proximity`**: chamar `handle_proximity(mcp_client)`, adicionar como tool result
-               - **`move`**: chamar `handle_move(mcp_client, command)`, adicionar como tool result. Se `TranslationError` → **abortar missão** (emitir erro, retornar mensagem)
-               - **outras tools**: chamada genérica `mcp.call_tool(name, args)`, adicionar tool result
-               - Emitir "tool_result"
-           - Se não tem tool_calls nem content → emitir "final_answer", retornar fallback
-        3. Após loop: emitir "max_steps_reached", retornar mensagem timeout
-  - **O que NÃO incluir** (removido):
-    - `_validate_and_adjust_move()` (RF03)
-    - `_check_proximity_goal()` (RF03)
-    - `_check_rotation_loop()` (RF08)
-    - `_detect_object_loss()` (RF03)
-    - `_is_valid_base64()` (RF03)
-    - `_trim_messages()` (RF08)
-    - `_sanitize_messages()` (RF08)
-    - `_estimate_tokens()` (RF08)
-    - `_collect_tool_call_ids()` (RF08)
-    - `_strip_images()` (modelo é multimodal, desnecessário)
-    - `_extract_proximity_from_messages()` (não é mais usado sem validações)
-    - `_parse_lbml_command()`, `_is_forward_command()`, `_is_rotation_command()`, `_reduce_step()`, `_parsed_to_lbml()` (não precisa parsear LBML)
-    - `_summarize_messages()` (movido para messages.py)
-    - `history_summary` property (CLI simplificado não usa)
-    - Tracking de estado: `_last_front_proximity`, `_last_back_proximity`, `_last_position`, `_consecutive_rotations`, `_object_was_centered`, `_goal_achieved`
-    - Variável `LBOT_MAX_CONTEXT_TOKENS` (RF08)
+- [x] Tarefa 1: Criar `conftest.py` com fixtures compartilhadas
+  - Arquivo: `lbot-mcp/tests/conftest.py`
+  - O que fazer: Criar fixtures pytest:
+    - `mock_backend`: Mock do SimulatorBackend com `AsyncMock` para `get_camera()`, `get_proximity_sensor()`, `execute_lbml()`
+    - `sample_frame_base64`: frame PNG 640x480 com cubo vermelho (gerado com numpy + cv2)
+    - `empty_frame_base64`: frame PNG 640x480 vazio (fundo cinza)
+    - `sample_camera_response`: dict `{"image": sample_frame_base64, "render_method": "webgl", "robot_position": {...}}`
 
-- [x] Tarefa 2: Deletar `personality.py`
-  - Arquivo: `lbot-mcp/src/harness/personality.py`
-  - O que fazer: Deletar o arquivo completamente (substituído por `prompt.py`)
+- [x] Tarefa 2: Criar `test_detector.py`
+  - Arquivo: `lbot-mcp/tests/test_detector.py`
+  - O que fazer: Testes unitarios para todas as funcoes do detector:
+    - `test_decode_frame`: decodifica base64 -> numpy array (640x480, 3 canais)
+    - `test_parse_description_with_color`: "cubo vermelho" -> tipo + cor
+    - `test_parse_description_no_color`: "esfera" -> tipo sem cor
+    - `test_parse_description_unknown`: "foobar" -> fallback cubo
+    - `test_detect_spheres`: frame com circulo preenchido
+    - `test_detect_cubes`: frame com retangulo
+    - `test_detect_cones`: frame com triangulo
+    - `test_detect_with_color_mask`: objeto vermelho com mascara HSV
+    - `test_select_best_match`: 2 objetos, seleciona maior
+    - `test_equalize_histogram`: frame escuro equalizado melhora deteccao
 
-- [x] Tarefa 3: Atualizar `__init__.py` do harness (se necessário)
-  - Arquivo: `lbot-mcp/src/harness/__init__.py`
-  - O que fazer: Se houver imports no `__init__.py`, atualizar. Se estiver vazio, manter vazio.
+- [x] Tarefa 3: Criar `test_search_orchestrator.py`
+  - Arquivo: `lbot-mcp/tests/test_search_orchestrator.py`
+  - O que fazer: Testes do orquestrador com mock backend:
+    - `test_scan_detects_on_first_frame`
+    - `test_scan_detects_after_rotation`
+    - `test_scan_no_detection`
+    - `test_scan_camera_timeout`
+    - `test_center_already_centered`
+    - `test_center_converges`
+    - `test_center_max_attempts`
+    - `test_approach_adaptive_step`
+    - `test_approach_reaches_target`
+    - `test_approach_obstacle_too_close`
+    - `test_approach_object_too_far`
+    - `test_approach_rescan_success`
+    - `test_approach_rescan_failure`
+    - `test_approach_max_steps`
+    - `test_run_full_flow_found`
+    - `test_run_full_flow_not_found`
 
-## Arquivos Referência
+- [x] Tarefa 4: Criar `test_search_object.py`
+  - Arquivo: `lbot-mcp/tests/test_search_object.py`
+  - O que fazer: Testes de integracao do tool MCP:
+    - `test_search_object_empty_description`: description="" retorna erro
+    - `test_search_object_none_description`: description=None retorna erro
+    - `test_search_object_backend_unavailable`: RuntimeError tratado
+    - `test_search_object_success`: fluxo completo com mock, verifica JSON de retorno
+    - `test_search_object_not_found`: mock sem deteccao, verifica status not_found
 
-- `lbot-mcp/src/harness/agent.py` — Código atual (linhas 298-910, classe `ReActAgent` e método `run()`) como base para o loop ReAct
-- `lbot-mcp/src/harness/prompt.py` — System prompt e tool definitions (criado na Fase 01)
-- `lbot-mcp/src/harness/messages.py` — Funções de manipulação de mensagens (criado na Fase 01)
-- `lbot-mcp/src/harness/tool_handler.py` — Handlers de tool calls (criado na Fase 01)
-- `lbot-mcp/src/harness/mcp_client.py` — Interface do MCPClient (`call_tool`, `list_tools`)
+- [x] Tarefa 5: Adicionar `handle_search_object()` ao harness
+  - Arquivo: `lbot-mcp/src/harness/tool_handler.py`
+  - O que fazer: Criar funcao `async def handle_search_object(mcp_client, description: str) -> str`:
+    - Chama `mcp_client.call_tool("search_object", {"description": description})`
+    - Parse JSON do resultado
+    - Formata mensagem em portugues:
+      - Found: `"Encontrei o {tipo} {cor}! Estou a aproximadamente {distancia}cm dele."`
+      - Not found: `"Nao encontrei o {descricao}. {motivo}"`
+      - Erro: `"Erro durante a busca: {erro}"`
+    - Retorna string formatada para injecao no contexto da LLM
 
-## Critérios de Aceite
+- [x] Tarefa 6: Adicionar `search_object` ao prompt.py
+  - Arquivo: `lbot-mcp/src/harness/prompt.py`
+  - O que fazer: Adicionar entrada na lista `get_tools_description()`:
+    ```python
+    {
+        "type": "function",
+        "function": {
+            "name": "search_object",
+            "description": (
+                "Busca um objeto na arena de forma autonoma. "
+                "O robo faz varredura 360°, centraliza o objeto no frame "
+                "e se aproxima ate ~50cm. Use quando o usuario pedir para "
+                "encontrar algo (ex: 'ache o cubo vermelho')."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Descricao do objeto a buscar (ex: 'cubo vermelho', 'esfera azul', 'cone')."
+                    }
+                },
+                "required": ["description"],
+            },
+        },
+    }
+    ```
 
-- [x] CA01: `agent.py` tem no máximo ~200 linhas
-  - Cenario: Dado o arquivo agent.py refatorado / Quando conto as linhas / Então ≤ 200 linhas
+- [x] Tarefa 7: Executar todos os testes e validar
+  - O que fazer: Rodar `pytest tests/ -v`, verificar cobertura de todos os cenarios de aceite do business-spec. Corrigir falhas.
 
-- [x] CA02: Nenhuma validação programática existe em agent.py
-  - Cenario: Dado o código de agent.py / Quando busco por `_validate_and_adjust_move`, `_check_proximity_goal`, `_check_rotation_loop`, `_detect_object_loss`, `_is_valid_base64`, `_trim_messages`, `_sanitize_messages`, `_estimate_tokens` / Então nenhum desses métodos existe
+## Arquivos Referencia
 
-- [x] CA03: Nenhuma função de parsing LBML existe em agent.py
-  - Cenario: Dado o código de agent.py / Quando busco por `_parse_lbml_command`, `_is_forward_command`, `_is_rotation_command`, `_reduce_step`, `_parsed_to_lbml` / Então nenhuma dessas funções existe
+- `lbot-mcp/src/harness/tool_handler.py` — padrao `handle_camera()`, `handle_move()` para replicar
+- `lbot-mcp/src/harness/prompt.py` — padrao de tool description para LLM
+- `lbot-mcp/src/mcp_server/tools/search_object.py` — tool finalizado da Fase 02
+- `lbot-mcp/src/mcp_server/services/search_orchestrator.py` — orquestrador da Fase 02
+- `lbot-mcp/src/mcp_server/services/detector.py` — detector da Fase 01
+- `lbot-mcp/src/mcp_server/backends/base.py` — interface LBotBackend para mock
 
-- [x] CA04: Agente usa `tool_handler.handle_move()` para traduzir e executar movimento
-  - Cenario: Dado tool_call com nome "move" e argumentos `{"command": "ande 30cm para frente"}` / Quando o agente processa / Então chama handle_move (que traduz NL→LBML e executa)
+## Criterios de Aceite
 
-- [x] CA05: `TranslationError` aborta a missão
-  - Cenario: Dado translate falha / Quando handle_move lança TranslationError / Então agente emite evento de erro e retorna mensagem "Missão abortada: falha na tradução"
+Mapeamento completo dos cenarios de aceite do business-spec (CA01-CA12):
 
-- [x] CA06: `personality.py` não existe mais
-  - Cenario: Dado o diretório harness/ / Quando listo arquivos / Então personality.py não existe
+- [x] CA01 (busca bem-sucedida, objeto visivel de inicio): testado em `test_run_full_flow_found`
+  - Cenario: Given cubo vermelho visivel na orientacao atual, when usuario pede, then detecta, centraliza, aproxima, retorna found
+- [x] CA02 (objeto encontrado apos rotacao): testado em `test_scan_detects_after_rotation`
+  - Cenario: Given esfera azul fora do FOV inicial, when scan itera, then detecta apos rotacao
+- [x] CA03 (objeto nao encontrado, arena sem o tipo): testado em `test_run_full_flow_not_found`
+  - Cenario: Given arena sem cones, when busca cone laranja, then retorna not_found
+- [x] CA04 (arena vazia): testado em `test_scan_no_detection`
+  - Cenario: Given arena vazia, when busca qualquer objeto, then not_found
+- [x] CA05 (multiplos objetos, seleciona maior): testado em `test_select_best_match` e `test_selects_larger_of_two`
+  - Cenario: Given 2 cubos no frame, when detecta, then seleciona maior bbox
+- [x] CA06 (centralizacao converge): testado em `test_center_converges`
+  - Cenario: Given objeto a 150px do centro, when center, then converge em <5 iteracoes
+- [x] CA07 (passos adaptativos): testado em `test_approach_adaptive_step`
+  - Cenario: Given sensor=80cm e passo planejado=100cm, when approach, then passo=40cm
+- [x] CA08 (perda de tracking durante aproximacao): testado em `test_approach_rescan_success`
+  - Cenario: Given objeto perdido apos avanco, when re-scan, then encontra e retoma
+- [x] CA09 (objeto muito longe): testado em `test_approach_object_too_far`
+  - Cenario: Given sensor>400cm mas OpenCV detecta, when approach, then "object too far"
+- [x] CA10 (limite centralizacao): testado em `test_center_max_attempts`
+  - Cenario: Given 5 ajustes sem centralizar, when limite atingido, then "could not center"
+- [x] CA11 (limite passos aproximacao): testado em `test_approach_max_steps`
+  - Cenario: Given 10 passos sem atingir 50cm, when limite, then "max approach steps exceeded"
+- [x] CA12 (busca de cone): testado em `test_detect_cones` e `test_detects_cone`
+  - Cenario: Given cone laranja, when detecta com approxPolyDP ~3 vertices, then sucesso
 
 ## Testes Esperados
 
-(Não há testes automatizados — RF02. Validação funcional rodando o harness com uma LLM.)
+(Ver tarefas 2-4 para lista detalhada)
 
-## Comandos pós-fase
+- `tests/test_detector.py` — ~10 testes unitarios do detector OpenCV
+- `tests/test_search_orchestrator.py` — ~16 testes do orquestrador com mock
+- `tests/test_search_object.py` — ~5 testes de integracao do tool
+
+## Comandos pos-fase
 
 ```bash
-# Verificar tamanho do arquivo
-wc -l lbot-mcp/src/harness/agent.py
-
-# Verificar que personality.py foi removido
-test ! -f lbot-mcp/src/harness/personality.py && echo "personality.py removido"
-
-# Verificar que o módulo importa
-cd lbot-mcp && python -c "from harness.agent import ReActAgent; print('ReActAgent importado OK')"
-
-# Verificar ausência de métodos removidos
-cd lbot-mcp && python -c "
-import ast, inspect
-with open('src/harness/agent.py') as f:
-    tree = ast.parse(f.read())
-methods = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) or isinstance(n, ast.AsyncFunctionDef)]
-forbidden = ['_validate_and_adjust_move', '_check_proximity_goal', '_check_rotation_loop', '_detect_object_loss', '_is_valid_base64', '_trim_messages', '_sanitize_messages', '_estimate_tokens', '_parse_lbml_command', '_strip_images']
-found = [m for m in methods if m in forbidden]
-if found:
-    print(f'ERRO: Metodos nao removidos: {found}')
-else:
-    print('Todos os metodos proibidos foram removidos')
-"
+cd lbot-mcp && python -m pytest tests/ -v
+cd lbot-mcp && python -m mypy src/
+cd lbot-mcp && python -c "from harness.tool_handler import handle_search_object; print('OK')"
 ```
 
-## Registro de Execução
+## Registro de Execucao
 
 - Data: 2026-06-06
 - Arquivos criados:
-  - Nenhum (apenas alterações e remoções)
+  - `lbot-mcp/tests/__init__.py`
+  - `lbot-mcp/tests/conftest.py`
+  - `lbot-mcp/tests/test_detector.py`
+  - `lbot-mcp/tests/test_search_orchestrator.py`
+  - `lbot-mcp/tests/test_search_object.py`
 - Arquivos alterados:
-  - `lbot-mcp/src/harness/agent.py` — Reescrito completamente: de 910 linhas para 200 linhas. Apenas loop ReAct com `run()`, usando `prompt.py`, `messages.py` e `tool_handler.py`. Removidas todas as validações programáticas, parsing LBML, trimming, sanitization, tracking de estado e `history_summary`.
-- Arquivos removidos:
-  - `lbot-mcp/src/harness/personality.py` — Substituído por `prompt.py`
+  - `lbot-mcp/src/harness/tool_handler.py` (adicionado `handle_search_object()`)
+  - `lbot-mcp/src/harness/prompt.py` (adicionado tool `search_object`)
+  - `lbot-mcp/src/mcp_server/services/search_orchestrator.py` (corrigido ordem dos checks de segurança: MIN_SAFE antes de TARGET)
 - Testes executados:
-  - `wc -l agent.py`: 200 linhas (dentro do limite ~200)
-  - Import check: `ReActAgent` importa sem erros
-  - Verificação de métodos proibidos: todos os 16 métodos/funções removidos (apenas `__init__`, `_emit`, `cancel`, `reset`, `history`, `run` permanecem)
-  - `personality.py` confirmado removido
-  - Referência a `handle_move` e `TranslationError` confirmada no código
-  - `__init__.py` já estava vazio, sem necessidade de alteração
-- Resultado: Aprovado (todos os critérios de aceite atendidos)
-- Pendências: Nenhuma
+  - `pytest tests/ -v`: 51 passed, 0 failed
+  - `mypy src/`: 4 erros pre-existentes, nenhum nos arquivos novos/alterados
+  - `python -c "from harness.tool_handler import handle_search_object; print('OK')"`: OK
+- Resultado: Todas as 7 tarefas concluidas com sucesso. 51 testes cobrindo detector (25), orchestrator (18), e tool integration (8). 12/12 cenarios de aceite do business-spec cobertos. Corrigido bug de seguranca no orchestrator (checagem MIN_SAFE antes de TARGET).
+- Pendencias: Nenhuma

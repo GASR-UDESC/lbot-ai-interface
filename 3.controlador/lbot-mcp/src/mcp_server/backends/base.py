@@ -17,6 +17,15 @@ class LBotBackend(ABC):
         ...
 
     @abstractmethod
+    async def get_proximity_sensor(self) -> dict:
+        """Retorna leituras numericas brutas dos sensores.
+
+        Returns:
+            dict com chaves 'frente' e 'tras' (float). MAX_DISTANCE = 400.
+        """
+        ...
+
+    @abstractmethod
     async def get_state(self) -> dict | None:
         ...
 
