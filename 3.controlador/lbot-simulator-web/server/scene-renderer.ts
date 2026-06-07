@@ -93,6 +93,8 @@ export class HeadlessSceneRenderer {
   private robotGroup: unknown = null;
   private THREE: { WebGLRenderer: new (...args: unknown[]) => unknown; Scene: new () => unknown; PerspectiveCamera: new (...args: unknown[]) => unknown; Color: new (c: number) => unknown; AmbientLight: new (...args: unknown[]) => unknown; DirectionalLight: new (...args: unknown[]) => unknown; HemisphereLight: new (...args: unknown[]) => unknown; Mesh: new (...args: unknown[]) => unknown; PlaneGeometry: new (...args: unknown[]) => unknown; BoxGeometry: new (...args: unknown[]) => unknown; SphereGeometry: new (...args: unknown[]) => unknown; ConeGeometry: new (...args: unknown[]) => unknown; MeshLambertMaterial: new (...args: unknown[]) => unknown; MeshStandardMaterial: new (...args: unknown[]) => unknown; Group: new () => unknown } | null = null;
 
+  private headlight: { position: { set: (x: number, y: number, z: number) => void } } | null = null;
+
   readonly available: boolean;
 
   constructor(width = 640, height = 480) {
@@ -144,16 +146,28 @@ export class HeadlessSceneRenderer {
         renderer.setSize(width, height);
         renderer.setPixelRatio(1);
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87ceeb);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-        dirLight.position.set(100, 200, 100);
+        dirLight.position.set(50, 150, 50);
         dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -400;
+        dirLight.shadow.camera.right = 400;
+        dirLight.shadow.camera.top = 400;
+        dirLight.shadow.camera.bottom = -400;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 500;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
         scene.add(dirLight);
-        scene.add(new THREE.HemisphereLight(0x87ceeb, 0x228b22, 0.6));
+        scene.add(new THREE.HemisphereLight(0x87ceeb, 0x228b22, 0.8));
+
+        const headlight = new THREE.PointLight(0xffffff, 5.0, 120, 1.5);
+        scene.add(headlight);
 
         const ground = new THREE.Mesh(
           new THREE.PlaneGeometry(400, 400),
@@ -217,6 +231,7 @@ export class HeadlessSceneRenderer {
         this.scene = scene;
         this.camera = camera;
         this.robotGroup = robot;
+        this.headlight = headlight;
         this.THREE = {
           WebGLRenderer: THREE.WebGLRenderer,
           Scene: THREE.Scene,
@@ -273,6 +288,10 @@ export class HeadlessSceneRenderer {
 
     robot.position.set(robotX, 0, robotZ);
     robot.rotation.y = rad;
+
+    if (this.headlight) {
+      this.headlight.position.set(robotX, 3, robotZ);
+    }
 
     const wasVisible = ((robot as unknown) as { visible: boolean }).visible;
     ((robot as unknown) as { visible: boolean }).visible = false;

@@ -14,6 +14,7 @@ from mcp_server.services.search_orchestrator import (
     SCAN_STEP_DEGREES,
     SCAN_STEPS,
     STAR_OFFSET_CM,
+    STAR_OFFSET_HALF_CM,
     STAR_STEP_DEGREES,
     STAR_STEPS,
     SearchOrchestrator,
@@ -294,6 +295,35 @@ class TestStarExplore:
             if "F;" in str(c[0][0])
         ]
         assert len(forward_calls) == 0
+
+    @pytest.mark.asyncio
+    async def test_star_explore_with_50cm_offset(
+        self, orchestrator, mock_backend, sample_camera_response,
+    ):
+        mock_backend.get_camera.return_value = sample_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 200, "tras": 400,
+        }
+
+        with patch(
+            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
+            return_value=True,
+        ), patch(
+            "mcp_server.services.search_orchestrator.detect_object",
+            return_value=_make_detection(),
+        ):
+            result = await orchestrator._star_explore(
+                "cubo", "vermelho", offset_cm=STAR_OFFSET_HALF_CM
+            )
+
+        assert result is not None
+        assert result["object"]["type"] == "cubo"
+        mock_backend.execute_lbml.assert_any_call(f"D{STAR_OFFSET_HALF_CM}F;")
+        backward_calls = [
+            c for c in mock_backend.execute_lbml.call_args_list
+            if "B;" in str(c[0][0])
+        ]
+        assert len(backward_calls) == 0
 
 
 class TestRetryDetectWithAdvance:
@@ -705,7 +735,10 @@ class TestRunFullFlow:
 
         assert result["status"] == "not_found"
         assert any(
-            "star_explore" in step for step in orchestrator._steps_taken
+            "star_explore_50cm" in step for step in orchestrator._steps_taken
+        )
+        assert any(
+            "star_explore_100cm" in step for step in orchestrator._steps_taken
         )
 
     @pytest.mark.asyncio
@@ -720,7 +753,7 @@ class TestRunFullFlow:
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
         ) as mock_llm:
-            mock_llm.side_effect = [False] * SCAN_STEPS + [True] * 2
+            mock_llm.side_effect = [False] * SCAN_STEPS + [False] * STAR_STEPS + [True] * 2
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
@@ -730,5 +763,5 @@ class TestRunFullFlow:
 
         assert result["status"] == "found"
         assert any(
-            "star_cv_confirmed" in step for step in orchestrator._steps_taken
+            "cv_confirmed" in step for step in orchestrator._steps_taken
         )

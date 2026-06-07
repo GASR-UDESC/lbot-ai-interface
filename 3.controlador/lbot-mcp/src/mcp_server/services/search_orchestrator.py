@@ -27,7 +27,8 @@ SCAN_STEP_DEGREES = 45
 SCAN_STEPS = 8
 STAR_STEP_DEGREES = 45
 STAR_STEPS = 8
-STAR_OFFSET_CM = 75
+STAR_OFFSET_HALF_CM = 50
+STAR_OFFSET_CM = 100
 OPENCV_RETRY_FORWARD_1 = 50
 OPENCV_RETRY_FORWARD_2 = 30
 
@@ -62,7 +63,13 @@ class SearchOrchestrator:
         scan_result = await self._scan(self._object_type, self._object_color)
 
         if scan_result is None:
-            _log(f"[FASE 2] Scan nao encontrou. Iniciando exploracao em estrela 8x{STAR_STEP_DEGREES}graus com {STAR_OFFSET_CM}cm (star_explore)")
+            _log(f"[FASE 2] Scan nao encontrou. Iniciando exploracao em estrela 8x{STAR_STEP_DEGREES}graus com {STAR_OFFSET_HALF_CM}cm (star_explore)")
+            scan_result = await self._star_explore(
+                self._object_type, self._object_color, offset_cm=STAR_OFFSET_HALF_CM
+            )
+
+        if scan_result is None:
+            _log(f"[FASE 2B] Star explore {STAR_OFFSET_HALF_CM}cm nao encontrou. Iniciando exploracao em estrela 8x{STAR_STEP_DEGREES}graus com {STAR_OFFSET_CM}cm (star_explore)")
             scan_result = await self._star_explore(
                 self._object_type, self._object_color
             )
@@ -80,7 +87,7 @@ class SearchOrchestrator:
 
         obj = scan_result["object"]
         self._last_bbox = obj["bbox"]
-        _log(f"[FASE 2] Objeto detectado! bbox={obj['bbox']} center={obj['center']}. Iniciando centralizacao (center)")
+        _log(f"[FASE 3] Objeto detectado! bbox={obj['bbox']} center={obj['center']}. Iniciando centralizacao (center)")
 
         centered = await self._center(obj["center"])
         if not centered:
@@ -95,7 +102,7 @@ class SearchOrchestrator:
                 "steps_taken": self._steps_taken,
             }
 
-        _log("[FASE 3] Objeto centralizado. Iniciando aproximacao (approach)")
+        _log("[FASE 4] Objeto centralizado. Iniciando aproximacao (approach)")
         approach_result = await self._approach(self._object_type, self._object_color)
 
         elapsed = round(time.monotonic() - t0, 2)
@@ -213,14 +220,14 @@ class SearchOrchestrator:
         await asyncio.sleep(MOVE_DELAY_SECONDS)
 
     async def _star_explore(
-        self, object_type: str, object_color: str | None
+        self, object_type: str, object_color: str | None, offset_cm: int = STAR_OFFSET_CM
     ) -> dict | None:
-        _log(f"  [star] Iniciando exploracao em estrela: {STAR_STEPS}x{STAR_STEP_DEGREES}graus, offset={STAR_OFFSET_CM}cm")
-        self._steps_taken.append("star_explore_start")
+        _log(f"  [star {offset_cm}cm] Iniciando exploracao em estrela: {STAR_STEPS}x{STAR_STEP_DEGREES}graus, offset={offset_cm}cm")
+        self._steps_taken.append(f"star_explore_{offset_cm}cm_start")
 
         for direction in range(STAR_STEPS):
-            self._steps_taken.append(f"star_explore_direction_{direction}")
-            _log(f"  [star {direction}/{STAR_STEPS}] Girando {STAR_STEP_DEGREES} graus para nova direcao")
+            self._steps_taken.append(f"star_explore_{offset_cm}cm_direction_{direction}")
+            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Girando {STAR_STEP_DEGREES} graus para nova direcao")
             await self._rotate(STAR_STEP_DEGREES)
 
             try:
@@ -229,25 +236,25 @@ class SearchOrchestrator:
                 )
                 distance_frente = sensor_data.get("frente", 999)
             except (asyncio.TimeoutError, Exception):
-                _log(f"  [star {direction}/{STAR_STEPS}] Sensor indisponivel, assumindo caminho livre")
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Sensor indisponivel, assumindo caminho livre")
                 distance_frente = 999
 
-            safe_advance = min(STAR_OFFSET_CM, max(0, distance_frente - MIN_SAFE_DISTANCE_CM))
+            safe_advance = min(offset_cm, max(0, distance_frente - MIN_SAFE_DISTANCE_CM))
             if safe_advance <= 0:
-                _log(f"  [star {direction}/{STAR_STEPS}] Obstaculo muito perto (sensor={distance_frente:.0f}cm), pulando direcao")
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Obstaculo muito perto (sensor={distance_frente:.0f}cm), pulando direcao")
                 await self._rotate(-STAR_STEP_DEGREES)
                 continue
 
-            if safe_advance < STAR_OFFSET_CM:
-                _log(f"  [star {direction}/{STAR_STEPS}] Obstaculo a {distance_frente:.0f}cm, avancando apenas {safe_advance}cm (seguro)")
+            if safe_advance < offset_cm:
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Obstaculo a {distance_frente:.0f}cm, avancando apenas {safe_advance}cm (seguro)")
             else:
-                _log(f"  [star {direction}/{STAR_STEPS}] Avancando {safe_advance}cm")
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Avancando {safe_advance}cm")
 
             await self._move_forward(safe_advance)
 
             frame = await self._capture_frame()
             if frame is None:
-                _log(f"  [star {direction}/{STAR_STEPS}] Frame vazio, recuando")
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Frame vazio, recuando")
                 await self._move_backward(safe_advance)
                 continue
 
@@ -260,32 +267,32 @@ class SearchOrchestrator:
             if not llm_description:
                 llm_description = f"{object_color} {object_type}" if object_color else object_type
 
-            _log(f"  [star {direction}/{STAR_STEPS}] Perguntando para LLM...")
+            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Perguntando para LLM...")
             llm_sees = await ask_llm_if_object_visible(
                 self._llm_client, self._llm_model,
                 image_base64, llm_description,
             )
 
             if not llm_sees:
-                self._steps_taken.append(f"star_dir_{direction}_llm_not_found")
-                _log(f"  [star {direction}/{STAR_STEPS}] LLM: NAO VIU. Recuando {safe_advance}cm")
+                self._steps_taken.append(f"star_{offset_cm}cm_dir_{direction}_llm_not_found")
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] LLM: NAO VIU. Recuando {safe_advance}cm")
                 await self._move_backward(safe_advance)
                 continue
 
-            self._steps_taken.append(f"star_dir_{direction}_llm_detected")
-            _log(f"  [star {direction}/{STAR_STEPS}] LLM: AVISTOU! Confirmando com OpenCV...")
+            self._steps_taken.append(f"star_{offset_cm}cm_dir_{direction}_llm_detected")
+            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] LLM: AVISTOU! Confirmando com OpenCV...")
             result = detect_object(frame, object_type, object_color)
 
             if result is not None:
-                self._steps_taken.append(f"star_cv_confirmed_dir_{direction}")
-                _log(f"  [star {direction}/{STAR_STEPS}] OpenCV: CONFIRMOU! bbox={result['bbox']}")
+                self._steps_taken.append(f"star_{offset_cm}cm_cv_confirmed_dir_{direction}")
+                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] OpenCV: CONFIRMOU! bbox={result['bbox']}")
                 return {"object": result, "angle": direction * STAR_STEP_DEGREES}
 
-            self._steps_taken.append(f"star_cv_not_confirmed_dir_{direction}")
-            _log(f"  [star {direction}/{STAR_STEPS}] OpenCV: NAO CONFIRMOU. Recuando {safe_advance}cm")
+            self._steps_taken.append(f"star_{offset_cm}cm_cv_not_confirmed_dir_{direction}")
+            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] OpenCV: NAO CONFIRMOU. Recuando {safe_advance}cm")
             await self._move_backward(safe_advance)
 
-        _log("  [star] Fim da exploracao em estrela. Nada encontrado")
+        _log(f"  [star {offset_cm}cm] Fim da exploracao em estrela. Nada encontrado")
         return None
 
     async def _retry_detect_with_advance(self) -> dict | None:

@@ -9,8 +9,8 @@ import { createRobot } from '../simulator/robot.js';
 import { createScene, resizeScene } from '../simulator/scene.js';
 import type { SimulatorSnapshot, StatusMessage } from '../simulator/types.js';
 
-const PREVIEW_WIDTH = 400;
-const PREVIEW_HEIGHT = 300;
+const PREVIEW_WIDTH = 640;
+const PREVIEW_HEIGHT = 480;
 const PREVIEW_THROTTLE_MS = 66;
 
 export interface SimulatorCanvasHandle {
@@ -45,12 +45,14 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
     let scene: THREE.Scene;
     let camera: THREE.PerspectiveCamera;
     let renderer: THREE.WebGLRenderer;
+    let robotHeadlight: THREE.PointLight;
 
     try {
       const setup = createScene(container);
       scene = setup.scene;
       camera = setup.camera;
       renderer = setup.renderer;
+      robotHeadlight = setup.robotHeadlight;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido ao criar WebGL.';
       setWebglError(message);
@@ -91,6 +93,7 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
     let previewCamera: THREE.PerspectiveCamera | null = null;
     let previewCtx: CanvasRenderingContext2D | null = null;
     let previewPixelBuffer: Uint8Array | null = null;
+    let previewLight: THREE.PointLight | null = null;
 
     let animationFrame = 0;
     let lastPreviewTime = 0;
@@ -98,6 +101,11 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
     const animate = () => {
       animationFrame = requestAnimationFrame(animate);
       engine.step();
+      robotHeadlight.position.set(
+        robotGroup.position.x,
+        robotGroup.position.y + 3,
+        robotGroup.position.z,
+      );
       cameraController.update();
       renderer.render(scene, camera);
 
@@ -106,6 +114,7 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
         previewRenderTarget &&
         previewCamera &&
         previewCtx &&
+        previewLight &&
         now - lastPreviewTime >= PREVIEW_THROTTLE_MS
       ) {
         lastPreviewTime = now;
@@ -120,20 +129,28 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
         const camHeight = 3;
         const camForward = 12;
 
-        previewCamera.position.set(
-          robotGroup.position.x + frontX * camForward,
-          camHeight,
-          robotGroup.position.z + frontZ * camForward,
-        );
+        const camPosX = robotGroup.position.x + frontX * camForward;
+        const camPosZ = robotGroup.position.z + frontZ * camForward;
+
+        previewCamera.position.set(camPosX, camHeight, camPosZ);
         previewCamera.lookAt(
           robotGroup.position.x + frontX * 200,
           camHeight,
           robotGroup.position.z + frontZ * 200,
         );
 
+        previewLight.position.set(camPosX, camHeight, camPosZ);
+        previewLight.visible = true;
+
+        const prevFog = scene.fog;
+        scene.fog = null;
+
         renderer.setRenderTarget(previewRenderTarget);
         renderer.render(scene, previewCamera);
         renderer.setRenderTarget(null);
+
+        scene.fog = prevFog;
+        previewLight.visible = false;
 
         const buffer = previewPixelBuffer!;
         renderer.readRenderTargetPixels(
@@ -207,6 +224,11 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
           previewRenderTarget.dispose();
           previewRenderTarget = null;
         }
+        if (previewLight) {
+          scene.remove(previewLight);
+          previewLight.dispose();
+          previewLight = null;
+        }
 
         previewCtx = canvas.getContext('2d');
         if (!previewCtx) {
@@ -214,14 +236,25 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
           return;
         }
 
+        canvas.width = PREVIEW_WIDTH;
+        canvas.height = PREVIEW_HEIGHT;
+
         previewCamera = new THREE.PerspectiveCamera(100, PREVIEW_WIDTH / PREVIEW_HEIGHT, 0.1, 1500);
         previewRenderTarget = new THREE.WebGLRenderTarget(PREVIEW_WIDTH, PREVIEW_HEIGHT);
         previewPixelBuffer = new Uint8Array(PREVIEW_WIDTH * PREVIEW_HEIGHT * 4);
+        previewLight = new THREE.PointLight(0xffffff, 3.0, 60, 1.5);
+        previewLight.visible = false;
+        scene.add(previewLight);
       },
       unbindPreviewCanvas() {
         if (previewRenderTarget) {
           previewRenderTarget.dispose();
           previewRenderTarget = null;
+        }
+        if (previewLight) {
+          scene.remove(previewLight);
+          previewLight.dispose();
+          previewLight = null;
         }
         previewCamera = null;
         previewCtx = null;
@@ -245,6 +278,11 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
       if (previewRenderTarget) {
         previewRenderTarget.dispose();
         previewRenderTarget = null;
+      }
+      if (previewLight) {
+        scene.remove(previewLight);
+        previewLight.dispose();
+        previewLight = null;
       }
       previewCamera = null;
       previewCtx = null;

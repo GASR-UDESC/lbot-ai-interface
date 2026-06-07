@@ -4,6 +4,7 @@ export interface SceneSetup {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
+  robotHeadlight: THREE.PointLight;
 }
 
 const SKY_COLOR = 0x87ceeb;
@@ -28,12 +29,12 @@ export function createScene(container: HTMLDivElement): SceneSetup {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.4;
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-  directionalLight.position.set(100, 200, 100);
+  directionalLight.position.set(50, 150, 50);
   directionalLight.castShadow = true;
   directionalLight.shadow.camera.left = -400;
   directionalLight.shadow.camera.right = 400;
@@ -45,10 +46,15 @@ export function createScene(container: HTMLDivElement): SceneSetup {
   directionalLight.shadow.mapSize.height = 2048;
   scene.add(directionalLight);
 
-  scene.add(new THREE.HemisphereLight(0x87ceeb, 0x228b22, 0.6));
+  scene.add(new THREE.HemisphereLight(0x87ceeb, 0x228b22, 0.8));
+
+  const robotHeadlight = new THREE.PointLight(0xffffff, 5.0, 120, 1.5);
+  robotHeadlight.position.set(0, 3, 0);
+  scene.add(robotHeadlight);
+
   container.appendChild(renderer.domElement);
 
-  return { scene, camera, renderer };
+  return { scene, camera, renderer, robotHeadlight };
 }
 
 export function resizeScene(

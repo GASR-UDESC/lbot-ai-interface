@@ -83,8 +83,8 @@ export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) 
         <canvas
           ref={canvasRef}
           className={`camera-preview-canvas ${state.kind !== 'ready' ? 'camera-preview-canvas--hidden' : ''}`}
-          width={400}
-          height={300}
+          width={640}
+          height={480}
         />
       </div>
     </div>
