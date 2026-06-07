@@ -236,30 +236,15 @@ class TestExploreOffsets:
             result = await orchestrator._explore_offsets("cubo", "vermelho")
 
         assert result is None
-        assert orchestrator._llm_spotted is True
+        assert not orchestrator._llm_spotted
 
 
-class TestOpencvRetryWithAdvance:
+class TestRetryDetectWithAdvance:
 
     @pytest.fixture(autouse=True)
     def _patch_sleep(self):
         with patch("mcp_server.services.search_orchestrator.asyncio.sleep"):
             yield
-
-    @pytest.mark.asyncio
-    async def test_finds_immediately(
-        self, orchestrator, mock_backend, sample_camera_response,
-    ):
-        mock_backend.get_camera.return_value = sample_camera_response
-
-        with patch(
-            "mcp_server.services.search_orchestrator.detect_object",
-            return_value=_make_detection(),
-        ):
-            result = await orchestrator._opencv_retry_with_advance("cubo", "vermelho")
-
-        assert result is not None
-        mock_backend.execute_lbml.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_finds_after_50cm(
@@ -271,7 +256,7 @@ class TestOpencvRetryWithAdvance:
             "mcp_server.services.search_orchestrator.detect_object"
         ) as mock_detect:
             mock_detect.side_effect = [None, _make_detection()]
-            result = await orchestrator._opencv_retry_with_advance("cubo", "vermelho")
+            result = await orchestrator._retry_detect_with_advance()
 
         assert result is not None
         mock_backend.execute_lbml.assert_any_call(f"D{OPENCV_RETRY_FORWARD_1}F;")
@@ -285,8 +270,8 @@ class TestOpencvRetryWithAdvance:
         with patch(
             "mcp_server.services.search_orchestrator.detect_object"
         ) as mock_detect:
-            mock_detect.side_effect = [None, None, _make_detection()]
-            result = await orchestrator._opencv_retry_with_advance("cubo", "vermelho")
+            mock_detect.side_effect = [None, _make_detection()]
+            result = await orchestrator._retry_detect_with_advance()
 
         assert result is not None
         assert mock_backend.execute_lbml.call_count == 2
@@ -301,7 +286,7 @@ class TestOpencvRetryWithAdvance:
             "mcp_server.services.search_orchestrator.detect_object",
             return_value=None,
         ):
-            result = await orchestrator._opencv_retry_with_advance("cubo", "vermelho")
+            result = await orchestrator._retry_detect_with_advance()
 
         assert result is None
         mock_backend.execute_lbml.assert_any_call(f"D{OPENCV_RETRY_FORWARD_1}F;")
@@ -309,6 +294,12 @@ class TestOpencvRetryWithAdvance:
 
 
 class TestCenter:
+
+    @pytest.fixture(autouse=True)
+    def _patch_sleep(self):
+        with patch("mcp_server.services.search_orchestrator.asyncio.sleep"):
+            yield
+
     @pytest.mark.asyncio
     async def test_already_centered(self, orchestrator):
         result = await orchestrator._center((320, 240))
@@ -353,7 +344,9 @@ class TestCenter:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_loses_tracking(self, orchestrator, mock_backend):
+    async def test_loses_tracking_then_retry_fails(
+        self, orchestrator, mock_backend,
+    ):
         mock_backend.get_camera.return_value = {
             "image": "dummy",
             "render_method": "webgl",
@@ -363,10 +356,27 @@ class TestCenter:
         with patch(
             "mcp_server.services.search_orchestrator.detect_object"
         ) as mock_detect:
-            mock_detect.side_effect = [None]
+            mock_detect.return_value = None
             result = await orchestrator._center((400, 240))
 
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_loses_tracking_retry_succeeds(
+        self, orchestrator, mock_backend, empty_camera_response,
+    ):
+        mock_backend.get_camera.return_value = empty_camera_response
+
+        with patch(
+            "mcp_server.services.search_orchestrator.detect_object"
+        ) as mock_detect:
+            mock_detect.side_effect = [
+                None, None, _make_detection(cx=350, cy=240),
+                _make_detection(cx=320, cy=240),
+            ]
+            result = await orchestrator._center((400, 240))
+
+        assert result is True
 
 
 class TestApproach:
@@ -619,7 +629,7 @@ class TestRunFullFlow:
         assert result["bounding_box"] is None
 
     @pytest.mark.asyncio
-    async def test_llm_spotted_triggers_opencv_retry(
+    async def test_llm_spotted_simple_detect_succeeds(
         self, orchestrator, mock_backend, sample_camera_response,
     ):
         mock_backend.get_camera.return_value = sample_camera_response
@@ -636,16 +646,14 @@ class TestRunFullFlow:
             ) as mock_detect:
                 mock_detect.side_effect = [
                     None, None, None, None,
-                    None, _make_detection(),
+                    _make_detection(),
                 ]
                 result = await orchestrator.run("cubo vermelho")
 
         assert result["status"] == "found"
-        assert "opencv_retry_start" in orchestrator._steps_taken
-        mock_backend.execute_lbml.assert_any_call(f"D{OPENCV_RETRY_FORWARD_1}F;")
 
     @pytest.mark.asyncio
-    async def test_opencv_retry_exhausted(
+    async def test_llm_spotted_simple_detect_fails_then_explore(
         self, orchestrator, mock_backend, empty_camera_response,
     ):
         mock_backend.get_camera.return_value = empty_camera_response
@@ -653,7 +661,7 @@ class TestRunFullFlow:
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
         ) as mock_llm:
-            mock_llm.side_effect = [True] * 4
+            mock_llm.side_effect = [True] * 4 + [False] * 4
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
@@ -662,14 +670,9 @@ class TestRunFullFlow:
                 result = await orchestrator.run("cubo vermelho")
 
         assert result["status"] == "not_found"
-        forward_calls = [
-            call_args[0][0]
-            for call_args in mock_backend.execute_lbml.call_args_list
-            if str(call_args[0][0]).startswith("D") and "F;" in str(
-                call_args[0][0]
-            )
-        ]
-        assert len(forward_calls) == 2
+        assert any(
+            "explore_direction" in step for step in orchestrator._steps_taken
+        )
 
     @pytest.mark.asyncio
     async def test_explore_offsets_triggered_when_llm_never_spots(
