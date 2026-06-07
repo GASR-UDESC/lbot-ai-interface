@@ -6,14 +6,16 @@ import pytest
 from mcp_server.services.search_orchestrator import (
     CAMERA_TIMEOUT,
     CENTER_THRESHOLD_PX,
-    EXPLORE_OFFSET_CM,
-    EXPLORE_OFFSET_CM_2,
-    MAX_EXPLORE_DIRECTIONS,
-    OPENCV_RETRY_FORWARD_1,
-    OPENCV_RETRY_FORWARD_2,
     MAX_APPROACH_STEPS,
     MAX_RESCANS,
     MIN_SAFE_DISTANCE_CM,
+    OPENCV_RETRY_FORWARD_1,
+    OPENCV_RETRY_FORWARD_2,
+    SCAN_STEP_DEGREES,
+    SCAN_STEPS,
+    STAR_OFFSET_CM,
+    STAR_STEP_DEGREES,
+    STAR_STEPS,
     SearchOrchestrator,
     TARGET_DISTANCE_CM,
 )
@@ -90,7 +92,7 @@ class TestScan:
                 result = await orchestrator._scan("cubo", "vermelho")
 
         assert result is not None
-        assert result["angle"] == 180
+        assert result["angle"] == 2 * SCAN_STEP_DEGREES
 
     @pytest.mark.asyncio
     async def test_llm_never_sees_object(
@@ -105,7 +107,7 @@ class TestScan:
             result = await orchestrator._scan("cubo", "vermelho")
 
         assert result is None
-        assert mock_backend.execute_lbml.call_count == 3
+        assert mock_backend.execute_lbml.call_count == SCAN_STEPS - 1
 
     @pytest.mark.asyncio
     async def test_llm_yes_cv_no_continues(
@@ -116,7 +118,7 @@ class TestScan:
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
         ) as mock_llm:
-            mock_llm.side_effect = [True, True, True, True]
+            mock_llm.side_effect = [True] * SCAN_STEPS
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
@@ -125,7 +127,7 @@ class TestScan:
                 result = await orchestrator._scan("cubo", "vermelho")
 
         assert result is None
-        assert mock_backend.execute_lbml.call_count == 3
+        assert mock_backend.execute_lbml.call_count == SCAN_STEPS - 1
 
     @pytest.mark.asyncio
     async def test_camera_timeout_does_not_abort(
@@ -151,7 +153,7 @@ class TestScan:
         assert result is not None
 
 
-class TestExploreOffsets:
+class TestStarExplore:
 
     @pytest.fixture(autouse=True)
     def _patch_sleep(self):
@@ -163,6 +165,9 @@ class TestExploreOffsets:
         self, orchestrator, mock_backend, sample_camera_response,
     ):
         mock_backend.get_camera.return_value = sample_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 200, "tras": 400,
+        }
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
@@ -171,11 +176,11 @@ class TestExploreOffsets:
             "mcp_server.services.search_orchestrator.detect_object",
             return_value=_make_detection(),
         ):
-            result = await orchestrator._explore_offsets("cubo", "vermelho")
+            result = await orchestrator._star_explore("cubo", "vermelho")
 
         assert result is not None
         assert result["object"]["type"] == "cubo"
-        mock_backend.execute_lbml.assert_any_call(f"D{EXPLORE_OFFSET_CM}F;")
+        mock_backend.execute_lbml.assert_any_call(f"D{STAR_OFFSET_CM}F;")
         backward_calls = [
             c for c in mock_backend.execute_lbml.call_args_list
             if "B;" in str(c[0][0])
@@ -187,6 +192,9 @@ class TestExploreOffsets:
         self, orchestrator, mock_backend, empty_camera_response,
     ):
         mock_backend.get_camera.return_value = empty_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 200, "tras": 400,
+        }
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
@@ -197,7 +205,7 @@ class TestExploreOffsets:
                 "mcp_server.services.search_orchestrator.detect_object",
                 return_value=_make_detection(),
             ):
-                result = await orchestrator._explore_offsets("cubo", "vermelho")
+                result = await orchestrator._star_explore("cubo", "vermelho")
 
         assert result is not None
         assert result["object"]["type"] == "cubo"
@@ -207,25 +215,31 @@ class TestExploreOffsets:
         self, orchestrator, mock_backend, empty_camera_response,
     ):
         mock_backend.get_camera.return_value = empty_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 200, "tras": 400,
+        }
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
             return_value=False,
         ):
-            result = await orchestrator._explore_offsets("cubo", "vermelho")
+            result = await orchestrator._star_explore("cubo", "vermelho")
 
         assert result is None
         forward_calls = [
             c for c in mock_backend.execute_lbml.call_args_list
             if "F;" in str(c[0][0])
         ]
-        assert len(forward_calls) == MAX_EXPLORE_DIRECTIONS
+        assert len(forward_calls) == STAR_STEPS
 
     @pytest.mark.asyncio
     async def test_llm_sees_but_opencv_does_not(
         self, orchestrator, mock_backend, empty_camera_response,
     ):
         mock_backend.get_camera.return_value = empty_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 200, "tras": 400,
+        }
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
@@ -234,16 +248,18 @@ class TestExploreOffsets:
             "mcp_server.services.search_orchestrator.detect_object",
             return_value=None,
         ):
-            result = await orchestrator._explore_offsets("cubo", "vermelho")
+            result = await orchestrator._star_explore("cubo", "vermelho")
 
         assert result is None
-        assert not orchestrator._llm_spotted
 
     @pytest.mark.asyncio
-    async def test_custom_offset_75cm(
+    async def test_sensor_safety_reduces_advance(
         self, orchestrator, mock_backend, sample_camera_response,
     ):
         mock_backend.get_camera.return_value = sample_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 40, "tras": 400,
+        }
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
@@ -252,9 +268,32 @@ class TestExploreOffsets:
             "mcp_server.services.search_orchestrator.detect_object",
             return_value=_make_detection(),
         ):
-            await orchestrator._explore_offsets("cubo", "vermelho", offset=EXPLORE_OFFSET_CM_2)
+            await orchestrator._star_explore("cubo", "vermelho")
 
-        mock_backend.execute_lbml.assert_any_call(f"D{EXPLORE_OFFSET_CM_2}F;")
+        safe_cm = 40 - MIN_SAFE_DISTANCE_CM
+        mock_backend.execute_lbml.assert_any_call(f"D{safe_cm}F;")
+
+    @pytest.mark.asyncio
+    async def test_sensor_too_close_skips_direction(
+        self, orchestrator, mock_backend, empty_camera_response,
+    ):
+        mock_backend.get_camera.return_value = empty_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 15, "tras": 400,
+        }
+
+        with patch(
+            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
+            return_value=False,
+        ):
+            result = await orchestrator._star_explore("cubo", "vermelho")
+
+        assert result is None
+        forward_calls = [
+            c for c in mock_backend.execute_lbml.call_args_list
+            if "F;" in str(c[0][0])
+        ]
+        assert len(forward_calls) == 0
 
 
 class TestRetryDetectWithAdvance:
@@ -600,69 +639,6 @@ class TestConfirmViaCamera:
         assert result is False
 
 
-class TestTargetedOpencvSweep:
-
-    @pytest.fixture(autouse=True)
-    def _patch_sleep(self):
-        with patch("mcp_server.services.search_orchestrator.asyncio.sleep"):
-            yield
-
-    @pytest.mark.asyncio
-    async def test_finds_on_left(
-        self, orchestrator, mock_backend, sample_camera_response,
-    ):
-        mock_backend.get_camera.return_value = sample_camera_response
-        orchestrator._llm_spotted_angle = 90
-
-        with patch(
-            "mcp_server.services.search_orchestrator.detect_object"
-        ) as mock_detect:
-            mock_detect.side_effect = [_make_detection()]
-            result = await orchestrator._targeted_opencv_sweep()
-
-        assert result is not None
-        mock_backend.execute_lbml.assert_any_call("R45L;")
-        mock_backend.execute_lbml.assert_any_call("D50F;")
-        backward_calls = [
-            c for c in mock_backend.execute_lbml.call_args_list
-            if "B;" in str(c[0][0])
-        ]
-        assert len(backward_calls) == 0
-
-    @pytest.mark.asyncio
-    async def test_finds_on_right(
-        self, orchestrator, mock_backend, empty_camera_response,
-    ):
-        mock_backend.get_camera.return_value = empty_camera_response
-        orchestrator._llm_spotted_angle = 180
-
-        with patch(
-            "mcp_server.services.search_orchestrator.detect_object"
-        ) as mock_detect:
-            mock_detect.side_effect = [None, _make_detection()]
-            result = await orchestrator._targeted_opencv_sweep()
-
-        assert result is not None
-        assert mock_backend.execute_lbml.call_count >= 5
-
-    @pytest.mark.asyncio
-    async def test_not_found(
-        self, orchestrator, mock_backend, empty_camera_response,
-    ):
-        mock_backend.get_camera.return_value = empty_camera_response
-        orchestrator._llm_spotted_angle = 90
-
-        with patch(
-            "mcp_server.services.search_orchestrator.detect_object",
-            return_value=None,
-        ):
-            result = await orchestrator._targeted_opencv_sweep()
-
-        assert result is None
-        mock_backend.execute_lbml.assert_any_call("D50F;")
-        mock_backend.execute_lbml.assert_any_call("D50B;")
-
-
 class TestRunFullFlow:
 
     @pytest.fixture(autouse=True)
@@ -699,6 +675,9 @@ class TestRunFullFlow:
         self, orchestrator, mock_backend, empty_camera_response,
     ):
         mock_backend.get_camera.return_value = empty_camera_response
+        mock_backend.get_proximity_sensor.return_value = {
+            "frente": 200, "tras": 400,
+        }
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
@@ -710,60 +689,13 @@ class TestRunFullFlow:
         assert result["bounding_box"] is None
 
     @pytest.mark.asyncio
-    async def test_llm_spotted_targeted_sweep_finds(
-        self, orchestrator, mock_backend, sample_camera_response,
+    async def test_scan_fails_star_explore_called(
+        self, orchestrator, mock_backend, empty_camera_response,
     ):
-        mock_backend.get_camera.return_value = sample_camera_response
+        mock_backend.get_camera.return_value = empty_camera_response
         mock_backend.get_proximity_sensor.return_value = {
-            "frente": TARGET_DISTANCE_CM, "tras": 400,
+            "frente": 200, "tras": 400,
         }
-
-        with patch(
-            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
-            return_value=True,
-        ):
-            with patch(
-                "mcp_server.services.search_orchestrator.detect_object"
-            ) as mock_detect:
-                mock_detect.side_effect = [None, None, None, None]
-                with patch.object(
-                    orchestrator, "_targeted_opencv_sweep",
-                    return_value={"object": _make_detection(), "angle": 90},
-                ):
-                    result = await orchestrator.run("cubo vermelho")
-
-        assert result["status"] == "found"
-
-    @pytest.mark.asyncio
-    async def test_targeted_sweep_fails_then_explore(
-        self, orchestrator, mock_backend, empty_camera_response,
-    ):
-        mock_backend.get_camera.return_value = empty_camera_response
-
-        with patch(
-            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
-        ) as mock_llm:
-            mock_llm.side_effect = [True] * 4 + [False] * 8
-
-            with patch(
-                "mcp_server.services.search_orchestrator.detect_object",
-                return_value=None,
-            ), patch.object(
-                orchestrator, "_targeted_opencv_sweep",
-                return_value=None,
-            ):
-                result = await orchestrator.run("cubo vermelho")
-
-        assert result["status"] == "not_found"
-        assert any(
-            "explore_direction" in step for step in orchestrator._steps_taken
-        )
-
-    @pytest.mark.asyncio
-    async def test_explore_offsets_triggered_when_llm_never_spots(
-        self, orchestrator, mock_backend, empty_camera_response,
-    ):
-        mock_backend.get_camera.return_value = empty_camera_response
 
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible",
@@ -773,11 +705,11 @@ class TestRunFullFlow:
 
         assert result["status"] == "not_found"
         assert any(
-            "explore_direction" in step for step in orchestrator._steps_taken
+            "star_explore" in step for step in orchestrator._steps_taken
         )
 
     @pytest.mark.asyncio
-    async def test_explore_finds_then_approaches(
+    async def test_star_explore_finds_then_approaches(
         self, orchestrator, mock_backend, sample_camera_response,
     ):
         mock_backend.get_camera.return_value = sample_camera_response
@@ -788,7 +720,7 @@ class TestRunFullFlow:
         with patch(
             "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
         ) as mock_llm:
-            mock_llm.side_effect = [False] * 4 + [True] * 2
+            mock_llm.side_effect = [False] * SCAN_STEPS + [True] * 2
 
             with patch(
                 "mcp_server.services.search_orchestrator.detect_object",
@@ -798,31 +730,5 @@ class TestRunFullFlow:
 
         assert result["status"] == "found"
         assert any(
-            "explore_cv_confirmed" in step for step in orchestrator._steps_taken
+            "star_cv_confirmed" in step for step in orchestrator._steps_taken
         )
-
-    @pytest.mark.asyncio
-    async def test_explore_two_passes_second_finds(
-        self, orchestrator, mock_backend, sample_camera_response,
-    ):
-        mock_backend.get_camera.return_value = sample_camera_response
-        mock_backend.get_proximity_sensor.return_value = {
-            "frente": TARGET_DISTANCE_CM, "tras": 400,
-        }
-
-        with patch(
-            "mcp_server.services.search_orchestrator.ask_llm_if_object_visible"
-        ) as mock_llm:
-            mock_llm.side_effect = [False] * 8 + [True] * 2
-
-            with patch(
-                "mcp_server.services.search_orchestrator.detect_object",
-                return_value=_make_detection(),
-            ):
-                result = await orchestrator.run("cubo vermelho")
-
-        assert result["status"] == "found"
-        assert any(
-            "explore_cv_confirmed" in step for step in orchestrator._steps_taken
-        )
-        mock_backend.execute_lbml.assert_any_call(f"D{EXPLORE_OFFSET_CM_2}F;")

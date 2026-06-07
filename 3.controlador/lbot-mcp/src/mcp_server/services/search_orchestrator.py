@@ -23,13 +23,13 @@ MAX_RESCANS = 2
 MIN_SAFE_DISTANCE_CM = 20
 TARGET_DISTANCE_CM = 50
 CAMERA_TIMEOUT = 5.0
-EXPLORE_OFFSET_CM = 50
-EXPLORE_OFFSET_CM_2 = 75
-MAX_EXPLORE_DIRECTIONS = 4
+SCAN_STEP_DEGREES = 45
+SCAN_STEPS = 8
+STAR_STEP_DEGREES = 45
+STAR_STEPS = 8
+STAR_OFFSET_CM = 75
 OPENCV_RETRY_FORWARD_1 = 50
 OPENCV_RETRY_FORWARD_2 = 30
-TARGETED_SWEEP_ADVANCE_CM = 50
-TARGETED_SWEEP_ANGLE = 45
 
 
 def _log(msg: str) -> None:
@@ -48,8 +48,7 @@ class SearchOrchestrator:
         self._original_description: str = ""
         self._object_type: str = "cubo"
         self._object_color: str | None = None
-        self._llm_spotted: bool = False
-        self._llm_spotted_angle: int | None = None
+
 
     async def run(self, description: str) -> dict:
         t0 = time.monotonic()
@@ -59,23 +58,13 @@ class SearchOrchestrator:
 
         _log(f"=== INICIANDO BUSCA: type={self._object_type} color={self._object_color} desc='{description}' ===")
 
-        _log("[FASE 1] Varredura 360 graus (scan)")
+        _log("[FASE 1] Varredura 360 graus (scan 8x45)")
         scan_result = await self._scan(self._object_type, self._object_color)
 
-        if scan_result is None and self._llm_spotted:
-            _log("[FASE 1b] LLM avistou mas OpenCV nao confirmou. Iniciando varredura direcionada +-45graus (targeted_opencv_sweep)")
-            scan_result = await self._targeted_opencv_sweep()
-
         if scan_result is None:
-            _log("[FASE 1c] Ainda nao encontrou. Iniciando exploracao em cruz 50cm (explore_offsets)")
-            scan_result = await self._explore_offsets(
+            _log(f"[FASE 2] Scan nao encontrou. Iniciando exploracao em estrela 8x{STAR_STEP_DEGREES}graus com {STAR_OFFSET_CM}cm (star_explore)")
+            scan_result = await self._star_explore(
                 self._object_type, self._object_color
-            )
-
-        if scan_result is None:
-            _log("[FASE 1d] Cruz 50cm nao encontrou. Iniciando exploracao em cruz 75cm (explore_offsets)")
-            scan_result = await self._explore_offsets(
-                self._object_type, self._object_color, offset=EXPLORE_OFFSET_CM_2
             )
 
         if scan_result is None:
@@ -125,10 +114,10 @@ class SearchOrchestrator:
     async def _scan(
         self, object_type: str, object_color: str | None
     ) -> dict | None:
-        for i in range(4):
-            angle = i * 90
+        for i in range(SCAN_STEPS):
+            angle = i * SCAN_STEP_DEGREES
             self._steps_taken.append(f"scan_frame_{i}")
-            _log(f"  [scan {i}/4] Tirando foto na orientacao {angle} graus")
+            _log(f"  [scan {i}/{SCAN_STEPS}] Tirando foto na orientacao {angle} graus")
 
             try:
                 camera_data = await asyncio.wait_for(
@@ -136,25 +125,25 @@ class SearchOrchestrator:
                 )
             except asyncio.TimeoutError:
                 self._steps_taken.append("camera_timeout")
-                _log(f"  [scan {i}/4] TIMEOUT da camera, pulando")
+                _log(f"  [scan {i}/{SCAN_STEPS}] TIMEOUT da camera, pulando")
                 continue
             except Exception:
                 self._steps_taken.append("camera_error")
-                _log(f"  [scan {i}/4] ERRO da camera, pulando")
+                _log(f"  [scan {i}/{SCAN_STEPS}] ERRO da camera, pulando")
                 continue
 
             image_base64 = camera_data["image"]
             frame = decode_frame(image_base64)
 
             if frame is None or frame.shape[0] == 0:
-                _log(f"  [scan {i}/4] Frame vazio, pulando")
+                _log(f"  [scan {i}/{SCAN_STEPS}] Frame vazio, pulando")
                 continue
 
             llm_description = self._original_description
             if not llm_description:
                 llm_description = f"{object_color} {object_type}" if object_color else object_type
 
-            _log(f"  [scan {i}/4] Perguntando para LLM se '{llm_description}' esta visivel...")
+            _log(f"  [scan {i}/{SCAN_STEPS}] Perguntando para LLM se '{llm_description}' esta visivel...")
             llm_sees = await ask_llm_if_object_visible(
                 self._llm_client, self._llm_model,
                 image_base64, llm_description,
@@ -162,30 +151,28 @@ class SearchOrchestrator:
 
             if not llm_sees:
                 self._steps_taken.append(f"llm_not_found_at_{angle}deg")
-                _log(f"  [scan {i}/4] LLM: NAO VIU objeto em {angle} graus")
-                if i < 3:
-                    _log(f"  [scan {i}/4] Girando -90 graus (esquerda)")
-                    await self._rotate(-90)
+                _log(f"  [scan {i}/{SCAN_STEPS}] LLM: NAO VIU objeto em {angle} graus")
+                if i < SCAN_STEPS - 1:
+                    _log(f"  [scan {i}/{SCAN_STEPS}] Girando -{SCAN_STEP_DEGREES} graus (esquerda)")
+                    await self._rotate(-SCAN_STEP_DEGREES)
                 continue
 
             self._steps_taken.append(f"llm_detected_at_{angle}deg")
-            _log(f"  [scan {i}/4] LLM: AVISTOU objeto em {angle} graus! Confirmando com OpenCV...")
+            _log(f"  [scan {i}/{SCAN_STEPS}] LLM: AVISTOU objeto em {angle} graus! Confirmando com OpenCV...")
             result = detect_object(frame, object_type, object_color)
 
             if result is not None:
                 self._steps_taken.append(f"cv_confirmed_at_{angle}deg")
-                _log(f"  [scan {i}/4] OpenCV: CONFIRMOU deteccao em {angle} graus. bbox={result['bbox']}")
+                _log(f"  [scan {i}/{SCAN_STEPS}] OpenCV: CONFIRMOU deteccao em {angle} graus. bbox={result['bbox']}")
                 return {"object": result, "angle": angle}
 
             self._steps_taken.append(f"cv_not_confirmed_at_{angle}deg")
-            _log(f"  [scan {i}/4] OpenCV: NAO CONFIRMOU. Marcando llm_spotted=True e continuando")
-            self._llm_spotted = True
-            self._llm_spotted_angle = angle
-            if i < 3:
-                _log(f"  [scan {i}/4] Girando -90 graus (esquerda)")
-                await self._rotate(-90)
+            _log(f"  [scan {i}/{SCAN_STEPS}] OpenCV: NAO CONFIRMOU, continuando")
+            if i < SCAN_STEPS - 1:
+                _log(f"  [scan {i}/{SCAN_STEPS}] Girando -{SCAN_STEP_DEGREES} graus (esquerda)")
+                await self._rotate(-SCAN_STEP_DEGREES)
 
-        _log(f"  [scan] Fim da varredura 360. llm_spotted={self._llm_spotted}")
+        _log(f"  [scan] Fim da varredura 360 ({SCAN_STEPS}x{SCAN_STEP_DEGREES}graus)")
         return None
 
     async def _capture_frame(self) -> np.ndarray | None:
@@ -225,107 +212,80 @@ class SearchOrchestrator:
         self._steps_taken.append(f"backward_{cm}cm")
         await asyncio.sleep(MOVE_DELAY_SECONDS)
 
-    async def _targeted_opencv_sweep(self) -> dict | None:
-        _log(f"  [targeted_sweep] LLM avistou a ~{self._llm_spotted_angle}graus. Varredura direcionada +-45graus + {TARGETED_SWEEP_ADVANCE_CM}cm")
-        self._steps_taken.append("targeted_sweep_start")
-
-        _log(f"  [targeted_sweep] Girando -{TARGETED_SWEEP_ANGLE}graus (esquerda)")
-        await self._rotate(-TARGETED_SWEEP_ANGLE)
-        _log(f"  [targeted_sweep] Avancando {TARGETED_SWEEP_ADVANCE_CM}cm")
-        await self._move_forward(TARGETED_SWEEP_ADVANCE_CM)
-
-        frame = await self._capture_frame()
-        if frame is not None:
-            _log("  [targeted_sweep] Tentando OpenCV apos -45graus + 50cm...")
-            result = detect_object(frame, self._object_type, self._object_color)
-            if result is not None:
-                self._steps_taken.append("targeted_sweep_found_left")
-                _log(f"  [targeted_sweep] OpenCV: DETECTOU! bbox={result['bbox']}")
-                return {"object": result, "angle": self._llm_spotted_angle}
-            _log("  [targeted_sweep] OpenCV: NAO detectou")
-
-        _log(f"  [targeted_sweep] Voltando {TARGETED_SWEEP_ADVANCE_CM}cm")
-        await self._move_backward(TARGETED_SWEEP_ADVANCE_CM)
-
-        _log(f"  [targeted_sweep] Girando +{TARGETED_SWEEP_ANGLE * 2}graus (direita, passando pelo centro)")
-        await self._rotate(TARGETED_SWEEP_ANGLE * 2)
-        _log(f"  [targeted_sweep] Avancando {TARGETED_SWEEP_ADVANCE_CM}cm")
-        await self._move_forward(TARGETED_SWEEP_ADVANCE_CM)
-
-        frame = await self._capture_frame()
-        if frame is not None:
-            _log("  [targeted_sweep] Tentando OpenCV apos +45graus + 50cm...")
-            result = detect_object(frame, self._object_type, self._object_color)
-            if result is not None:
-                self._steps_taken.append("targeted_sweep_found_right")
-                _log(f"  [targeted_sweep] OpenCV: DETECTOU! bbox={result['bbox']}")
-                return {"object": result, "angle": self._llm_spotted_angle}
-            _log("  [targeted_sweep] OpenCV: NAO detectou")
-
-        _log(f"  [targeted_sweep] Voltando {TARGETED_SWEEP_ADVANCE_CM}cm")
-        await self._move_backward(TARGETED_SWEEP_ADVANCE_CM)
-
-        _log("  [targeted_sweep] Fim da varredura direcionada. Nada encontrado")
-        return None
-
-    async def _explore_offsets(
-        self, object_type: str, object_color: str | None, offset: int = EXPLORE_OFFSET_CM
+    async def _star_explore(
+        self, object_type: str, object_color: str | None
     ) -> dict | None:
-        _log(f"  [explore] Iniciando exploracao em {MAX_EXPLORE_DIRECTIONS} direcoes, offset={offset}cm")
-        for direction in range(MAX_EXPLORE_DIRECTIONS):
-            self._steps_taken.append(f"explore_direction_{direction}")
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Girando 90 graus para nova direcao")
-            await self._rotate(90)
+        _log(f"  [star] Iniciando exploracao em estrela: {STAR_STEPS}x{STAR_STEP_DEGREES}graus, offset={STAR_OFFSET_CM}cm")
+        self._steps_taken.append("star_explore_start")
 
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Avancando {offset}cm")
-            await self._move_forward(offset)
+        for direction in range(STAR_STEPS):
+            self._steps_taken.append(f"star_explore_direction_{direction}")
+            _log(f"  [star {direction}/{STAR_STEPS}] Girando {STAR_STEP_DEGREES} graus para nova direcao")
+            await self._rotate(STAR_STEP_DEGREES)
+
+            try:
+                sensor_data = await asyncio.wait_for(
+                    self._backend.get_proximity_sensor(), timeout=CAMERA_TIMEOUT
+                )
+                distance_frente = sensor_data.get("frente", 999)
+            except (asyncio.TimeoutError, Exception):
+                _log(f"  [star {direction}/{STAR_STEPS}] Sensor indisponivel, assumindo caminho livre")
+                distance_frente = 999
+
+            safe_advance = min(STAR_OFFSET_CM, max(0, distance_frente - MIN_SAFE_DISTANCE_CM))
+            if safe_advance <= 0:
+                _log(f"  [star {direction}/{STAR_STEPS}] Obstaculo muito perto (sensor={distance_frente:.0f}cm), pulando direcao")
+                await self._rotate(-STAR_STEP_DEGREES)
+                continue
+
+            if safe_advance < STAR_OFFSET_CM:
+                _log(f"  [star {direction}/{STAR_STEPS}] Obstaculo a {distance_frente:.0f}cm, avancando apenas {safe_advance}cm (seguro)")
+            else:
+                _log(f"  [star {direction}/{STAR_STEPS}] Avancando {safe_advance}cm")
+
+            await self._move_forward(safe_advance)
 
             frame = await self._capture_frame()
             if frame is None:
-                _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Frame vazio, voltando")
-                await self._move_backward(offset)
+                _log(f"  [star {direction}/{STAR_STEPS}] Frame vazio, recuando")
+                await self._move_backward(safe_advance)
                 continue
 
-            try:
-                camera_data = await asyncio.wait_for(
-                    self._backend.get_camera(), timeout=CAMERA_TIMEOUT
-                )
-            except (asyncio.TimeoutError, Exception):
-                _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Camera falhou, voltando")
-                await self._move_backward(offset)
-                continue
-
+            camera_data = await asyncio.wait_for(
+                self._backend.get_camera(), timeout=CAMERA_TIMEOUT
+            )
             image_base64 = camera_data["image"]
+
             llm_description = self._original_description
             if not llm_description:
                 llm_description = f"{object_color} {object_type}" if object_color else object_type
 
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] Perguntando para LLM...")
+            _log(f"  [star {direction}/{STAR_STEPS}] Perguntando para LLM...")
             llm_sees = await ask_llm_if_object_visible(
                 self._llm_client, self._llm_model,
                 image_base64, llm_description,
             )
 
             if not llm_sees:
-                self._steps_taken.append(f"explore_dir_{direction}_llm_not_found")
-                _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] LLM: NAO VIU. Voltando {offset}cm")
-                await self._move_backward(offset)
+                self._steps_taken.append(f"star_dir_{direction}_llm_not_found")
+                _log(f"  [star {direction}/{STAR_STEPS}] LLM: NAO VIU. Recuando {safe_advance}cm")
+                await self._move_backward(safe_advance)
                 continue
 
-            self._steps_taken.append(f"explore_dir_{direction}_llm_detected")
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] LLM: AVISTOU! Confirmando com OpenCV...")
+            self._steps_taken.append(f"star_dir_{direction}_llm_detected")
+            _log(f"  [star {direction}/{STAR_STEPS}] LLM: AVISTOU! Confirmando com OpenCV...")
             result = detect_object(frame, object_type, object_color)
 
             if result is not None:
-                self._steps_taken.append(f"explore_cv_confirmed_dir_{direction}")
-                _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] OpenCV: CONFIRMOU! bbox={result['bbox']}")
-                return {"object": result, "angle": direction * 90}
+                self._steps_taken.append(f"star_cv_confirmed_dir_{direction}")
+                _log(f"  [star {direction}/{STAR_STEPS}] OpenCV: CONFIRMOU! bbox={result['bbox']}")
+                return {"object": result, "angle": direction * STAR_STEP_DEGREES}
 
-            self._steps_taken.append(f"explore_cv_not_confirmed_dir_{direction}")
-            _log(f"  [explore {direction}/{MAX_EXPLORE_DIRECTIONS}] OpenCV: NAO CONFIRMOU. Voltando {offset}cm")
-            await self._move_backward(offset)
+            self._steps_taken.append(f"star_cv_not_confirmed_dir_{direction}")
+            _log(f"  [star {direction}/{STAR_STEPS}] OpenCV: NAO CONFIRMOU. Recuando {safe_advance}cm")
+            await self._move_backward(safe_advance)
 
-        _log("  [explore] Fim da exploracao em cruz. Nada encontrado")
+        _log("  [star] Fim da exploracao em estrela. Nada encontrado")
         return None
 
     async def _retry_detect_with_advance(self) -> dict | None:
@@ -450,12 +410,7 @@ class SearchOrchestrator:
                 rescan_count += 1
                 scan_result = await self._scan(object_type, object_color)
                 if scan_result is None:
-                    if rescan_count >= MAX_RESCANS:
-                        return {"status": "not_found", "reason": "lost tracking after rescan"}
-                    if not self._llm_spotted:
-                        return {"status": "not_found", "reason": "lost tracking after rescan"}
-                    _log("  [approach] Rescan nao encontrou mas llm_spotted=True, continuando")
-                    continue
+                    return {"status": "not_found", "reason": "lost tracking after rescan"}
                 obj = scan_result["object"]
                 cx, cy = obj["center"]
                 self._last_bbox = obj["bbox"]
@@ -475,12 +430,7 @@ class SearchOrchestrator:
                 rescan_count += 1
                 scan_result = await self._scan(object_type, object_color)
                 if scan_result is None:
-                    if rescan_count >= MAX_RESCANS:
-                        return {"status": "not_found", "reason": "lost tracking after rescan"}
-                    if not self._llm_spotted:
-                        return {"status": "not_found", "reason": "lost tracking after rescan"}
-                    _log("  [approach] Rescan nao encontrou mas llm_spotted=True, continuando")
-                    continue
+                    return {"status": "not_found", "reason": "lost tracking after rescan"}
                 obj = scan_result["object"]
                 self._last_bbox = obj["bbox"]
                 _log(f"  [approach] Rescan SUCESSO! Objeto re-encontrado apos falha de center. bbox={obj['bbox']}")
