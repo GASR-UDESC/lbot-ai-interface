@@ -102,4 +102,40 @@ def get_tools_description() -> list[dict]:
                 },
             },
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "go_to",
+                "description": (
+                    "Vai ate um alvo especifico em uma direcao cardinal. "
+                    "O robo gira para a direcao, confirma o alvo com a camera, "
+                    "e se move ate ele. Para paredes, para a ~20cm. "
+                    "Para objetos, centraliza com OpenCV e se aproxima ate ~50cm. "
+                    "Use quando o usuario pedir para ir ate algo em uma direcao "
+                    "(ex: 'va ate a parede na sua frente', "
+                    "'va ate a esfera azul', 'ande ate o cubo a sua esquerda')."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target": {
+                            "type": "string",
+                            "description": (
+                                "Alvo para ir. Pode ser 'parede', 'muro', "
+                                "ou um objeto como 'cubo vermelho', "
+                                "'esfera azul', 'cone', etc."
+                            ),
+                        },
+                        "direction": {
+                            "type": "string",
+                            "description": (
+                                "Direcao cardinal. Valores: 'frente' (padrao), "
+                                "'esquerda', 'direita', 'tras'."
+                            ),
+                        },
+                    },
+                    "required": ["target"],
+                },
+            },
+        },
     ]
