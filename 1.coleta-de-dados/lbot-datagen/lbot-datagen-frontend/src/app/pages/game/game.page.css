@@ -10,7 +10,8 @@
 .page-header {
   padding: var(--spacing-xxl) var(--spacing-xl);
   flex-shrink: 0;
-  background: var(--color-surface-dark);
+  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--color-hairline);
 }
 
 .page-title {
@@ -18,14 +19,14 @@
   font-weight: 400;
   text-transform: none;
   letter-spacing: -0.5px;
-  color: var(--color-on-dark);
+  color: var(--color-ink);
   margin: 0;
 }
 
 .page-subtitle {
   font-size: var(--typography-body-md-size);
   font-weight: 400;
-  color: var(--color-on-dark-soft);
+  color: var(--color-body);
   margin: 4px 0 0;
 }
 
