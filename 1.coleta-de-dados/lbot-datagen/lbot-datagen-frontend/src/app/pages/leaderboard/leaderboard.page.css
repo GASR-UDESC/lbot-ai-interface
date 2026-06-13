@@ -30,19 +30,18 @@
 }
 
 .lb-title {
-  font-size: var(--typography-display-lg-size);
-  font-weight: 700;
+  font-size: var(--typography-display-sm-size);
+  font-weight: 400;
   line-height: 1.05;
   color: var(--color-ink);
   margin: 0;
-  text-transform: uppercase;
   letter-spacing: -0.5px;
 }
 
 .lb-subtitle {
   color: var(--color-body);
   font-size: var(--typography-body-md-size);
-  font-weight: 300;
+  font-weight: 400;
   margin: 0;
 }
 
@@ -54,7 +53,7 @@
   gap: var(--spacing-base);
   padding: var(--spacing-xxl) var(--spacing-xl);
   background: var(--color-surface-card);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
 }
 
@@ -70,21 +69,19 @@
 
 .lb-retry-btn {
   padding: 16px 32px;
-  border-radius: 0;
+  border-radius: var(--rounded-pill);
   background: transparent;
-  color: var(--color-on-dark);
-  border: 1px solid var(--color-on-dark);
-  font-size: var(--typography-label-uppercase-size);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  font-size: var(--typography-body-md-size);
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .lb-retry-btn:hover {
-  background: var(--color-surface-card);
-  border-color: var(--color-on-dark);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .lb-skeleton-grid {
@@ -99,7 +96,7 @@
   flex-direction: column;
   gap: var(--spacing-sm);
   padding: var(--spacing-lg);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
   background: var(--color-surface-card);
 }
@@ -114,7 +111,7 @@
 
 .lb-skeleton-line {
   height: 14px;
-  border-radius: 0;
+  border-radius: var(--rounded-sm);
   background: var(--color-surface-strong);
   animation: lb-pulse 1.5s ease-in-out infinite;
 }
@@ -146,15 +143,16 @@
 .lb-card {
   display: flex;
   gap: var(--spacing-base);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-xl);
   background: var(--color-surface-card);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lb-card:hover {
-  border-color: var(--color-on-dark);
+  border-color: var(--color-body);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .lb-card--gold {
@@ -203,7 +201,7 @@
 
 .lb-rank-num--large {
   font-size: var(--typography-rating-display-size);
-  font-weight: var(--typography-rating-display-weight);
+  font-weight: 400;
   line-height: var(--typography-rating-display-line-height);
   color: var(--color-ink);
 }
@@ -231,7 +229,7 @@
   font-size: var(--typography-body-md-size);
   font-weight: var(--typography-body-md-weight);
   font-variant-numeric: tabular-nums;
-  font-family: 'Inter', -apple-system, system-ui, Roboto, 'Helvetica Neue', sans-serif;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .lb-card-date {
@@ -249,12 +247,10 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  color: var(--color-on-dark);
+  color: var(--color-primary);
   text-decoration: none;
-  font-size: var(--typography-label-uppercase-size);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-size: var(--typography-body-md-size);
+  font-weight: 600;
   background: transparent;
   transition: opacity 0.2s ease;
 }

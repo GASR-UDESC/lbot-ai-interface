@@ -1,6 +1,6 @@
 <div class="virtual-controls-container">
   <div class="header">
-    <h2>CONTROLES VIRTUAIS</h2>
+    <h2>Controles Virtuais</h2>
     <p class="subtitle">Clique nos botões para criar uma sequência de comandos</p>
   </div>
 
@@ -145,15 +145,15 @@
       class="action-btn reset-btn"
       (click)="reset()"
       [disabled]="!hasCommands() || isExecuting">
-           LIMPAR TUDO
+         Limpar Tudo
     </button>
 
     <button
       class="action-btn execute-btn"
       (click)="execute()"
       [disabled]="!hasCommands() || isExecuting || !userDescription.trim()">
-      <span *ngIf="!isExecuting">▶ EXECUTAR</span>
-      <span *ngIf="isExecuting">⏳ EXECUTANDO...</span>
+      <span *ngIf="!isExecuting">▶ Executar</span>
+      <span *ngIf="isExecuting">⏳ Executando...</span>
     </button>
   </div>
 </div>

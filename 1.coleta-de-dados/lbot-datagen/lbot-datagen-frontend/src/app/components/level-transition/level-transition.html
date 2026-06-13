@@ -1,17 +1,17 @@
 <div class="transition-overlay">
   <div class="transition-card">
-    <div class="level-badge">NÍVEL {{ levelNumber }}</div>
+    <div class="level-badge">Nível {{ levelNumber }}</div>
     <h1 class="level-complete-title">{{ levelName }} Completo!</h1>
     <div class="time-display">
-      <span class="time-label">TEMPO</span>
+      <span class="time-label">Tempo</span>
       <span class="time-value">{{ levelTime }}</span>
     </div>
     <div class="next-level-info" *ngIf="nextLevelName">
-      <span class="next-label">PRÓXIMO</span>
+      <span class="next-label">Próximo</span>
       <span class="next-name">{{ nextLevelName }}</span>
     </div>
     <button class="next-btn" (click)="onNextLevel()">
-      PRÓXIMO NÍVEL →
+      Próximo Nível →
     </button>
   </div>
 </div>

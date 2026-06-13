@@ -1,7 +1,7 @@
 .transition-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,7 +16,7 @@
 
 .transition-card {
   background: var(--color-surface-card);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
   padding: var(--spacing-xl, 32px);
   text-align: center;
@@ -37,23 +37,20 @@
 .level-badge {
   display: inline-block;
   font-size: var(--typography-uppercase-tag-size, 8px);
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  font-weight: 600;
   line-height: var(--typography-uppercase-tag-line-height, 1.25);
-  text-transform: uppercase;
   color: var(--color-ink);
-  background: var(--color-surface-elevated);
-  border-radius: var(--rounded-full);
+  background: var(--color-surface-strong);
+  border-radius: var(--rounded-pill);
   padding: 4px 14px;
 }
 
 .level-complete-title {
-  font-size: var(--typography-display-sm-size, 20px);
-  font-weight: 700;
-  line-height: var(--typography-display-sm-line-height, 1.20);
+  font-size: var(--typography-display-sm-size);
+  font-weight: 400;
+  line-height: var(--typography-display-sm-line-height);
   color: var(--color-ink);
   margin: 0;
-  text-transform: uppercase;
   letter-spacing: -0.5px;
 }
 
@@ -66,18 +63,17 @@
 
 .time-label {
   font-size: var(--typography-caption-sm-size, 13px);
-  font-weight: var(--typography-caption-sm-weight, 400);
+  font-weight: 600;
   line-height: var(--typography-caption-sm-line-height, 1.23);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
   color: var(--color-body);
 }
 
 .time-value {
   font-size: var(--typography-rating-display-size, 64px);
-  font-weight: 700;
+  font-weight: 500;
   line-height: var(--typography-rating-display-line-height, 1.1);
   font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
   color: var(--color-ink);
   letter-spacing: 0.05em;
 }
@@ -87,15 +83,13 @@
   align-items: center;
   gap: 8px;
   padding: 8px 20px;
-  background: var(--color-surface-elevated);
-  border-radius: 0;
+  background: var(--color-surface-strong);
+  border-radius: var(--rounded-pill);
 }
 
 .next-label {
   font-size: 0.8rem;
   color: var(--color-body);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
 }
 
 .next-name {
@@ -108,25 +102,17 @@
 .next-btn {
   margin-top: 8px;
   padding: 14px 36px;
-  background: var(--color-on-dark);
-  color: var(--color-canvas);
-  border: 1px solid var(--color-on-dark);
-  border-radius: 0;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: var(--rounded-pill);
   font-size: var(--typography-button-md-size, 16px);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
   width: 100%;
 }
 
 .next-btn:hover {
-  background: var(--color-surface-elevated);
-  color: var(--color-ink);
-}
-
-.next-btn:active {
-  background: var(--color-surface-elevated);
-  color: var(--color-ink);
+  background: var(--color-primary-active);
 }

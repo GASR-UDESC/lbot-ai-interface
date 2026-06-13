@@ -17,7 +17,6 @@
 
   <div class="nav-overlay" *ngIf="menuOpen()" (click)="closeMenu()">
     <div class="nav-overlay-content" (click)="$event.stopPropagation()">
-      <div class="m-stripe"></div>
       <a routerLink="/menu" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{exact: true}" class="nav-overlay-link" (click)="closeMenu()">Menu</a>
       <a routerLink="/game" routerLinkActive="nav-link--active" class="nav-overlay-link" (click)="closeMenu()">Jogar</a>
       <a routerLink="/controls" routerLinkActive="nav-link--active" class="nav-overlay-link" (click)="closeMenu()">Controle</a>
@@ -25,5 +24,4 @@
     </div>
   </div>
 
-  <div class="m-stripe"></div>
 </nav>

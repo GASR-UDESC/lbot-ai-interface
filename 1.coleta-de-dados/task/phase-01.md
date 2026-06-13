@@ -1,6 +1,6 @@
 # Fase 01: Design Tokens + Fontes + Remocao M-Stripe Global
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
 
 ## Tarefas
 
-- [ ] Tarefa 1: Adicionar JetBrains Mono no `index.html`
+- [x] Tarefa 1: Adicionar JetBrains Mono no `index.html`
   - Arquivo: `src/index.html`
   - O que fazer: Adicionar link do Google Fonts para JetBrains Mono (weights 400;500;700) ao lado do link existente da Inter. O link deve ser:
     ```html
@@ -20,7 +20,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
     ```
     Combinar no mesmo link do Google Fonts para performance.
 
-- [ ] Tarefa 2: Substituir design tokens de cores no `styles.css`
+- [x] Tarefa 2: Substituir design tokens de cores no `styles.css`
   - Arquivo: `src/styles.css`
   - O que fazer: Substituir todas as variaveis `--color-*` na secao `:root` pelos valores Coinbase:
     ```css
@@ -54,7 +54,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
     ```
     Remover tokens BMW: `--color-m-blue-light`, `--color-m-blue-dark`, `--color-m-red`.
 
-- [ ] Tarefa 3: Substituir design tokens de spacing no `styles.css`
+- [x] Tarefa 3: Substituir design tokens de spacing no `styles.css`
   - Arquivo: `src/styles.css`
   - O que fazer: Substituir `--spacing-*` pelos valores Coinbase:
     ```css
@@ -69,7 +69,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
     --spacing-section: 96px;
     ```
 
-- [ ] Tarefa 4: Substituir design tokens de border-radius no `styles.css`
+- [x] Tarefa 4: Substituir design tokens de border-radius no `styles.css`
   - Arquivo: `src/styles.css`
   - O que fazer: Substituir `--rounded-*` pelos valores Coinbase:
     ```css
@@ -83,7 +83,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
     --rounded-full: 9999px;
     ```
 
-- [ ] Tarefa 5: Substituir design tokens de tipografia no `styles.css`
+- [x] Tarefa 5: Substituir design tokens de tipografia no `styles.css`
   - Arquivo: `src/styles.css`
   - O que fazer: Substituir todos os `--typography-*` pelos valores Coinbase (usando Inter como substituta de CoinbaseDisplay/CoinbaseSans e JetBrains Mono como substituta de CoinbaseMono):
     ```css
@@ -154,7 +154,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
     ```
     Remover tokens BMW obsoletos: `--typography-uppercase-tag-*`, `--typography-button-letter-spacing`, `--typography-label-uppercase-*`.
 
-- [ ] Tarefa 6: Atualizar classes utilitarias e remover m-stripe no `styles.css`
+- [x] Tarefa 6: Atualizar classes utilitarias e remover m-stripe no `styles.css`
   - Arquivo: `src/styles.css`
   - O que fazer:
     1. Remover completamente a classe `.m-stripe` e seu CSS
@@ -203,7 +203,7 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
     4. Atualizar `html, body` color para `var(--color-ink)` e background para `var(--color-canvas)` (ja usa var, so precisa confirmar que os novos valores funcionam)
     5. Atualizar `--shadow-card-hover-float` para: `0 4px 12px rgba(0, 0, 0, 0.04)`
 
-- [ ] Tarefa 7: Remover elementos m-stripe do template top-nav
+- [x] Tarefa 7: Remover elementos m-stripe do template top-nav
   - Arquivo: `src/app/components/top-nav/top-nav.html`
   - O que fazer: Remover as duas linhas `<div class="m-stripe"></div>` (uma dentro do `.nav-overlay-content` e uma no final do `<nav>`)
 
@@ -216,11 +216,11 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
 
 ## Criterios de Aceite
 
-- [ ] CA01: Design tokens migrados
+- [x] CA01: Design tokens migrados
   - Cenario: Dado que o `styles.css` foi atualizado, quando o app carrega, entao `getComputedStyle(document.documentElement).getPropertyValue('--color-primary')` retorna `#0052ff`
-- [ ] CA02: M-Stripe removida
+- [x] CA02: M-Stripe removida
   - Cenario: Dado que `.m-stripe` foi removida do CSS global e dos templates, quando o usuario navega, entao nenhum elemento tricolor e visivel
-- [ ] CA09: Build sem erros
+- [x] CA09: Build sem erros
   - Cenario: Dado que todas as alteracoes foram aplicadas, quando `ng build` e executado, entao completa sem erros
 
 ## Testes Esperados
@@ -235,9 +235,12 @@ Substituir todos os design tokens BMW no `styles.css` pelos tokens Coinbase, adi
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-06-13
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/index.html` - Adicionado JetBrains Mono ao link Google Fonts
+  - `src/styles.css` - Substituicao completa dos design tokens BMW pelos tokens Coinbase (cores, spacing, border-radius, tipografia), remocao da classe .m-stripe, atualizacao de .btn-outline e .btn-filled para pill style
+  - `src/app/components/top-nav/top-nav.html` - Removidos os 2 elementos <div class="m-stripe">
+- Testes executados: `npx ng build --configuration local` - build concluido com sucesso em 4.151s (prerendered 3 static routes)
+- Resultado: Sucesso - todos os design tokens Coinbase instalados globalmente, m-stripe removida do CSS global e do template top-nav, JetBrains Mono carregado
+- Pendencias: Nenhuma. Componentes CSS que ainda referenciam tokens BMW serao tratados nas Fases 02-04 conforme planejado.

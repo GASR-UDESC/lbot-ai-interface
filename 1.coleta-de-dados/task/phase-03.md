@@ -1,6 +1,6 @@
 # Fase 03: Dark Hero - Game + Controls
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Aplicar o dark hero pattern do Coinbase nas paginas Game e Controls. O header de
 
 ## Tarefas
 
-- [ ] Tarefa 1: Migrar `game.page.css` com dark hero header
+- [x] Tarefa 1: Migrar `game.page.css` com dark hero header
   - Arquivo: `src/app/pages/game/game.page.css`
   - O que fazer:
     1. `.page-header`: background `var(--color-surface-dark)`, padding `var(--spacing-xxl) var(--spacing-xl)` (48px vertical adaptado para app context), remover `.page-header .m-stripe`
@@ -27,13 +27,13 @@ Aplicar o dark hero pattern do Coinbase nas paginas Game e Controls. O header de
     10. `.chat-panel`: background `var(--color-surface-soft)`, border-left `1px solid var(--color-hairline)`
     11. `.simulator-panel`: background `var(--color-canvas)` ou `var(--color-surface-soft)`
 
-- [ ] Tarefa 2: Atualizar `game.page.html` para remover m-stripe e uppercase
+- [x] Tarefa 2: Atualizar `game.page.html` para remover m-stripe e uppercase
   - Arquivo: `src/app/pages/game/game.page.html`
   - O que fazer:
     1. Remover `<div class="m-stripe"></div>` do `.page-header`
     2. Mudar `<h1 class="page-title">JOGAR</h1>` para `<h1 class="page-title">Jogar</h1>`
 
-- [ ] Tarefa 3: Migrar `controls.page.css` com dark hero header
+- [x] Tarefa 3: Migrar `controls.page.css` com dark hero header
   - Arquivo: `src/app/pages/controls/controls.page.css`
   - O que fazer:
     1. `.page-header`: background `var(--color-surface-dark)`, padding `var(--spacing-xxl) var(--spacing-xl)`, remover `.page-header .m-stripe`
@@ -43,7 +43,7 @@ Aplicar o dark hero pattern do Coinbase nas paginas Game e Controls. O header de
     5. `.controls-panel`: border-radius `var(--rounded-xl)`, background `var(--color-surface-card)`, border `1px solid var(--color-hairline)`
     6. `.controls-page`: background `var(--color-canvas)` (ja usa var)
 
-- [ ] Tarefa 4: Atualizar `controls.page.html` para remover m-stripe e uppercase
+- [x] Tarefa 4: Atualizar `controls.page.html` para remover m-stripe e uppercase
   - Arquivo: `src/app/pages/controls/controls.page.html`
   - O que fazer:
     1. Remover `<div class="m-stripe"></div>` do `.page-header`
@@ -59,15 +59,15 @@ Aplicar o dark hero pattern do Coinbase nas paginas Game e Controls. O header de
 
 ## Criterios de Aceite
 
-- [ ] CA04: Dark hero nas paginas Game e Controls
+- [x] CA04: Dark hero nas paginas Game e Controls
   - Cenario: Dado que o dark hero foi aplicado, quando o usuario acessa Game ou Controls, entao o header tem fundo #0a0b0d com texto branco
-- [ ] CA02: M-Stripe removida
+- [x] CA02: M-Stripe removida
   - Cenario: Dado que m-stripe foi removida, quando o usuario acessa Game ou Controls, entao nenhum elemento tricolor e visivel
-- [ ] CA06: Tipografia editorial
+- [x] CA06: Tipografia editorial
   - Cenario: Dado que tipografia foi migrada, quando o usuario le "Jogar" ou "Modo Controle", entao weight e 400 sem uppercase
-- [ ] CA10: Dados numericos em mono
+- [x] CA10: Dados numericos em mono
   - Cenario: Dado que JetBrains Mono foi aplicado no HUD timer, quando o timer e exibido, entao numeros sao renderizados em JetBrains Mono
-- [ ] CA09: Build sem erros
+- [x] CA09: Build sem erros
   - Cenario: `ng build` completa sem erros
 
 ## Testes Esperados
@@ -85,9 +85,13 @@ Aplicar o dark hero pattern do Coinbase nas paginas Game e Controls. O header de
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-06-13
+- Arquivos criados: Nenhum
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/app/pages/game/game.page.css` - Dark hero header (surface-dark bg, on-dark texts, display-sm 400 weight sem uppercase, on-dark-soft subtitle), HUD redesenhado com surface-dark-elevated + rounded-xl + border sutil, hud-label migrado de tokens BMW para micro-label Coinbase (600 weight, on-dark-soft, sem uppercase), hud-timer com JetBrains Mono 500 weight, hud-reset-btn pill style (rounded-pill, 600 weight, sem uppercase/letter-spacing, hover rgba white 0.1)
+  - `src/app/pages/game/game.page.html` - Removido `<div class="m-stripe">`, titulo "JOGAR" -> "Jogar"
+  - `src/app/pages/controls/controls.page.css` - Dark hero header (surface-dark bg, on-dark texts, display-sm 400 weight sem uppercase, on-dark-soft subtitle), removida regra .page-header .m-stripe, simulator-container e controls-panel com rounded-xl
+  - `src/app/pages/controls/controls.page.html` - Removido `<div class="m-stripe">`, titulo "MODO CONTROLE" -> "Modo Controle"
+- Testes executados: `npx ng build --configuration local` - build concluido com sucesso em 4.362s (prerendered 3 static routes). Erro pre-existente de DatePipe no leaderboard (nao relacionado a CSS).
+- Resultado: Sucesso - dark hero pattern aplicado nas paginas Game e Controls com headers dark (#0a0b0d), HUD redesenhado com surface-dark-elevated + rounded-xl + JetBrains Mono, todos os botoes pill style, tipografia editorial weight 400 sem uppercase, m-stripe completamente removida de ambas as paginas
+- Pendencias: Nenhuma

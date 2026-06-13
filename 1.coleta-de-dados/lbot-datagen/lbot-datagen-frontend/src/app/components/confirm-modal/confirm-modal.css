@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,7 +17,7 @@
 
 .modal-card {
   background: var(--color-surface-card);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
   padding: var(--spacing-xl, 32px);
   max-width: 400px;
@@ -32,17 +32,16 @@
 }
 
 .modal-title {
-  font-size: var(--typography-title-md-size, 16px);
-  font-weight: 700;
-  line-height: var(--typography-title-md-line-height, 1.25);
+  font-size: var(--typography-title-md-size);
+  font-weight: 600;
+  line-height: var(--typography-title-md-line-height);
   color: var(--color-ink);
-  text-transform: uppercase;
   margin: 0 0 12px;
 }
 
 .modal-message {
   font-size: var(--typography-body-md-size, 16px);
-  font-weight: 300;
+  font-weight: 400;
   line-height: var(--typography-body-md-line-height, 1.5);
   color: var(--color-body);
   margin: 0 0 28px;
@@ -57,11 +56,9 @@
 .modal-btn {
   padding: 12px 28px;
   border: none;
-  border-radius: 0;
+  border-radius: var(--rounded-pill);
   font-size: var(--typography-button-md-size, 16px);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 100px;
@@ -69,21 +66,20 @@
 
 .cancel-btn {
   background: transparent;
-  color: var(--color-on-dark);
-  border: 1px solid var(--color-on-dark);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
 }
 
 .cancel-btn:hover {
-  background: var(--color-surface-elevated);
+  background: var(--color-hairline-soft);
 }
 
 .confirm-btn {
-  background: var(--color-on-dark);
-  color: var(--color-canvas);
-  border: 1px solid var(--color-on-dark);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
 }
 
 .confirm-btn:hover {
-  background: var(--color-surface-elevated);
-  color: var(--color-ink);
+  background: var(--color-primary-active);
 }

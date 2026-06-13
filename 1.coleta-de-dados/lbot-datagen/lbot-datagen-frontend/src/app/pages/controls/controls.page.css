@@ -8,29 +8,26 @@
 .page-header {
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-base) var(--spacing-xl);
+  padding: var(--spacing-xxl) var(--spacing-xl);
   flex-shrink: 0;
+  background: var(--color-surface-dark);
 }
 
 .page-title {
   font-size: var(--typography-display-sm-size);
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 400;
+  text-transform: none;
   letter-spacing: -0.5px;
   line-height: var(--typography-display-sm-line-height);
-  color: var(--color-ink);
+  color: var(--color-on-dark);
   margin: 0;
 }
 
 .page-subtitle {
   font-size: var(--typography-body-md-size);
-  font-weight: 300;
-  color: var(--color-body);
+  font-weight: 400;
+  color: var(--color-on-dark-soft);
   margin: 4px 0 0;
-}
-
-.page-header .m-stripe {
-  margin-top: var(--spacing-base);
 }
 
 .controls-layout {
@@ -46,7 +43,7 @@
   width: 100%;
   height: 100%;
   min-width: 0;
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   overflow: hidden;
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
@@ -57,7 +54,7 @@
   height: 100%;
   max-width: 400px;
   background: var(--color-surface-card);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   overflow: hidden;
   border: 1px solid var(--color-hairline);
   justify-self: center;

@@ -34,11 +34,9 @@
   width: 100%;
   position: relative;
   font-size: var(--typography-title-md-size);
-  font-weight: 700;
+  font-weight: 600;
   line-height: var(--typography-title-md-line-height);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  border-radius: 0;
+  border-radius: var(--rounded-xl) var(--rounded-xl) 0 0;
 }
 
 .chat-container {
@@ -82,7 +80,7 @@
 .message {
   max-width: 70%;
   padding: var(--spacing-md) var(--spacing-base);
-  border-radius: 0;
+  border-radius: var(--rounded-md);
   word-wrap: break-word;
   position: relative;
   font-size: var(--typography-body-sm-size);
@@ -91,8 +89,8 @@
 }
 
 .message.user {
-  background: var(--color-surface-elevated);
-  color: var(--color-ink);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   align-self: flex-end;
   margin-left: auto;
 }
@@ -104,11 +102,10 @@
 }
 
 .message.error {
-  background: rgba(226, 39, 24, 0.1);
-  color: var(--color-primary-error-text);
+  background: rgba(207, 32, 47, 0.08);
+  color: var(--color-semantic-down);
   align-self: flex-start;
-  border: 1px solid var(--color-primary-error-text);
-  border-radius: 0;
+  border-radius: var(--rounded-md);
 }
 
 .message.system {
@@ -148,7 +145,7 @@
   flex: 1;
   padding: var(--spacing-md) var(--spacing-base);
   border: 1px solid var(--color-hairline);
-  border-radius: 0;
+  border-radius: var(--rounded-md);
   outline: none;
   font-size: var(--typography-body-md-size);
   font-family: inherit;
@@ -164,7 +161,7 @@
 }
 
 .chat-input input:focus {
-  border-color: var(--color-on-dark);
+  border-color: var(--color-primary);
   border-width: 2px;
 }
 
@@ -175,16 +172,14 @@
 
 .chat-input button {
   padding: 14px 24px;
-  background: transparent;
-  border: 1px solid var(--color-on-dark);
-  color: var(--color-on-dark);
-  border-radius: 0;
+  background: var(--color-primary);
+  border: none;
+  color: var(--color-on-primary);
+  border-radius: var(--rounded-pill);
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: var(--typography-button-md-size);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-weight: 600;
   white-space: nowrap;
   min-width: fit-content;
   flex-shrink: 0;
@@ -192,7 +187,7 @@
 }
 
 .chat-input button:hover:not(:disabled) {
-  background: var(--color-surface-elevated);
+  background: var(--color-primary-active);
 }
 
 .chat-input button:disabled {
@@ -230,7 +225,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -242,7 +237,7 @@
 .rating-popup {
   background: var(--color-surface-card);
   padding: var(--spacing-xl);
-  border-radius: 0;
+  border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
   text-align: center;
   max-width: min(500px, 90vw);
@@ -258,7 +253,6 @@
   font-size: var(--typography-title-md-size);
   font-weight: var(--typography-title-md-weight);
   line-height: var(--typography-title-md-line-height);
-  text-transform: uppercase;
 }
 
 .rating-popup p {
@@ -278,17 +272,15 @@
   display: block;
   margin-bottom: var(--spacing-sm);
   color: var(--color-ink);
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--typography-body-sm-size);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
 }
 
 .observation-area textarea {
   width: 100%;
   padding: var(--spacing-md);
   border: 1px solid var(--color-hairline);
-  border-radius: 0;
+  border-radius: var(--rounded-md);
   font-family: inherit;
   font-size: var(--typography-body-sm-size);
   resize: vertical;
@@ -301,7 +293,7 @@
 }
 
 .observation-area textarea:focus {
-  border-color: var(--color-on-dark);
+  border-color: var(--color-primary);
   border-width: 2px;
 }
 
@@ -319,14 +311,12 @@
 .cancel-btn {
   padding: 13px 23px;
   background: transparent;
-  color: var(--color-on-dark);
-  border: 1px solid var(--color-on-dark);
-  border-radius: 0;
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-pill);
   cursor: pointer;
   font-size: var(--typography-button-md-size);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-weight: 600;
   transition: all 0.2s ease;
   min-width: 100px;
   flex: 1;
@@ -335,20 +325,18 @@
 }
 
 .cancel-btn:hover {
-  background: var(--color-surface-elevated);
+  background: var(--color-hairline-soft);
 }
 
 .submit-btn {
   padding: 14px 24px;
-  background: var(--color-on-dark);
-  color: var(--color-canvas);
-  border: 1px solid var(--color-on-dark);
-  border-radius: 0;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  border-radius: var(--rounded-pill);
   cursor: pointer;
   font-size: var(--typography-button-md-size);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  font-weight: 600;
   transition: all 0.2s ease;
   min-width: 100px;
   flex: 1;
@@ -357,13 +345,11 @@
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--color-surface-elevated);
-  color: var(--color-ink);
+  background: var(--color-primary-active);
 }
 
 .submit-btn:disabled {
-  background: var(--color-hairline);
-  color: var(--color-muted);
+  background: var(--color-primary-disabled);
   cursor: not-allowed;
 }
 

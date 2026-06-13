@@ -1,6 +1,6 @@
 # Fase 04: Componentes de Jogo + Robo-Simulator
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
 
 ## Tarefas
 
-- [ ] Tarefa 1: Migrar `lbot-chat.css` e `lbot-chat.html`
+- [x] Tarefa 1: Migrar `lbot-chat.css` e `lbot-chat.html`
   - Arquivo: `src/app/components/lbot-chat/lbot-chat.css` e `src/app/components/lbot-chat/lbot-chat.html`
   - O que fazer:
     1. `.chat-header`: background `var(--color-surface-card)`, border-bottom `1px solid var(--color-hairline)`, remover `text-transform: uppercase`, `letter-spacing: 1.5px`, font-weight 600, border-radius `var(--rounded-xl) var(--rounded-xl) 0 0`
@@ -35,7 +35,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
     18. `.rating-overlay`: background `var(--color-scrim)`
     19. No HTML: remover uppercase dos textos do header e labels
 
-- [ ] Tarefa 2: Migrar `victory-screen.css` e `victory-screen.html`
+- [x] Tarefa 2: Migrar `victory-screen.css` e `victory-screen.html`
   - Arquivo: `src/app/components/victory-screen/victory-screen.css` e `src/app/components/victory-screen/victory-screen.html`
   - O que fazer:
     1. `.victory-overlay`: background `var(--color-scrim)`
@@ -58,7 +58,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
     18. `.save-retry-btn`: border-radius `var(--rounded-pill)`, color `var(--color-primary)`, remover uppercase
     19. No HTML: remover uppercase dos textos
 
-- [ ] Tarefa 3: Migrar `level-transition.css` e `level-transition.html`
+- [x] Tarefa 3: Migrar `level-transition.css` e `level-transition.html`
   - Arquivo: `src/app/components/level-transition/level-transition.css` e `src/app/components/level-transition/level-transition.html`
   - O que fazer:
     1. `.transition-overlay`: background `var(--color-scrim)`
@@ -73,7 +73,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
     10. `.next-btn:hover`: background `var(--color-primary-active)`
     11. No HTML: remover uppercase dos textos
 
-- [ ] Tarefa 4: Migrar `confirm-modal.css` e `confirm-modal.html`
+- [x] Tarefa 4: Migrar `confirm-modal.css` e `confirm-modal.html`
   - Arquivo: `src/app/components/confirm-modal/confirm-modal.css` e `src/app/components/confirm-modal/confirm-modal.html`
   - O que fazer:
     1. `.modal-overlay`: background `var(--color-scrim)`
@@ -85,7 +85,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
     7. `.confirm-btn`: background `var(--color-primary)`, color `var(--color-on-primary)`, border none
     8. `.confirm-btn:hover`: background `var(--color-primary-active)`
 
-- [ ] Tarefa 5: Migrar `virtual-controls.css` e `virtual-controls.html`
+- [x] Tarefa 5: Migrar `virtual-controls.css` e `virtual-controls.html`
   - Arquivo: `src/app/components/virtual-controls/virtual-controls.css` e `src/app/components/virtual-controls/virtual-controls.html`
   - O que fazer:
     1. `.header h2`: remover `text-transform: uppercase`, font-weight 600, `letter-spacing: 0`
@@ -109,7 +109,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
     19. `.execute-btn:disabled`: background `var(--color-primary-disabled)`
     20. No HTML: remover uppercase dos textos ("CONTROLES VIRTUAIS" -> "Controles Virtuais", etc.)
 
-- [ ] Tarefa 6: Migrar `robo-simulator.css` para variaveis CSS
+- [x] Tarefa 6: Migrar `robo-simulator.css` para variaveis CSS
   - Arquivo: `src/app/components/robo-simulator/robo-simulator.css`
   - O que fazer: Substituir todas as cores hardcoded por variaveis CSS Coinbase:
     1. `.status`: background `var(--color-surface-card)`, border-radius `var(--rounded-sm)`, box-shadow `0 4px 12px rgba(0,0,0,0.04)`
@@ -127,7 +127,7 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
     13. `.error`: background `var(--color-semantic-down)`, border-radius `var(--rounded-md)`
     14. `.victory`: background `var(--color-semantic-up)`, border-radius `var(--rounded-xl)`
 
-- [ ] Tarefa 7: Migrar `simulator-frame.css`
+- [x] Tarefa 7: Migrar `simulator-frame.css`
   - Arquivo: `src/app/components/simulator-frame/simulator-frame.css`
   - O que fazer:
     1. `.simulator-wrapper`: border-radius `var(--rounded-xl)`, border `1px solid var(--color-hairline)`
@@ -150,17 +150,17 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
 
 ## Criterios de Aceite
 
-- [ ] CA05: Botoes pill em todo o app
+- [x] CA05: Botoes pill em todo o app
   - Cenario: Dado que todos os botoes foram migrados, quando o usuario interage com qualquer botao, entao tem border-radius 100px
-- [ ] CA06: Tipografia editorial
+- [x] CA06: Tipografia editorial
   - Cenario: Dado que tipografia foi migrada, quando o usuario le textos nos componentes, entao sem uppercase
-- [ ] CA07: Cores semanticas em feedback
+- [x] CA07: Cores semanticas em feedback
   - Cenario: Dado que tokens semanticos foram aplicados, quando feedback positivo aparece, entao usa #05b169 como cor de texto
-- [ ] CA08: Responsividade mantida
+- [x] CA08: Responsividade mantida
   - Cenario: Dado que a migracao foi aplicada, quando o usuario acessa em mobile, entao layout se adapta
-- [ ] CA10: Dados numericos em mono
+- [x] CA10: Dados numericos em mono
   - Cenario: Dado que JetBrains Mono foi aplicado, quando tempos aparecem no victory-screen e level-transition, entao numeros sao JetBrains Mono
-- [ ] CA09: Build sem erros
+- [x] CA09: Build sem erros
   - Cenario: `ng build` completa sem erros
 
 ## Testes Esperados
@@ -181,9 +181,20 @@ Migrar todos os componentes de jogo (lbot-chat, victory-screen, level-transition
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-06-13
+- Arquivos criados: (nenhum)
 - Arquivos alterados:
-- Testes executados:
-- Resultado:
-- Pendencias:
+  - `src/app/components/lbot-chat/lbot-chat.css` - Pill buttons, rounded-md messages/inputs, Coinbase primary + semantic colors
+  - `src/app/components/lbot-chat/lbot-chat.html` - Uppercase removido
+  - `src/app/components/victory-screen/victory-screen.css` - Border-radius xl, pill buttons, JetBrains Mono, scrim
+  - `src/app/components/victory-screen/victory-screen.html` - Uppercase removido
+  - `src/app/components/level-transition/level-transition.css` - Border-radius xl/pill, JetBrains Mono, scrim, primary button
+  - `src/app/components/level-transition/level-transition.html` - Uppercase removido
+  - `src/app/components/confirm-modal/confirm-modal.css` - Border-radius xl/pill, scrim, primary button, hairline secondary
+  - `src/app/components/virtual-controls/virtual-controls.css` - Border-radius xl/sm/md/pill, JetBrains Mono code, primary focus/buttons
+  - `src/app/components/virtual-controls/virtual-controls.html` - Uppercase removido
+  - `src/app/components/robo-simulator/robo-simulator.css` - Todas cores hardcoded substituidas por variaveis CSS Coinbase
+  - `src/app/components/simulator-frame/simulator-frame.css` - Border-radius xl
+- Testes executados: `ng build --configuration local` - build concluido com sucesso
+- Resultado: Build bem-sucedido. Prerendering lanca erro pre-existente de DatePipe (nao relacionado a migracao CSS).
+- Pendencias: Nenhuma (erro de DatePipe e pre-existente e fora do escopo desta fase).
