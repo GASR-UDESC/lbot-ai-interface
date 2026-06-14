@@ -370,7 +370,14 @@
 }
 
 @media (max-width: 600px) {
-  .virtual-controls-container {
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.virtual-controls-container {
     padding: var(--spacing-sm);
     gap: var(--spacing-sm);
   }

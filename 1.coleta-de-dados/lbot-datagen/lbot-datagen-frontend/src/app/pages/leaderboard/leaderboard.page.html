@@ -37,9 +37,10 @@
            [class.lb-card--bronze]="i === 2">
 
         <div class="lb-card-rank">
-          <lucide-icon *ngIf="i === 0" [img]="MedalIcon" [size]="32" class="lb-medal lb-medal--gold"></lucide-icon>
-          <lucide-icon *ngIf="i === 1" [img]="MedalIcon" [size]="28" class="lb-medal lb-medal--silver"></lucide-icon>
-          <lucide-icon *ngIf="i === 2" [img]="MedalIcon" [size]="24" class="lb-medal lb-medal--bronze"></lucide-icon>
+          <lucide-icon *ngIf="i <= 2"
+                       [img]="MedalIcon"
+                       [size]="i === 0 ? 32 : i === 1 ? 28 : 24"
+                       class="lb-medal"></lucide-icon>
           <span class="lb-rank-num" [class.lb-rank-num--large]="i < 3" *ngIf="i >= 3">#{{ i + 1 }}</span>
         </div>
 
