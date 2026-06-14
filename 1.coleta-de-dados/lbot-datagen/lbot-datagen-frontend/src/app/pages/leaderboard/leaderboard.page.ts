@@ -43,7 +43,14 @@ export class LeaderboardPage implements OnInit {
 
     this.leaderboardService.getLeaderboard().subscribe({
       next: (data) => {
-        this.entries.set(data);
+        const parsed = data.map((entry) => {
+          const [year, month, day, hour, minute, second] = entry.completedAt as unknown as number[];
+          return {
+            ...entry,
+            completedAt: new Date(year, month - 1, day, hour, minute, second).toISOString()
+          };
+        });
+        this.entries.set(parsed);
         this.isLoading.set(false);
       },
       error: () => {
