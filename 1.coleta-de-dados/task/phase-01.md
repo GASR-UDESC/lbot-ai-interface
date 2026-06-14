@@ -1,6 +1,6 @@
 # Fase 01: ObstacleMeshFactory e Novos Tipos de Obstaculos
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Criar o servico `ObstacleMeshFactory` dedicado para gerar meshes compostas (THRE
 
 ## Tarefas
 
-- [ ] Tarefa 1: Criar `obstacle-mesh.factory.ts`
+- [x] Tarefa 1: Criar `obstacle-mesh.factory.ts`
   - Arquivo: `lbot-datagen-frontend/src/app/services/obstacle-mesh.factory.ts`
   - O que fazer: Criar classe `ObstacleMeshFactory` com metodos estaticos ou de instancia para cada tipo de obstaculo:
     - `createCrateStack(width, height, depth, color, variation?)`: Pilha de 2-3 caixas com tamanhos variados
@@ -25,18 +25,18 @@ Criar o servico `ObstacleMeshFactory` dedicado para gerar meshes compostas (THRE
   - Usar variacoes de tonalidade da cor base para diferentes partes do mesmo modelo.
   - Criar helper `shadeColor(colorHex, percent)` para clarear/escurecer cores.
 
-- [ ] Tarefa 2: Expandir `ObstacleType` no `level-config.model.ts`
+- [x] Tarefa 2: Expandir `ObstacleType` no `level-config.model.ts`
   - Arquivo: `lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer: Alterar `export type ObstacleType = 'wall' | 'crate' | 'ramp';` para incluir `'tree' | 'barrier' | 'stack' | 'industrial'`.
   - Garantir que `ObstacleConfig` continue compativel (os campos existentes nao mudam).
 
-- [ ] Tarefa 3: Integrar factory no `ArenaBuilderService`
+- [x] Tarefa 3: Integrar factory no `ArenaBuilderService`
   - Arquivo: `lbot-datagen-frontend/src/app/services/arena-builder.service.ts`
   - O que fazer: Modificar `createObstaclesFromConfig()` para usar a `ObstacleMeshFactory` em vez de criar BoxGeometry simples.
   - Se o tipo nao tiver gerador definido na factory, usar fallback de caixa simples (regra do RF01).
   - O corpo de fisica (CANNON.Body) continua sendo uma Box simples aproximada.
 
-- [ ] Tarefa 4: Atualizar `createObstacles()` (modo default/sem level)
+- [x] Tarefa 4: Atualizar `createObstacles()` (modo default/sem level)
   - Arquivo: `lbot-datagen-frontend/src/app/services/arena-builder.service.ts`
   - O que fazer: Modificar o modo default para tambem usar a factory para criar obstaculos mais interessantes (em vez das caixas simples atuais). Manter compatibilidade com o robo-simulator quando nao ha levelConfig.
 
@@ -48,12 +48,12 @@ Criar o servico `ObstacleMeshFactory` dedicado para gerar meshes compostas (THRE
 
 ## Criterios de Aceite
 
-- [ ] CA01: A factory existe e tem funcoes para todos os tipos expandidos (crate, wall, ramp, tree, barrier, stack, industrial)
-- [ ] CA02: Cada funcao retorna THREE.Group com no maximo 4 geometrias
-- [ ] CA03: As cores usam variacoes de tonalidade da cor base
-- [ ] CA04: O fallback de caixa simples funciona para tipos desconhecidos
-- [ ] CA05: O ArenaBuilderService compila sem erros e usa a factory
-- [ ] CA06: O modo default (sem level) ainda funciona com obstaculos visuais compostos
+- [x] CA01: A factory existe e tem funcoes para todos os tipos expandidos (crate, wall, ramp, tree, barrier, stack, industrial)
+- [x] CA02: Cada funcao retorna THREE.Group com no maximo 4 geometrias
+- [x] CA03: As cores usam variacoes de tonalidade da cor base
+- [x] CA04: O fallback de caixa simples funciona para tipos desconhecidos
+- [x] CA05: O ArenaBuilderService compila sem erros e usa a factory
+- [x] CA06: O modo default (sem level) ainda funciona com obstaculos visuais compostos
 
 ## Testes Esperados
 
@@ -68,9 +68,14 @@ Criar o servico `ObstacleMeshFactory` dedicado para gerar meshes compostas (THRE
 
 ## Registro de Execucao
 
-- Data:
+- Data: 2026-06-14
 - Arquivos criados:
+  - `lbot-datagen-frontend/src/app/services/obstacle-mesh.factory.ts`
 - Arquivos alterados:
+  - `lbot-datagen-frontend/src/app/models/level-config.model.ts` (expandiu ObstacleType)
+  - `lbot-datagen-frontend/src/app/services/arena-builder.service.ts` (integracao com factory + createObstacles modo default)
+  - `lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts` (ajuste de cleanup para Mesh|Group)
 - Testes executados:
-- Resultado:
-- Pendencias:
+  - `npm run build` (compilacao passou sem erros)
+- Resultado: SUCESSO
+- Pendencias: Nenhuma

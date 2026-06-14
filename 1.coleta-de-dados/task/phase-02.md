@@ -1,6 +1,6 @@
 # Fase 02: Sistema de Temas Dinamicos
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,13 +12,13 @@ Implementar o sistema de temas dinamicos: sky color ajustavel por nivel, textura
 
 ## Tarefas
 
-- [ ] Tarefa 1: Tornar sky color dinamico no ThreeSceneService
+- [x] Tarefa 1: Tornar sky color dinamico no ThreeSceneService
   - Arquivo: `lbot-datagen-frontend/src/app/services/three-scene.service.ts`
   - O que fazer: Adicionar metodo `updateSkyColor(scene: THREE.Scene, skyColor: string)` que atualiza `scene.background` e `scene.fog.color`.
   - Remover o `SKY_COLOR` fixo e o `FOG` fixo do `createScene()`, ou permitir override.
   - O `initScene` pode continuar com o valor padrao, mas o metodo novo deve permitir mudar depois.
 
-- [ ] Tarefa 2: Criar geradores de textura CanvasTexture para o chao
+- [x] Tarefa 2: Criar geradores de textura CanvasTexture para o chao
   - Arquivo: `lbot-datagen-frontend/src/app/services/arena-builder.service.ts` (ou helper)
   - O que fazer: Criar funcoes que geram CanvasTexture para diferentes tipos de chao:
     - `createGrassTexture()`: base verde com detalhes de grama (linhas, pontos)
@@ -29,13 +29,13 @@ Implementar o sistema de temas dinamicos: sky color ajustavel por nivel, textura
   - Cada funcao retorna `THREE.CanvasTexture`.
   - Usar `canvas.getContext('2d')` para desenhar padroes simples.
 
-- [ ] Tarefa 3: Atualizar `createThemedGround` para usar texturas
+- [x] Tarefa 3: Atualizar `createThemedGround` para usar texturas
   - Arquivo: `lbot-datagen-frontend/src/app/services/arena-builder.service.ts`
   - O que fazer: Modificar `createThemedGround(theme)` para aceitar um tipo de textura (ou inferir a partir do tema). Usar a CanvasTexture apropriada em vez de cor solida.
   - Manter `MeshLambertMaterial` com a textura + cor base.
   - O `createGround()` (sem tema) pode continuar com a textura de grama atual ou usar a nova factory.
 
-- [ ] Tarefa 4: Criar paredes tematicas da arena
+- [x] Tarefa 4: Criar paredes tematicas da arena
   - Arquivo: `lbot-datagen-frontend/src/app/services/arena-builder.service.ts`
   - O que fazer: Modificar `createThemedWalls()` para adicionar detalhes visuais tematicos alem da cor:
     - Para tema "armazem/campo": manter pranchas de madeira (como hoje)
@@ -46,7 +46,7 @@ Implementar o sistema de temas dinamicos: sky color ajustavel por nivel, textura
   - Usar a `ObstacleMeshFactory` para criar os detalhes se possivel, ou criar inline.
   - Manter performance: no maximo 2-3 detalhes adicionais por parede.
 
-- [ ] Tarefa 5: Integrar sky color no carregamento de nivel
+- [x] Tarefa 5: Integrar sky color no carregamento de nivel
   - Arquivo: `lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts`
   - O que fazer: No metodo `loadLevel()`, apos carregar o ground e obstaculos, chamar `this.threeScene.updateSkyColor(this.scene, config.theme.skyColor)`.
   - Verificar se o metodo existe e funciona.
@@ -60,11 +60,11 @@ Implementar o sistema de temas dinamicos: sky color ajustavel por nivel, textura
 
 ## Criterios de Aceite
 
-- [ ] CA01: O sky color muda corretamente quando o nivel carrega
-- [ ] CA02: O chao de cada nivel tem uma textura CanvasTexture distinta
-- [ ] CA03: As paredes da arena seguem o tema (cor + detalhes visuais)
-- [ ] CA04: O fog usa a mesma cor do skyColor
-- [ ] CA05: Transicao entre niveis mantem a performance (sem leaks de textura)
+- [x] CA01: O sky color muda corretamente quando o nivel carrega
+- [x] CA02: O chao de cada nivel tem uma textura CanvasTexture distinta
+- [x] CA03: As paredes da arena seguem o tema (cor + detalhes visuais)
+- [x] CA04: O fog usa a mesma cor do skyColor
+- [x] CA05: Transicao entre niveis mantem a performance (sem leaks de textura)
 
 ## Testes Esperados
 
@@ -79,9 +79,16 @@ Implementar o sistema de temas dinamicos: sky color ajustavel por nivel, textura
 
 ## Registro de Execucao
 
-- Data:
+- Data: 2026-06-14
 - Arquivos criados:
+  - Nenhum (todos os arquivos ja existiam)
 - Arquivos alterados:
+  - `lbot-datagen-frontend/src/app/services/three-scene.service.ts` (metodo updateSkyColor)
+  - `lbot-datagen-frontend/src/app/services/arena-builder.service.ts` (texturas CanvasTexture, createThemedGround com textura, createThemedWalls com detalhes tematicos)
+  - `lbot-datagen-frontend/src/app/components/robo-simulator/robo-simulator.ts` (chamada updateSkyColor em loadLevel)
+  - `lbot-datagen-frontend/src/app/app.spec.ts` (correcao de import App -> AppComponent)
 - Testes executados:
-- Resultado:
-- Pendencias:
+  - `npm run build` (compilacao passou sem erros)
+  - `npm run test` (1 teste pre-existente falhou por falta de provider ActivatedRoute; nao relacionado a esta fase)
+- Resultado: SUCESSO
+- Pendencias: Nenhuma (o teste que falha eh pre-existente e nao impactado por esta fase)

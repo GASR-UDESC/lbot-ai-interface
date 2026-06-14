@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, NgZone, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { LucideAngularModule, Camera, Target } from 'lucide-angular';
+import { LucideAngularModule, Camera } from 'lucide-angular';
 import { SimulatorBridgeService, SimulatorCommand } from '../../services/simulator-bridge.service';
 import { ThreeSceneService } from '../../services/three-scene.service';
 import { PhysicsService } from '../../services/physics.service';
@@ -51,9 +51,6 @@ import * as CANNON from 'cannon-es';
       <div class="buttons-container">
         <button class="camera-button" (click)="toggleCameraMode()" [disabled]="robotState.isAnimating">
           <lucide-icon [img]="CameraIcon" [size]="18" style="vertical-align: middle; margin-right: 4px;"></lucide-icon>{{ cameraController.isThirdPersonView() ? 'Vista Normal' : '3ª Pessoa' }}
-        </button>
-        <button class="goal-button" (click)="generateNewLevel()" [disabled]="robotState.isAnimating" *ngIf="showGoals">
-          <lucide-icon [img]="TargetIcon" [size]="18" style="vertical-align: middle; margin-right: 4px;"></lucide-icon>Novo Desafio
         </button>
       </div>
       <div class="indicator" [style.display]="robotState.isAnimating ? 'block' : 'none'">
@@ -108,7 +105,6 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   
   // Icons
   readonly CameraIcon = Camera;
-  readonly TargetIcon = Target;
   
   // Game state
   startPoint = { x: -80, z: -80 };
@@ -120,8 +116,6 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   private startTextSprite!: THREE.Sprite;
   private goalTextSprite!: THREE.Sprite;
   private readonly WIN_DISTANCE = 25;
-  private readonly MIN_DISTANCE_AB = 250; // Distância mínima entre A e B (bem grande para desafio)
-  private readonly MIN_OBSTACLE_DISTANCE = 20; // Distância mínima dos obstáculos
 
   // Throttle para atualizações do estado
   private lastStateUpdate = 0;
@@ -176,8 +170,6 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
       this.updateMarkersVisibility();
       if (!changes['showGoals'].currentValue) {
         this.hasWon = false;
-      } else if (this.startMarker) {
-        this.generateNewLevel();
       }
     }
 
@@ -230,8 +222,8 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
       // Level config mode: robot starts at the fixed start point; no random generation
       this.resetRobot();
     } else {
-      // Default mode: generate random A/B positions
-      this.generateNewLevel();
+      // Default mode (Modo Controle): use fixed A/B positions
+      this.resetRobot();
     }
 
     // Setup camera controls
@@ -474,9 +466,23 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     // 1. Remove old obstacles from scene and physics world
     for (const obs of this.obstacles) {
       this.scene.remove(obs.mesh);
-      obs.mesh.geometry.dispose();
-      if (obs.mesh.material instanceof THREE.Material) {
-        obs.mesh.material.dispose();
+      // Dispose geometries and materials for both Mesh and Group
+      if (obs.mesh instanceof THREE.Mesh) {
+        obs.mesh.geometry.dispose();
+        if (obs.mesh.material instanceof THREE.Material) {
+          obs.mesh.material.dispose();
+        }
+      } else if (obs.mesh instanceof THREE.Group) {
+        obs.mesh.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (child.material instanceof THREE.Material) {
+              child.material.dispose();
+            } else if (Array.isArray(child.material)) {
+              child.material.forEach((m) => m.dispose());
+            }
+          }
+        });
       }
       this.world.removeBody(obs.body);
     }
@@ -506,7 +512,10 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.startTextSprite.position.set(this.startPoint.x, 10, this.startPoint.z);
     this.goalTextSprite.position.set(this.goalPoint.x,  10, this.goalPoint.z);
 
-    // 6. Reset robot to new start point
+    // 6. Update sky color
+    this.threeScene.updateSkyColor(this.scene, config.theme.skyColor);
+
+    // 7. Reset robot to new start point
     this.hasWon = false;
     this.resetRobot();
 
@@ -642,137 +651,5 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     }, 3000);
   }
   
-  generateNewLevel(): void {
-    const maxAttempts = 500; // Mais tentativas para encontrar posições válidas
-    let validPositions = false;
-    let attempts = 0;
-    
-    while (!validPositions && attempts < maxAttempts) {
-      attempts++;
-      
-      // Estratégia: gera A em uma região, B na região oposta
-      const quadrantA = Math.floor(Math.random() * 4); // 0=NW, 1=NE, 2=SE, 3=SW
-      const quadrantB = (quadrantA + 2) % 4; // Quadrante oposto
-      
-      // Gera posição para A no seu quadrante
-      const newStartPoint = this.generatePositionInQuadrant(quadrantA);
-      
-      // Gera posição para B no quadrante oposto
-      const newGoalPoint = this.generatePositionInQuadrant(quadrantB);
-      
-      // Verifica se a distância entre A e B é suficiente
-      const distanceAB = this.calculateDistance(newStartPoint, newGoalPoint);
-      if (distanceAB < this.MIN_DISTANCE_AB) {
-        continue;
-      }
-      
-      // Verifica se A não está em obstáculos
-      if (this.isPositionOnObstacle(newStartPoint)) {
-        continue;
-      }
-      
-      // Verifica se B não está em obstáculos
-      if (this.isPositionOnObstacle(newGoalPoint)) {
-        continue;
-      }
-      
-      // Posições válidas encontradas
-      this.startPoint = newStartPoint;
-      this.goalPoint = newGoalPoint;
-      validPositions = true;
-    }
-    
-    if (!validPositions) {
-      console.warn('Não foi possível encontrar posições válidas após', maxAttempts, 'tentativas');
-      // Usa posições padrão bem distantes
-      this.startPoint = { x: -85, z: -85 };
-      this.goalPoint = { x: 85, z: 85 };
-    }
-    
-    // Atualiza posições dos marcadores
-    this.startMarker.position.set(this.startPoint.x, 0.1, this.startPoint.z);
-    this.goalMarker.position.set(this.goalPoint.x, 0.1, this.goalPoint.z);
-    
-    // Atualiza sprites de texto
-    this.startTextSprite.position.set(this.startPoint.x, 10, this.startPoint.z);
-    this.goalTextSprite.position.set(this.goalPoint.x, 10, this.goalPoint.z);
-    
-    // Reseta o robô para a nova posição A
-    this.resetRobot();
-    
-    this.hasWon = false;
-    this.cdr.detectChanges();
-  }
-  
-  private generateRandomPosition(): { x: number, z: number } {
-    const range = 180; // Área segura dentro da arena (maior para permitir distâncias grandes)
-    return {
-      x: (Math.random() - 0.5) * range,
-      z: (Math.random() - 0.5) * range
-    };
-  }
-  
-  private generatePositionInQuadrant(quadrant: number): { x: number, z: number } {
-    // Divide a arena em 4 quadrantes para forçar distâncias grandes
-    const range = 90; // Metade da arena
-    const minOffset = 40; // Offset mínimo do centro para evitar o meio
-    
-    let x = 0, z = 0;
-    
-    switch(quadrant) {
-      case 0: // Noroeste (NW): x negativo, z positivo
-        x = -(Math.random() * range + minOffset);
-        z = Math.random() * range + minOffset;
-        break;
-      case 1: // Nordeste (NE): x positivo, z positivo
-        x = Math.random() * range + minOffset;
-        z = Math.random() * range + minOffset;
-        break;
-      case 2: // Sudeste (SE): x positivo, z negativo
-        x = Math.random() * range + minOffset;
-        z = -(Math.random() * range + minOffset);
-        break;
-      case 3: // Sudoeste (SW): x negativo, z negativo
-        x = -(Math.random() * range + minOffset);
-        z = -(Math.random() * range + minOffset);
-        break;
-    }
-    
-    return { x, z };
-  }
-  
-  private calculateDistance(point1: { x: number, z: number }, point2: { x: number, z: number }): number {
-    const dx = point2.x - point1.x;
-    const dz = point2.z - point1.z;
-    return Math.sqrt(dx * dx + dz * dz);
-  }
-  
-  private isPositionOnObstacle(position: { x: number, z: number }): boolean {
-    // Verifica colisão com cada obstáculo
-    for (const obstacle of this.obstacles) {
-      const obstaclePos = obstacle.body.position;
-      const shapes = obstacle.body.shapes;
-      
-      if (shapes.length > 0) {
-        const shape = shapes[0];
-        
-        if (shape instanceof CANNON.Box) {
-          // Cria uma área expandida ao redor do obstáculo
-          const halfExtents = shape.halfExtents;
-          const minX = obstaclePos.x - halfExtents.x - this.MIN_OBSTACLE_DISTANCE;
-          const maxX = obstaclePos.x + halfExtents.x + this.MIN_OBSTACLE_DISTANCE;
-          const minZ = obstaclePos.z - halfExtents.z - this.MIN_OBSTACLE_DISTANCE;
-          const maxZ = obstaclePos.z + halfExtents.z + this.MIN_OBSTACLE_DISTANCE;
-          
-          // Verifica se o ponto está dentro da área expandida
-          if (position.x >= minX && position.x <= maxX &&
-              position.z >= minZ && position.z <= maxZ) {
-            return true;
-          }
-        }
-      }
-    }
-    
-    return false;
-  }
+
 }

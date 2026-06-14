@@ -155,7 +155,8 @@ export class PhysicsService {
     }
 
     // Accelerate falling if robot is in the air
-    if (robotBody.position.y > 7) {
+    // Do NOT force down when the robot is ascending (e.g., climbing a ramp)
+    if (robotBody.position.y > 10 && robotBody.velocity.y <= 0) {
       robotBody.velocity.y -= 2;
     }
   }

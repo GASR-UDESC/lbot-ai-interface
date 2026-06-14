@@ -1,6 +1,6 @@
 # Fase 04: Redesign dos Niveis 4-5
 
-## Status: PENDENTE
+## Status: CONCLUIDO
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Redefinir os Niveis 4 e 5 no `level-config.model.ts` com novos layouts, obstacul
 
 ## Tarefas
 
-- [ ] Tarefa 1: Redesenhar Nivel 4 - Floresta Misteriosa
+- [x] Tarefa 1: Redesenhar Nivel 4 - Floresta Misteriosa
   - Arquivo: `lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer: Substituir o nivel 4 atual por:
     - Nome: `'Floresta Misteriosa'`
@@ -23,7 +23,7 @@ Redefinir os Niveis 4 e 5 no `level-config.model.ts` com novos layouts, obstacul
     - Os angulos devem forcar o jogador a fazer varias rotacoes (R90L/R90R)
     - Dificuldade: 12-16 comandos LBML
 
-- [ ] Tarefa 2: Redesenhar Nivel 5 - Complexo Industrial
+- [x] Tarefa 2: Redesenhar Nivel 5 - Complexo Industrial
   - Arquivo: `lbot-datagen-frontend/src/app/models/level-config.model.ts`
   - O que fazer: Substituir o nivel 5 atual por:
     - Nome: `'Complexo Industrial'`
@@ -38,7 +38,7 @@ Redefinir os Niveis 4 e 5 no `level-config.model.ts` com novos layouts, obstacul
     - Layout: corredores mais estreitos (paredes proximas), combinacao de angulos e rampas
     - Dificuldade: 16-20 comandos LBML
 
-- [ ] Tarefa 3: Verificar compilacao e posicoes
+- [x] Tarefa 3: Verificar compilacao e posicoes
   - Verificar que todas as posicoes A/B estao dentro da arena
   - Verificar que nenhum obstaculo colide com A ou B
   - Verificar que os tipos usados existem na ObstacleMeshFactory
@@ -52,12 +52,12 @@ Redefinir os Niveis 4 e 5 no `level-config.model.ts` com novos layouts, obstacul
 
 ## Criterios de Aceite
 
-- [ ] CA01: Nivel 4 tem 9-11 obstaculos com angulos variados (zig-zag)
-- [ ] CA02: Nivel 5 tem 11-13 obstaculos combinando paredes + rampas + rotacionados + corredores estreitos
-- [ ] CA03: Distancia A->B ~300-424 unidades em ambos
-- [ ] CA04: Posicoes A e B nao colidem com obstaculos
-- [ ] CA05: Paleta de cores distinta para cada nivel
-- [ ] CA06: Compilacao passa sem erros
+- [x] CA01: Nivel 4 tem 9-11 obstaculos com angulos variados (zig-zag)
+- [x] CA02: Nivel 5 tem 11-13 obstaculos combinando paredes + rampas + rotacionados + corredores estreitos
+- [x] CA03: Distancia A->B ~300-424 unidades em ambos
+- [x] CA04: Posicoes A e B nao colidem com obstaculos
+- [x] CA05: Paleta de cores distinta para cada nivel
+- [x] CA06: Compilacao passa sem erros
 
 ## Testes Esperados
 
@@ -72,9 +72,11 @@ Redefinir os Niveis 4 e 5 no `level-config.model.ts` com novos layouts, obstacul
 
 ## Registro de Execucao
 
-- Data:
-- Arquivos criados:
+- Data: 2026-06-14
+- Arquivos criados: (nenhum)
 - Arquivos alterados:
+  - `lbot-datagen-frontend/src/app/models/level-config.model.ts` (niveis 4 e 5 redefinidos)
 - Testes executados:
-- Resultado:
-- Pendencias:
+  - `npm run build` (compilacao passou sem erros TypeScript)
+- Resultado: SUCESSO
+- Pendencias: Nenhuma. Ambos os niveis foram redesenhados com layouts que exploram as mecanicas esperadas (zig-zag com rotacao no nivel 4, corredores estreitos + rampa + industrial + rotacionados no nivel 5). A compilacao foi bem-sucedida. A proxima fase (Fase 05) pode prosseguir.

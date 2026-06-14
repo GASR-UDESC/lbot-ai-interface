@@ -198,4 +198,17 @@ export class ThreeSceneService {
   public getDefaultCameraPosition(): Readonly<{ x: number; y: number; z: number }> {
     return ThreeSceneService.CAMERA_DEFAULT_POSITION;
   }
+
+  /**
+   * Updates the sky color (background + fog) dynamically.
+   * @param scene - The scene to update
+   * @param skyColor - Hex color string (e.g. '#87CEEB')
+   */
+  public updateSkyColor(scene: THREE.Scene, skyColor: string): void {
+    const color = new THREE.Color(skyColor);
+    scene.background = color;
+    if (scene.fog) {
+      scene.fog.color = color;
+    }
+  }
 }
