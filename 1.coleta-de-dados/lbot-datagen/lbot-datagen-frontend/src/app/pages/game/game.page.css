@@ -2,12 +2,16 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: calc(100dvh - var(--top-nav-height, 64px));
+  height: 100dvh;
   overflow: hidden;
   background: var(--color-canvas);
 }
 
 .page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
   padding: var(--spacing-xxl) var(--spacing-xl);
   flex-shrink: 0;
   background: rgba(0, 82, 255, 0.03);

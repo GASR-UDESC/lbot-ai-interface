@@ -113,8 +113,6 @@
   --typography-rating-display-weight: 500;
   --typography-rating-display-line-height: 1.1;
 
-  --top-nav-height: 64px;
-
   --transition-fade-in: opacity 0.3s ease;
   --transition-scale-in: transform 0.3s ease;
 }

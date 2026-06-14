@@ -1,0 +1,25 @@
+.back-btn {
+  position: fixed;
+  top: var(--spacing-base);
+  left: var(--spacing-base);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: var(--rounded-pill);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-body);
+  text-decoration: none;
+  font-size: var(--typography-body-sm-size);
+  font-weight: 500;
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 82, 255, 0.1);
+}

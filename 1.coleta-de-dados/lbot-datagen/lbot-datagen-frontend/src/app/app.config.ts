@@ -5,7 +5,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { routes } from './app.routes';
 
 /**
- * Application configuration for the LBot DataGen frontend.
+ * Application configuration for the Lbot DataGen frontend.
  * Defines all providers needed for the application to run.
  */
 export const appConfig: ApplicationConfig = {

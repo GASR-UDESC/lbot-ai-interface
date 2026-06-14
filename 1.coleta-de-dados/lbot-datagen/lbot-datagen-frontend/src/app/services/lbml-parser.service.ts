@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ParsedCommand, LbmlCommandType, CommandDirection } from '../models/lbml-command.model';
 
 /**
- * Service responsible for parsing and validating LBML (LBot Markup Language) commands.
+ * Service responsible for parsing and validating LBML (Lbot Markup Language) commands.
  * 
  * LBML Format:
  * - Distance commands: D[number][F|B|L|R]; (e.g., D10F; - move 10 units forward)

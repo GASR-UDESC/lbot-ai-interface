@@ -37,7 +37,7 @@ interface StarRating {
 }
 
 /**
- * Chat component that handles the conversation interface with the LBot translator.
+ * Chat component that handles the conversation interface with the Lbot translator.
  * Manages message sending, rating, and chat lifecycle.
  */
 @Component({
