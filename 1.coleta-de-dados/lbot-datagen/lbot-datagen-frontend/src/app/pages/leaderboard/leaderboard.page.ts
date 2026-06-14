@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { LeaderboardService } from '../../services/leaderboard.service';
 import { GameRunResponse } from '../../models/leaderboard.model';
+import { LucideAngularModule, Trophy, TriangleAlert, Gamepad2, Medal } from 'lucide-angular';
 
 /**
  * Leaderboard page — displays the global ranking of completed game runs
@@ -10,11 +11,16 @@ import { GameRunResponse } from '../../models/leaderboard.model';
 @Component({
   selector: 'app-leaderboard-page',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, LucideAngularModule],
   templateUrl: './leaderboard.page.html',
   styleUrl: './leaderboard.page.css'
 })
 export class LeaderboardPage implements OnInit {
+
+  public readonly TrophyIcon = Trophy;
+  public readonly TriangleAlertIcon = TriangleAlert;
+  public readonly GamepadIcon = Gamepad2;
+  public readonly MedalIcon = Medal;
 
   /** Ordered list of game runs fetched from the backend. */
   entries = signal<GameRunResponse[]>([]);

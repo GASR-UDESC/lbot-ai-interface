@@ -20,6 +20,7 @@ import { LbotChat } from '../../components/lbot-chat/lbot-chat';
 import { LevelTransitionComponent } from '../../components/level-transition/level-transition';
 import { VictoryScreenComponent, VictorySavePayload } from '../../components/victory-screen/victory-screen';
 import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal';
+import { LucideAngularModule, RotateCcw } from 'lucide-angular';
 
 /**
  * Main game page orchestrating the 3-D simulator, chat panel, HUD, overlays
@@ -43,12 +44,15 @@ import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-mo
     LbotChat,
     LevelTransitionComponent,
     VictoryScreenComponent,
-    ConfirmModalComponent
+    ConfirmModalComponent,
+    LucideAngularModule
   ],
   templateUrl: './game.page.html',
   styleUrl: './game.page.css'
 })
 export class GamePage implements OnInit, OnDestroy {
+
+  public readonly RotateCcwIcon = RotateCcw;
 
   @ViewChild(RoboSimulatorComponent) simulator?: RoboSimulatorComponent;
 

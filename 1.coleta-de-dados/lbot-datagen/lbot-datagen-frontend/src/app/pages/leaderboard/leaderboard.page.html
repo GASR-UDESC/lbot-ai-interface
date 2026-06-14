@@ -2,7 +2,7 @@
   <div class="lb-container">
 
     <div class="lb-header">
-      <div class="lb-trophy">🏆</div>
+      <div class="lb-trophy"><lucide-icon [img]="TrophyIcon" [size]="48"></lucide-icon></div>
       <h1 class="lb-title">Leaderboard</h1>
       <p class="lb-subtitle">Os melhores tempos de todos os tempos</p>
     </div>
@@ -19,13 +19,13 @@
     </div>
 
     <div class="lb-state" *ngIf="!isLoading() && hasError()">
-      <div class="lb-state-icon">⚠️</div>
+      <div class="lb-state-icon"><lucide-icon [img]="TriangleAlertIcon" [size]="40"></lucide-icon></div>
       <p class="lb-state-text">Leaderboard indisponível no momento</p>
       <button class="lb-retry-btn" (click)="loadLeaderboard()">Tentar novamente</button>
     </div>
 
     <div class="lb-state" *ngIf="!isLoading() && !hasError() && entries().length === 0">
-      <div class="lb-state-icon">🎮</div>
+      <div class="lb-state-icon"><lucide-icon [img]="GamepadIcon" [size]="40"></lucide-icon></div>
       <p class="lb-state-text">Nenhum jogador completou os 5 níveis ainda. Seja o primeiro!</p>
     </div>
 
@@ -37,9 +37,9 @@
            [class.lb-card--bronze]="i === 2">
 
         <div class="lb-card-rank">
-          <span class="lb-medal" *ngIf="i === 0">🥇</span>
-          <span class="lb-medal" *ngIf="i === 1">🥈</span>
-          <span class="lb-medal" *ngIf="i === 2">🥉</span>
+          <lucide-icon *ngIf="i === 0" [img]="MedalIcon" [size]="32" class="lb-medal lb-medal--gold"></lucide-icon>
+          <lucide-icon *ngIf="i === 1" [img]="MedalIcon" [size]="28" class="lb-medal lb-medal--silver"></lucide-icon>
+          <lucide-icon *ngIf="i === 2" [img]="MedalIcon" [size]="24" class="lb-medal lb-medal--bronze"></lucide-icon>
           <span class="lb-rank-num" [class.lb-rank-num--large]="i < 3" *ngIf="i >= 3">#{{ i + 1 }}</span>
         </div>
 

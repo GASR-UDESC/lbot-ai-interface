@@ -92,9 +92,7 @@
   cursor: not-allowed;
 }
 
-.control-btn .arrow {
-  font-size: 1.3rem;
-  line-height: 1;
+.control-btn lucide-icon {
   color: var(--color-primary);
 }
 

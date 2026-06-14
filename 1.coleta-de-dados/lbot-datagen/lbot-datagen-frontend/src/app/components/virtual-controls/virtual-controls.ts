@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { CommandBuilderService, TimelineCommand } from '../../services/command-builder.service';
 import { SimulatorBridgeService } from '../../services/simulator-bridge.service';
 import { VirtualControlService } from '../../services/virtual-control.service';
+import { LucideAngularModule, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, RotateCw, X, Play, Hourglass } from 'lucide-angular';
 
 @Component({
   selector: 'app-virtual-controls',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './virtual-controls.html',
   styleUrls: ['./virtual-controls.css']
 })
@@ -21,6 +22,17 @@ export class VirtualControlsComponent implements OnInit {
   // Increment values
   public readonly DISTANCE_INCREMENT = 10; // 10cm
   public readonly ROTATION_INCREMENT = 10; // 10 degrees
+
+  // Icons
+  public readonly ArrowUpIcon = ArrowUp;
+  public readonly ArrowDownIcon = ArrowDown;
+  public readonly ArrowLeftIcon = ArrowLeft;
+  public readonly ArrowRightIcon = ArrowRight;
+  public readonly RotateCcwIcon = RotateCcw;
+  public readonly RotateCwIcon = RotateCw;
+  public readonly XIcon = X;
+  public readonly PlayIcon = Play;
+  public readonly HourglassIcon = Hourglass;
 
   constructor(
     private commandBuilder: CommandBuilderService,

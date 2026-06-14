@@ -15,14 +15,14 @@
             class="control-btn movement-btn"
             (click)="addMovement('F')"
             [disabled]="isExecuting">
-            <span class="arrow">↑</span>
+            <lucide-icon [img]="ArrowUpIcon" [size]="24"></lucide-icon>
             <span class="label">Frente</span>
           </button>
           <button
             class="control-btn movement-btn"
             (click)="addMovement('B')"
             [disabled]="isExecuting">
-            <span class="arrow">↓</span>
+            <lucide-icon [img]="ArrowDownIcon" [size]="24"></lucide-icon>
             <span class="label">Trás</span>
           </button>
         </div>
@@ -31,14 +31,14 @@
             class="control-btn movement-btn"
             (click)="addMovement('L')"
             [disabled]="isExecuting">
-            <span class="arrow">←</span>
+            <lucide-icon [img]="ArrowLeftIcon" [size]="24"></lucide-icon>
             <span class="label">Esquerda</span>
           </button>
           <button
             class="control-btn movement-btn"
             (click)="addMovement('R')"
             [disabled]="isExecuting">
-            <span class="arrow">→</span>
+            <lucide-icon [img]="ArrowRightIcon" [size]="24"></lucide-icon>
             <span class="label">Direita</span>
           </button>
         </div>
@@ -52,14 +52,14 @@
             class="control-btn rotation-btn"
             (click)="addRotation('L')"
             [disabled]="isExecuting">
-            <span class="arrow">↺</span>
+            <lucide-icon [img]="RotateCcwIcon" [size]="24"></lucide-icon>
             <span class="label">Girar Esq.</span>
           </button>
           <button
             class="control-btn rotation-btn"
             (click)="addRotation('R')"
             [disabled]="isExecuting">
-            <span class="arrow">↻</span>
+            <lucide-icon [img]="RotateCwIcon" [size]="24"></lucide-icon>
             <span class="label">Girar Dir.</span>
           </button>
         </div>
@@ -95,7 +95,7 @@
           (click)="removeCommand(i)"
           [disabled]="isExecuting"
           title="Remover comando">
-          ✕
+          <lucide-icon [img]="XIcon" [size]="16"></lucide-icon>
         </button>
       </div>
     </div>
@@ -152,8 +152,8 @@
       class="action-btn execute-btn"
       (click)="execute()"
       [disabled]="!hasCommands() || isExecuting || !userDescription.trim()">
-      <span *ngIf="!isExecuting">▶ Executar</span>
-      <span *ngIf="isExecuting">⏳ Executando...</span>
+      <span *ngIf="!isExecuting"><lucide-icon [img]="PlayIcon" [size]="20" style="vertical-align: middle;"></lucide-icon> Executar</span>
+      <span *ngIf="isExecuting"><lucide-icon [img]="HourglassIcon" [size]="20" style="vertical-align: middle;"></lucide-icon> Executando...</span>
     </button>
   </div>
 </div>

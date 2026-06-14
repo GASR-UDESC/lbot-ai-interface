@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatDto, MessageDto, MessagesService } from '../../services/messages-service';
 import { SimulatorBridgeService } from '../../services/simulator-bridge.service';
-import { LucideAngularModule, Bot, Star } from 'lucide-angular';
+import { LucideAngularModule, Bot, Star, X } from 'lucide-angular';
 
 /**
  * Message types supported by the chat interface.
@@ -34,7 +34,6 @@ interface PendingReevaluation {
 interface StarRating {
   value: number;
   title: string;
-  emoji: string;
 }
 
 /**
@@ -65,11 +64,11 @@ export class LbotChat implements OnInit, OnDestroy, OnChanges {
   };
 
   private static readonly STAR_RATINGS: ReadonlyArray<StarRating> = [
-    { value: 1, title: 'Muito ruim', emoji: '⭐' },
-    { value: 2, title: 'Ruim', emoji: '⭐' },
-    { value: 3, title: 'Ok', emoji: '⭐' },
-    { value: 4, title: 'Bom', emoji: '⭐' },
-    { value: 5, title: 'Excelente', emoji: '⭐' }
+    { value: 1, title: 'Muito ruim' },
+    { value: 2, title: 'Ruim' },
+    { value: 3, title: 'Ok' },
+    { value: 4, title: 'Bom' },
+    { value: 5, title: 'Excelente' }
   ];
 
   private static readonly FAREWELL_DELAY_MS = 2000;
@@ -86,6 +85,7 @@ export class LbotChat implements OnInit, OnDestroy, OnChanges {
   // Icons
   public readonly BotIcon = Bot;
   public readonly StarIcon = Star;
+  public readonly XIcon = X;
 
   // Private state
   private readonly ratings = new Map<string, number>();
@@ -171,14 +171,6 @@ export class LbotChat implements OnInit, OnDestroy, OnChanges {
   public getStarTitle(star: number): string {
     const starRating = LbotChat.STAR_RATINGS.find(sr => sr.value === star);
     return starRating?.title ?? 'Avaliar';
-  }
-
-  /**
-   * Returns the emoji for a rating value.
-   */
-  public getRatingEmoji(rating: number): string {
-    const starRating = LbotChat.STAR_RATINGS.find(sr => sr.value === rating);
-    return starRating?.emoji ?? '�';
   }
 
   /**

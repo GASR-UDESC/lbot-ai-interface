@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideAngularModule, Play, Trophy, Gamepad2 } from 'lucide-angular';
+import { LucideAngularModule, Play, Trophy, Gamepad2, Bot } from 'lucide-angular';
 
 /**
  * Main menu page component.
@@ -17,4 +17,5 @@ export class MenuPage {
   public readonly PlayIcon = Play;
   public readonly TrophyIcon = Trophy;
   public readonly GamepadIcon = Gamepad2;
+  public readonly BotIcon = Bot;
 }

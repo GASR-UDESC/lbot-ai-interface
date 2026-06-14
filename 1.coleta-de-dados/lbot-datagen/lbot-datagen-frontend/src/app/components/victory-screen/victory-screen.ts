@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule, Trophy } from 'lucide-angular';
 
 /** Payload emitted when the player saves to the leaderboard. */
 export interface VictorySavePayload {
@@ -16,11 +17,13 @@ export interface VictorySavePayload {
 @Component({
   selector: 'app-victory-screen',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './victory-screen.html',
   styleUrls: ['./victory-screen.css']
 })
 export class VictoryScreenComponent {
+  public readonly TrophyIcon = Trophy;
+
   /** Time in milliseconds for each completed level (index 0 = level 1). */
   @Input() levelTimes: number[] = [];
 
