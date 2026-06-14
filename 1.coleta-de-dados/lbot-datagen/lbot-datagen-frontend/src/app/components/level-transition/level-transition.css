@@ -39,8 +39,8 @@
   font-size: var(--typography-uppercase-tag-size, 8px);
   font-weight: 600;
   line-height: var(--typography-uppercase-tag-line-height, 1.25);
-  color: var(--color-ink);
-  background: var(--color-surface-strong);
+  color: var(--color-primary);
+  background: rgba(0, 82, 255, 0.08);
   border-radius: var(--rounded-pill);
   padding: 4px 14px;
 }
@@ -83,7 +83,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 20px;
-  background: var(--color-surface-strong);
+  background: rgba(0, 82, 255, 0.06);
   border-radius: var(--rounded-pill);
 }
 

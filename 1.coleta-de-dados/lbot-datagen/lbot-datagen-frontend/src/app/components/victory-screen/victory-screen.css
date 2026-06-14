@@ -38,6 +38,14 @@
 
 .trophy-icon {
   font-size: 4rem;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--rounded-full);
+  background: rgba(0, 82, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
 }
 
 .victory-title {

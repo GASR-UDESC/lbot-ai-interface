@@ -16,7 +16,7 @@
 
 .header h2 {
   margin: 0 0 var(--spacing-xs) 0;
-  color: var(--color-ink);
+  color: var(--color-primary);
   font-size: var(--typography-title-md-size);
   font-weight: 600;
   line-height: var(--typography-title-md-line-height);
@@ -78,12 +78,13 @@
 }
 
 .control-btn:hover:not(:disabled) {
-  background: var(--color-hairline-soft);
-  border-color: var(--color-hairline);
+  background: rgba(0, 82, 255, 0.08);
+  border-color: var(--color-primary);
 }
 
 .control-btn:active:not(:disabled) {
-  background: var(--color-hairline-soft);
+  background: rgba(0, 82, 255, 0.12);
+  border-color: var(--color-primary);
 }
 
 .control-btn:disabled {
@@ -94,7 +95,7 @@
 .control-btn .arrow {
   font-size: 1.3rem;
   line-height: 1;
-  color: var(--color-ink);
+  color: var(--color-primary);
 }
 
 .control-btn .label {
@@ -113,7 +114,7 @@
 
 .timeline-section h3 {
   margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-ink);
+  color: var(--color-primary);
   font-size: var(--typography-title-sm-size);
   font-weight: var(--typography-title-sm-weight);
   line-height: var(--typography-title-sm-line-height);

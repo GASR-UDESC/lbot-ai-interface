@@ -36,6 +36,17 @@
   color: var(--color-ink);
   margin: 0;
   letter-spacing: -0.5px;
+  position: relative;
+}
+
+.lb-title::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: var(--color-primary);
+  border-radius: var(--rounded-pill);
+  margin: 12px auto 0;
 }
 
 .lb-subtitle {
@@ -55,6 +66,7 @@
   background: var(--color-surface-card);
   border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
+  border-left: 3px solid var(--color-primary);
 }
 
 .lb-state-icon {
@@ -98,6 +110,7 @@
   padding: var(--spacing-lg);
   border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
+  border-left: 3px solid var(--color-primary);
   background: var(--color-surface-card);
 }
 
@@ -147,16 +160,19 @@
   background: var(--color-surface-card);
   border-radius: var(--rounded-xl);
   border: 1px solid var(--color-hairline);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, border-left-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lb-card:hover {
-  border-color: var(--color-body);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 82, 255, 0.06);
 }
 
 .lb-card--gold {
   border-color: var(--color-hairline);
+  border-left-color: var(--color-primary);
 }
 
 .lb-card--gold .lb-medal {
