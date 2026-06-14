@@ -10,24 +10,25 @@
 
   <!-- ── Simulator panel ── -->
   <div class="simulator-panel">
-    <app-robo-simulator
-      [showGoals]="true"
-      [levelConfig]="currentLevelConfig()"
-      (levelCompleted)="onLevelCompleted()"
-    ></app-robo-simulator>
+    <div class="simulator-wrapper">
+      <app-robo-simulator
+        [showGoals]="true"
+        [levelConfig]="currentLevelConfig()"
+        (levelCompleted)="onLevelCompleted()"
+      ></app-robo-simulator>
 
-    <!-- HUD overlay -->
-    <div class="hud" *ngIf="gameState.phase() === 'playing'">
-      <div class="hud-level">
-        <span class="hud-label">NÍVEL {{ gameState.currentLevel() }}</span>
-        <span class="hud-level-name">{{ currentLevelConfig()?.name }}</span>
+      <!-- HUD overlay -->
+      <div class="hud" *ngIf="gameState.phase() === 'playing'">
+        <div class="hud-level">
+          <span class="hud-label">NÍVEL {{ gameState.currentLevel() }}</span>
+          <span class="hud-level-name">{{ currentLevelConfig()?.name }}</span>
+        </div>
+        <div class="hud-timer">{{ timerDisplay() }}</div>
+        <button class="hud-reset-btn" (click)="onResetRobot()">
+          ↺ Reiniciar Posição
+        </button>
       </div>
-      <div class="hud-timer">{{ timerDisplay() }}</div>
-      <button class="hud-reset-btn" (click)="onResetRobot()">
-        ↺ Reiniciar Posição
-      </button>
     </div>
-
   </div>
 
   <!-- ── Chat panel ── -->

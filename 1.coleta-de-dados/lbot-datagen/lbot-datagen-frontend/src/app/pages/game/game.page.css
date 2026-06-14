@@ -35,6 +35,8 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding: var(--spacing-base) var(--spacing-xl) var(--spacing-lg);
+  gap: var(--spacing-lg);
 }
 
 .simulator-panel {
@@ -43,10 +45,21 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
-.simulator-panel app-robo-simulator {
+.simulator-wrapper {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: var(--rounded-xl);
+  overflow: hidden;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+}
+
+.simulator-wrapper app-robo-simulator {
   flex: 1 1 0;
   min-height: 0;
   display: block;
@@ -129,9 +142,10 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface-soft);
-  border-left: 1px solid var(--color-hairline);
+  background: var(--color-surface-card);
+  border-radius: var(--rounded-xl);
   overflow: hidden;
+  border: 1px solid var(--color-hairline);
 }
 
 .chat-loading {
@@ -146,6 +160,8 @@
 @media (max-width: 744px) {
   .game-layout {
     flex-direction: column;
+    padding: var(--spacing-base);
+    gap: var(--spacing-base);
   }
 
   .simulator-panel {
@@ -155,8 +171,6 @@
   .chat-panel {
     width: 100%;
     flex: 1;
-    border-left: none;
-    border-top: 1px solid var(--color-hairline);
   }
 
   .hud {
