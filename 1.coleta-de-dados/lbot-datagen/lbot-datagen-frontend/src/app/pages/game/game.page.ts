@@ -177,7 +177,7 @@ export class GamePage implements OnInit, OnDestroy {
     // reacts via the effect above.
   }
 
-  /** "Jogar Novamente" in VictoryScreen. */
+  /** "Jogar Desafios Novamente" in VictoryScreen. */
   onPlayAgain(): void {
     // Destroi o LbotChat (currentChatId = null) para limpar o historico
     this.currentChatId.set(null);

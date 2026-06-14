@@ -42,7 +42,7 @@ export class VictoryScreenComponent {
   /** Emitted when the player clicks "Tentar novamente" after a failed save. */
   @Output() retrySave = new EventEmitter<void>();
 
-  /** Emitted when the player clicks "Jogar Novamente". */
+  /** Emitted when the player clicks "Jogar Desafios Novamente". */
   @Output() playAgain = new EventEmitter<void>();
 
   nickname = '';
