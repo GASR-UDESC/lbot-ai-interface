@@ -17,10 +17,10 @@
 }
 
 .lb-header {
-  text-align: right;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--spacing-sm);
 }
 
@@ -45,7 +45,7 @@
   height: 3px;
   background: var(--color-primary);
   border-radius: var(--rounded-pill);
-  margin: 12px 0 0 auto;
+  margin: 12px auto 0;
 }
 
 .lb-subtitle {
