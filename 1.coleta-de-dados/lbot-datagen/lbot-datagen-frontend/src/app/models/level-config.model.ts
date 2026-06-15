@@ -66,19 +66,19 @@ const GOAL_POINT = { x: 150, z: 150 };
  * Definitions for all 5 game levels.
  *
  * Level design philosophy:
- *  - Level 1 (Armazem)  : 5 crates in a loose diagonal cluster. Easy to go around.
- *  - Level 2 (Escritorio): 7 rectangular obstacles (desks/shelves). More blocked paths.
- *  - Level 3 (Cidade)   : 6 tall walls creating narrow corridors and forced detours.
- *  - Level 4 (Floresta) : 9 tall "tree" crates placed in a sinuous pattern.
- *  - Level 5 (Fabrica)  : 9 mixed obstacles (walls + crates + ramps). Most complex.
+ *  - Nivel 1 (Trivial)  : few crates, almost straight path. Tutorial intro.
+ *  - Nivel 2 (Desviar)  : walls creating detours, no ramps. Corner blocking.
+ *  - Nivel 3 (Labirinto): first mandatory ramp, corners blocked, U-shaped walls.
+ *  - Nivel 4 (Denso)   : dense labyrinth with narrow corridors, one mandatory ramp.
+ *  - Nivel 5 (Complexo) : two mandatory ramps, mixed obstacles, most complex layout.
  */
 export const LEVEL_CONFIGS: LevelConfig[] = [
   // ─────────────────────────────────────────────
-  // Level 1 — Campo de Treino (Training Ground)
+  // Level 1 — Nivel 1
   // ─────────────────────────────────────────────
   {
     id: 1,
-    name: 'Campo de Treino',
+    name: 'Nivel 1',
     theme: {
       groundColor: '#7C9A5E',
       wallColor:   '#8B7355',
@@ -88,20 +88,19 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     startPoint: START_POINT,
     goalPoint:  GOAL_POINT,
     obstacles: [
-      // Loose diagonal cluster in the centre; small detours left/right keep path almost straight.
-      { x:   0, z:   0, width: 15, height: 15, depth: 15, type: 'crate' },
-      { x: -20, z:  20, width: 12, height: 12, depth: 12, type: 'crate' },
-      { x:  20, z: -20, width: 12, height: 12, depth: 12, type: 'crate' },
-      { x:   0, z:  40, width: 10, height: 10, depth: 10, type: 'crate' },
+      // Tutorial level — sparse crates near centre, easy to go around
+      { x:   0, z:   0, width: 12, height: 12, depth: 12, type: 'crate' },
+      { x: -25, z:  25, width: 10, height: 10, depth: 10, type: 'crate' },
+      { x:  25, z: -25, width: 10, height: 10, depth: 10, type: 'crate' },
     ]
   },
 
   // ─────────────────────────────────────────────
-  // Level 2 — Escritorio Central (Central Office)
+  // Level 2 — Nivel 2
   // ─────────────────────────────────────────────
   {
     id: 2,
-    name: 'Escritório Central',
+    name: 'Nivel 2',
     theme: {
       groundColor: '#D3D3D3',
       wallColor:   '#808080',
@@ -111,31 +110,31 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     startPoint: START_POINT,
     goalPoint:  GOAL_POINT,
     obstacles: [
-      // Central vertical partition — forces detour around it
-      { x:   0, z:   0, width: 10, height: 15, depth: 80, type: 'wall' },
-      // Horizontal walls on left/right that block the straight corridor
-      { x: -80, z:   0, width: 60, height: 12, depth: 10, type: 'wall' },
-      { x:  80, z:   0, width: 60, height: 12, depth: 10, type: 'wall' },
-      // Upper/lower vertical walls channelling the player into a corridor
-      { x:   0, z:  80, width: 10, height: 12, depth: 60, type: 'wall' },
-      { x:   0, z: -80, width: 10, height: 12, depth: 60, type: 'wall' },
-      // Extra corner walls forcing additional turns
-      { x: -40, z:  40, width: 40, height: 10, depth: 10, type: 'wall' },
-      { x:  40, z: -40, width: 40, height: 10, depth: 10, type: 'wall' },
-      // Block L-shaped paths along the bottom and left edges (leave gap at center)
-      { x: -60, z: -130, width: 80, height: 12, depth: 10, type: 'wall' },
-      { x:  60, z: -130, width: 80, height: 12, depth: 10, type: 'wall' },
-      { x: -130, z: -60, width: 10, height: 12, depth: 80, type: 'wall' },
-      { x: -130, z:  60, width: 10, height: 12, depth: 80, type: 'wall' },
+      // Central vertical wall — blocks the direct diagonal A→B
+      { x:   0, z:   0, width: 10, height: 18, depth: 120, type: 'wall' },
+      // Horizontal walls that force zig-zag detours
+      { x: -80, z:   0, width: 60, height: 15, depth: 10, type: 'wall' },
+      { x:  80, z:   0, width: 60, height: 15, depth: 10, type: 'wall' },
+      // Vertical barriers channelling into narrow corridors
+      { x:   0, z:  90, width: 10, height: 15, depth: 60, type: 'wall' },
+      { x:   0, z: -90, width: 10, height: 15, depth: 60, type: 'wall' },
+      // Corner blocking — NE / SW arena corners
+      { x:  130, z:  60, width: 10, height: 15, depth: 80, type: 'wall' },
+      { x:  60, z:  130, width: 80, height: 15, depth: 10, type: 'wall' },
+      { x: -130, z: -60, width: 10, height: 15, depth: 80, type: 'wall' },
+      { x:  -60, z: -130, width: 80, height: 15, depth: 10, type: 'wall' },
+      // Extra walls to reinforce detour path
+      { x: -50, z:  50, width: 40, height: 12, depth: 10, type: 'wall' },
+      { x:  50, z: -50, width: 40, height: 12, depth: 10, type: 'wall' },
     ]
   },
 
   // ─────────────────────────────────────────────
-  // Level 3 — Cidade em Obras (City Under Construction)
+  // Level 3 — Nivel 3
   // ─────────────────────────────────────────────
   {
     id: 3,
-    name: 'Cidade em Obras',
+    name: 'Nivel 3',
     theme: {
       groundColor: '#696969',
       wallColor:   '#2F4F4F',
@@ -145,31 +144,32 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     startPoint: START_POINT,
     goalPoint:  GOAL_POINT,
     obstacles: [
-      // Main ramp aligned with the NE diagonal path (45°) so the robot can climb it
-      { x:   0, z:   0, width: 40, height: 3, depth: 50, type: 'ramp', rotationY: 45, rampAngle: 0.3927 },
-      // Side barriers funnelling the robot toward the ramp
-      { x: -50, z:  50, width: 15, height: 10, depth: 5, type: 'barrier' },
-      { x:  50, z: -50, width: 15, height: 10, depth: 5, type: 'barrier' },
-      { x: -80, z:  20, width: 15, height: 10, depth: 5, type: 'barrier' },
-      { x:  80, z: -20, width: 15, height: 10, depth: 5, type: 'barrier' },
-      // Large diagonal walls blocking the outer edges
-      { x: -80, z:  80, width: 10, height: 15, depth: 80, type: 'wall' },
-      { x:  80, z: -80, width: 10, height: 15, depth: 80, type: 'wall' },
-      // Horizontal walls blocking top/bottom routes
-      { x:   0, z: 100, width: 80, height: 12, depth: 10, type: 'wall' },
-      { x:   0, z: -100, width: 80, height: 12, depth: 10, type: 'wall' },
-      // Additional barriers near the start/goal to prevent easy bypasses
-      { x: -100, z:   0, width: 20, height: 8, depth: 5, type: 'barrier' },
-      { x:  100, z:   0, width: 20, height: 8, depth: 5, type: 'barrier' },
+      // Mandatory ramp — the only passage through the centre barrier
+      { x:   0, z:   0, width: 36, height: 3, depth: 60, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
+      // Long centre walls flanking the ramp (forming a narrow corridor)
+      { x: -30, z:   0, width: 8, height: 18, depth: 180, type: 'wall' },
+      { x:  30, z:   0, width: 8, height: 18, depth: 180, type: 'wall' },
+      // Horizontal barriers extending from corridor walls to arena edges
+      { x: -90, z: 100, width: 120, height: 15, depth: 8, type: 'wall' },
+      { x:  90, z: -100, width: 120, height: 15, depth: 8, type: 'wall' },
+      // Corner blocking — all four corners
+      { x: -130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x: -130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x:  130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:   70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x:  130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:   70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
     ]
   },
 
   // ─────────────────────────────────────────────
-  // Level 4 — Floresta Misteriosa (Mysterious Forest)
+  // Level 4 — Nivel 4
   // ─────────────────────────────────────────────
   {
     id: 4,
-    name: 'Floresta Misteriosa',
+    name: 'Nivel 4',
     theme: {
       groundColor: '#228B22',
       wallColor:   '#8B4513',
@@ -179,28 +179,38 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     startPoint: START_POINT,
     goalPoint:  GOAL_POINT,
     obstacles: [
-      // Trees (trunk + canopy) with varied angles to force zig-zag
-      { x:  -80, z:  -80, width: 18, height: 20, depth: 18, type: 'tree', rotationY: 45 },
-      { x:  -30, z:  -30, width: 18, height: 20, depth: 18, type: 'tree', rotationY: 15 },
-      { x:   20, z:   20, width: 18, height: 20, depth: 18, type: 'tree', rotationY: 30 },
-      { x:   70, z:   70, width: 18, height: 20, depth: 18, type: 'tree', rotationY: 60 },
-      { x:  100, z:  100, width: 18, height: 20, depth: 18, type: 'tree', rotationY: 75 },
-      { x:   40, z:  -40, width: 18, height: 20, depth: 18, type: 'tree', rotationY: 30 },
-      // Barriers at angles to create additional detours
-      { x: -120, z:   30, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 45 },
-      { x:   30, z:  120, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 30 },
-      { x:  120, z:  -30, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 60 },
-      { x:  -30, z: -120, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 45 },
-      { x:  -60, z:   80, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 15 },
+      // Mandatory ramp at centre
+      { x:   0, z:   0, width: 30, height: 3, depth: 50, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
+      // Corridor walls flanking the ramp
+      { x: -30, z:   0, width: 8, height: 18, depth: 140, type: 'wall' },
+      { x:  30, z:   0, width: 8, height: 18, depth: 140, type: 'wall' },
+      // Walls to funnel into the corridor
+      { x: -70, z: -60, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  70, z:  60, width: 8, height: 15, depth: 60, type: 'wall' },
+      // Trees acting as extra obstacles near the path
+      { x:  -80, z:  -80, width: 18, height: 20, depth: 18, type: 'tree' },
+      { x:   80, z:   80, width: 18, height: 20, depth: 18, type: 'tree' },
+      // Barrier walls near the corridor entrances
+      { x:  -90, z:  100, width: 40, height: 15, depth: 8, type: 'barrier' },
+      { x:   90, z: -100, width: 40, height: 15, depth: 8, type: 'barrier' },
+      // Corner blocking — all four corners
+      { x: -130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x: -130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x:  130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:   70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x:  130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:   70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
     ]
   },
 
   // ─────────────────────────────────────────────
-  // Level 5 — Complexo Industrial (Industrial Complex)
+  // Level 5 — Nivel 5
   // ─────────────────────────────────────────────
   {
     id: 5,
-    name: 'Complexo Industrial',
+    name: 'Nivel 5',
     theme: {
       groundColor: '#2F4F4F',
       wallColor:   '#1C1C1C',
@@ -210,43 +220,37 @@ export const LEVEL_CONFIGS: LevelConfig[] = [
     startPoint: START_POINT,
     goalPoint:  GOAL_POINT,
     obstacles: [
-      // Central corridor walls — create narrow passages
-      { x:  -50, z:  -50, width: 10, height: 18, depth: 100, type: 'wall' },
-      { x:   50, z:   50, width: 10, height: 18, depth: 100, type: 'wall' },
-      // Full-width horizontal walls blocking top/bottom edges
-      { x:    0, z: -120, width: 200, height: 18, depth: 10, type: 'wall' },
-      { x:    0, z:  120, width: 200, height: 18, depth: 10, type: 'wall' },
-      // Full-depth vertical walls blocking left/right edges
-      { x: -120, z:    0, width: 10, height: 18, depth: 200, type: 'wall' },
-      { x:  120, z:    0, width: 10, height: 18, depth: 200, type: 'wall' },
-      // Central ramp aligned with diagonal path (45°)
-      { x:    0, z:    0, width: 30, height: 3, depth: 60, type: 'ramp', rampAngle: 0.3927, rotationY: 45 },
-      // Industrial complex structures
-      { x:  -60, z:   40, width: 30, height: 20, depth: 30, type: 'industrial' },
-      { x:   60, z:  -40, width: 30, height: 20, depth: 30, type: 'industrial' },
-      { x:  -20, z:  -80, width: 30, height: 20, depth: 30, type: 'industrial' },
-      { x:   20, z:   80, width: 30, height: 20, depth: 30, type: 'industrial' },
+      // First mandatory ramp (lower section, near A side)
+      { x: -30, z: -30, width: 28, height: 3, depth: 45, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
+      // Second mandatory ramp (upper section, near B side)
+      { x:  60, z:  60, width: 28, height: 3, depth: 45, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
+      // Walls flanking first ramp
+      { x: -55, z:  -8, width: 8, height: 15, depth: 80, type: 'wall' },
+      { x:  -8, z: -55, width: 8, height: 15, depth: 80, type: 'wall' },
+      // Walls flanking second ramp
+      { x:  35, z:  80, width: 8, height: 15, depth: 80, type: 'wall' },
+      { x:  80, z:  35, width: 8, height: 15, depth: 80, type: 'wall' },
+      // Additional corridor walls to force detours
+      { x: -100, z:  30, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  100, z: -30, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:   30, z: -100, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -30, z:  100, width: 8, height: 15, depth: 60, type: 'wall' },
+      // Mixed obstacles — industrial structures
+      { x:  -80, z:   80, width: 22, height: 18, depth: 22, type: 'industrial' },
+      { x:   80, z:  -80, width: 22, height: 18, depth: 22, type: 'industrial' },
       // Crate stacks
-      { x:   40, z:  -40, width: 15, height: 15, depth: 15, type: 'stack' },
-      { x:  -40, z:   40, width: 15, height: 15, depth: 15, type: 'stack' },
-      { x: -120, z:  120, width: 15, height: 15, depth: 15, type: 'stack' },
-      { x:  120, z: -120, width: 15, height: 15, depth: 15, type: 'stack' },
-      { x:   80, z:   80, width: 15, height: 15, depth: 15, type: 'stack' },
-      { x:  -80, z:  -80, width: 15, height: 15, depth: 15, type: 'stack' },
-      // Rotated barriers at angles creating zig-zag
-      { x:   70, z:   70, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 45 },
-      { x:  -70, z:  -70, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 45 },
-      { x:   30, z:  -70, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 30 },
-      { x:  -30, z:   70, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 60 },
-      { x:    0, z:   60, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 15 },
-      { x:    0, z:  -60, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 75 },
-      { x:   60, z:    0, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 30 },
-      { x:  -60, z:    0, width: 20, height: 10, depth: 5, type: 'barrier', rotationY: 60 },
-      // Additional walls to force more detours
-      { x:  -30, z:  -30, width: 10, height: 18, depth: 60, type: 'wall' },
-      { x:   30, z:   30, width: 10, height: 18, depth: 60, type: 'wall' },
-      { x:  -90, z:   90, width: 10, height: 18, depth: 40, type: 'wall' },
-      { x:   90, z:  -90, width: 10, height: 18, depth: 40, type: 'wall' },
+      { x: -120, z: -120, width: 14, height: 14, depth: 14, type: 'stack' },
+      { x:  120, z:  120, width: 14, height: 14, depth: 14, type: 'stack' },
+      // Trees
+      { x:  -60, z:  120, width: 18, height: 20, depth: 18, type: 'tree' },
+      { x:   60, z: -120, width: 18, height: 20, depth: 18, type: 'tree' },
+      // Corner blocking
+      { x: -130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x: -130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:  -70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
+      { x:  130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
+      { x:   70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
     ]
   },
 ];

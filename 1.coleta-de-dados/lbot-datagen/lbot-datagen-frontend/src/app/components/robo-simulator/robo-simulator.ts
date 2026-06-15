@@ -92,6 +92,8 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
   private world!: CANNON.World;
   private robotBody!: CANNON.Body;
   private obstacles: ObstacleData[] = [];
+  /* Outer arena boundary wall meshes — tracked so they can be swapped on level load. */
+  private outerWalls: THREE.Mesh[] = [];
   private timeStep = 1 / 60;
 
   // Robot configuration constants
@@ -193,8 +195,10 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.scene.add(this.groundMesh);
     this.scene.add(this.arenaBuilder.createGridHelper());
 
-    const walls = this.arenaBuilder.createArenaWalls(this.scene);
-    walls.forEach(wall => this.scene.add(wall));
+    this.outerWalls = this.levelConfig
+      ? this.arenaBuilder.createThemedWalls(this.scene, this.levelConfig.theme)
+      : this.arenaBuilder.createArenaWalls(this.scene);
+    this.outerWalls.forEach(wall => this.scene.add(wall));
 
     // Create robot
     this.robotGroup = this.robotBuilder.createRobot();
@@ -488,7 +492,17 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     }
     this.obstacles = [];
 
-    // 2. Swap ground with themed ground
+    // 2. Remove old outer walls and create new themed walls
+    for (const wall of this.outerWalls) {
+      this.scene.remove(wall);
+      wall.geometry.dispose();
+      const mat = wall.material as THREE.Material;
+      mat.dispose();
+    }
+    this.outerWalls = this.arenaBuilder.createThemedWalls(this.scene, config.theme);
+    this.outerWalls.forEach(wall => this.scene.add(wall));
+
+    // 3. Swap ground with themed ground
     if (this.groundMesh) {
       this.scene.remove(this.groundMesh);
       this.groundMesh.geometry.dispose();
@@ -499,23 +513,23 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     this.groundMesh = this.arenaBuilder.createThemedGround(config.theme);
     this.scene.add(this.groundMesh);
 
-    // 3. Create new obstacles from config
+    // 4. Create new obstacles from config
     this.obstacles = this.arenaBuilder.createObstaclesFromConfig(this.scene, this.world, config);
 
-    // 4. Update start and goal points
+    // 5. Update start and goal points
     this.startPoint = { ...config.startPoint };
     this.goalPoint  = { ...config.goalPoint };
 
-    // 5. Reposition markers
+    // 6. Reposition markers
     this.startMarker.position.set(this.startPoint.x, 0.1, this.startPoint.z);
     this.goalMarker.position.set(this.goalPoint.x,  0.1, this.goalPoint.z);
     this.startTextSprite.position.set(this.startPoint.x, 10, this.startPoint.z);
     this.goalTextSprite.position.set(this.goalPoint.x,  10, this.goalPoint.z);
 
-    // 6. Update sky color
+    // 7. Update sky color
     this.threeScene.updateSkyColor(this.scene, config.theme.skyColor);
 
-    // 7. Reset robot to new start point
+    // 8. Reset robot to new start point
     this.hasWon = false;
     this.resetRobot();
 

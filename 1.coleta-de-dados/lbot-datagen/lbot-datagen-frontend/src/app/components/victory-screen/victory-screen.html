@@ -14,12 +14,10 @@
     <div class="times-table">
       <div class="times-row times-header">
         <span>Nível</span>
-        <span>Nome</span>
         <span>Tempo</span>
       </div>
       <div class="times-row" *ngFor="let time of levelTimes; let i = index">
         <span class="level-num">{{ i + 1 }}</span>
-        <span class="level-name-cell">{{ levelNames[i] || ('Nível ' + (i + 1)) }}</span>
         <span class="level-time">{{ formatTime(time) }}</span>
       </div>
     </div>

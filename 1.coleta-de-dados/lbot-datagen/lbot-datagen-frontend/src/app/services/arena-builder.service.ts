@@ -384,7 +384,8 @@ export class ArenaBuilderService {
         obsCfg.height,
         obsCfg.depth,
         config.theme.obstacleColor,
-        obsCfg.rotationY
+        obsCfg.rotationY,
+        obsCfg.rampAngle
       );
 
       mesh.position.set(obsCfg.x, yOffset, obsCfg.z);
@@ -500,135 +501,6 @@ export class ArenaBuilderService {
       mesh.receiveShadow = true;
       walls.push(mesh);
     });
-
-    // Add thematic details based on ground color
-    const gc = theme.groundColor.toLowerCase();
-    if (gc === '#7c9a5e' || gc === '#8b4513') {
-      // Campo / Armazem: wooden planks (same as createArenaWalls)
-      const plankMat = new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.9 });
-      const plankCount = Math.floor(wallHeight / 3);
-      wallDefs.forEach((def, idx) => {
-        const wall = walls[idx];
-        const isHorizontal = def.d > def.w;
-        for (let i = 0; i < plankCount; i++) {
-          const plank = new THREE.Mesh(
-            new THREE.BoxGeometry(
-              isHorizontal ? def.w * 0.98 : def.w + 0.5,
-              0.5,
-              isHorizontal ? def.d + 0.5 : def.d * 0.98
-            ),
-            plankMat
-          );
-          plank.position.set(
-            wall.position.x,
-            wall.position.y - wallHeight / 2 + i * 3 + 1.5,
-            wall.position.z
-          );
-          plank.rotation.y = wall.rotation.y;
-          scene.add(plank);
-        }
-      });
-    } else if (gc === '#d3d3d3') {
-      // Escritorio: concrete panels with lines
-      const lineMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 });
-      wallDefs.forEach((def, idx) => {
-        const wall = walls[idx];
-        const isHorizontal = def.d > def.w;
-        const segments = 4;
-        const segmentSize = isHorizontal ? def.w / segments : def.d / segments;
-        for (let i = 1; i < segments; i++) {
-          const line = new THREE.Mesh(
-            new THREE.BoxGeometry(
-              isHorizontal ? 0.5 : def.w + 0.5,
-              wallHeight * 0.95,
-              isHorizontal ? def.d + 0.5 : 0.5
-            ),
-            lineMat
-          );
-          const offset = -((isHorizontal ? def.w : def.d) / 2) + i * segmentSize;
-          line.position.set(
-            isHorizontal ? wall.position.x + offset : wall.position.x,
-            wall.position.y,
-            isHorizontal ? wall.position.z : wall.position.z + offset
-          );
-          scene.add(line);
-        }
-      });
-    } else if (gc === '#696969') {
-      // Cidade: concrete barrier with stripes
-      const stripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFF00, roughness: 0.7 });
-      wallDefs.forEach((def, idx) => {
-        const wall = walls[idx];
-        const isHorizontal = def.d > def.w;
-        const stripeCount = 6;
-        const stripeSize = isHorizontal ? def.w / stripeCount : def.d / stripeCount;
-        for (let i = 0; i < stripeCount; i += 2) {
-          const stripe = new THREE.Mesh(
-            new THREE.BoxGeometry(
-              isHorizontal ? stripeSize * 0.8 : def.w + 1,
-              wallHeight * 0.2,
-              isHorizontal ? def.d + 1 : stripeSize * 0.8
-            ),
-            stripeMat
-          );
-          const offset = -((isHorizontal ? def.w : def.d) / 2) + i * stripeSize + stripeSize / 2;
-          stripe.position.set(
-            isHorizontal ? wall.position.x + offset : wall.position.x,
-            wall.position.y + wallHeight * 0.3,
-            isHorizontal ? wall.position.z : wall.position.z + offset
-          );
-          scene.add(stripe);
-        }
-      });
-    } else if (gc === '#228b22') {
-      // Floresta: tree trunks (vertical cylinders)
-      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
-      wallDefs.forEach((def, idx) => {
-        const wall = walls[idx];
-        const isHorizontal = def.d > def.w;
-        const trunkCount = 4;
-        const spacing = isHorizontal ? def.w / (trunkCount + 1) : def.d / (trunkCount + 1);
-        for (let i = 1; i <= trunkCount; i++) {
-          const trunk = new THREE.Mesh(
-            new THREE.CylinderGeometry(2, 2, wallHeight + 2, 8),
-            trunkMat
-          );
-          const offset = -((isHorizontal ? def.w : def.d) / 2) + i * spacing;
-          trunk.position.set(
-            isHorizontal ? wall.position.x + offset : wall.position.x,
-            wall.position.y,
-            isHorizontal ? wall.position.z : wall.position.z + offset
-          );
-          scene.add(trunk);
-        }
-      });
-    } else if (gc === '#2f4f4f') {
-      // Industrial: metal with rivets (small spheres)
-      const rivetMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.8 });
-      wallDefs.forEach((def, idx) => {
-        const wall = walls[idx];
-        const isHorizontal = def.d > def.w;
-        const rivetRows = 2;
-        const rivetCols = 6;
-        const rowSpacing = wallHeight / (rivetRows + 1);
-        const colSpacing = isHorizontal ? def.w / (rivetCols + 1) : def.d / (rivetCols + 1);
-        for (let r = 1; r <= rivetRows; r++) {
-          for (let c = 1; c <= rivetCols; c++) {
-            const rivet = new THREE.Mesh(
-              new THREE.SphereGeometry(1, 6, 4),
-              rivetMat
-            );
-            const colOffset = -((isHorizontal ? def.w : def.d) / 2) + c * colSpacing;
-            rivet.position.set(
-              isHorizontal ? wall.position.x + colOffset : wall.position.x + (wallThickness / 2 + 1),
-              wall.position.y - wallHeight / 2 + r * rowSpacing,
-              isHorizontal ? wall.position.z + (wallThickness / 2 + 1) : wall.position.z + colOffset
-            );
-            scene.add(rivet);
-          }
-        }
-      });
-    }
 
     return walls;
   }

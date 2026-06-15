@@ -38,7 +38,8 @@ export class ObstacleMeshFactory {
     height: number,
     depth: number,
     color: string,
-    variation?: number
+    variation?: number,
+    rampAngle?: number
   ): THREE.Group {
     switch (type) {
       case 'crate':
@@ -46,7 +47,7 @@ export class ObstacleMeshFactory {
       case 'wall':
         return this.createWallWithPillars(width, height, depth, color, variation);
       case 'ramp':
-        return this.createRamp(width, height, depth, color, variation);
+        return this.createRamp(width, height, depth, color, variation, rampAngle);
       case 'tree':
         return this.createTree(width, height, depth, color, variation);
       case 'barrier':
@@ -156,19 +157,19 @@ export class ObstacleMeshFactory {
     height: number,
     depth: number,
     color: string,
-    variation?: number
+    variation?: number,
+    rampAngle?: number
   ): THREE.Group {
     const group = new THREE.Group();
     const rampMat = this.standardMaterial(color);
     const railMat = this.standardMaterial(this.shadeColor(color, -0.25));
-    const rampAngle = Math.PI / 8;
+    const angle = rampAngle ?? Math.PI / 8;
 
     // Main ramp
     const rampGeo = new THREE.BoxGeometry(width, height, depth);
     const ramp = new THREE.Mesh(rampGeo, rampMat);
-    const yOffset = Math.sin(rampAngle) * depth / 4;
-    ramp.position.y = height / 2 + yOffset;
-    ramp.rotation.x = rampAngle;
+    ramp.position.y = height / 2;
+    ramp.rotation.x = angle;
     ramp.castShadow = true;
     ramp.receiveShadow = true;
     group.add(ramp);
@@ -179,14 +180,14 @@ export class ObstacleMeshFactory {
     const railGeo = new THREE.BoxGeometry(railThick, railHeight, depth);
 
     const railLeft = new THREE.Mesh(railGeo, railMat);
-    railLeft.position.set(-width / 2 + railThick / 2, railHeight / 2 + yOffset, 0);
-    railLeft.rotation.x = rampAngle;
+    railLeft.position.set(-width / 2 + railThick / 2, railHeight / 2, 0);
+    railLeft.rotation.x = angle;
     railLeft.castShadow = true;
     group.add(railLeft);
 
     const railRight = new THREE.Mesh(railGeo, railMat);
-    railRight.position.set(width / 2 - railThick / 2, railHeight / 2 + yOffset, 0);
-    railRight.rotation.x = rampAngle;
+    railRight.position.set(width / 2 - railThick / 2, railHeight / 2, 0);
+    railRight.rotation.x = angle;
     railRight.castShadow = true;
     group.add(railRight);
 
