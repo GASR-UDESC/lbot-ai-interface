@@ -56,201 +56,334 @@ export interface LevelConfig {
 }
 
 // ---------------------------------------------------------------------------
-// Fixed start and goal points used across ALL levels.
-// A = (-150, -150) | B = (150, 150) | distance ≈ 424 units
+// Helper to build horizontal maze walls (long walls on X axis)
 // ---------------------------------------------------------------------------
-const START_POINT = { x: -150, z: -150 };
-const GOAL_POINT = { x: 150, z: 150 };
+function hWall(x: number, z: number, width: number, height = 18, depth = 6): ObstacleConfig {
+  return { x, z, width, height, depth, type: 'wall' };
+}
+
+// ---------------------------------------------------------------------------
+// Helper to build vertical maze walls (long walls on Z axis)
+// ---------------------------------------------------------------------------
+function vWall(x: number, z: number, depth: number, height = 18, width = 6): ObstacleConfig {
+  return { x, z, width, height, depth, type: 'wall' };
+}
+
+// ---------------------------------------------------------------------------
+// Helper to build a corner blocker (L-shaped inner wall near arena border)
+// ---------------------------------------------------------------------------
+function cornerBlockerNE(): ObstacleConfig[] {
+  return [
+    vWall(130, 60, 80, 15, 6),
+    hWall(60, 130, 80, 15, 6),
+  ];
+}
+function cornerBlockerNW(): ObstacleConfig[] {
+  return [
+    vWall(-130, 60, 80, 15, 6),
+    hWall(-60, 130, 80, 15, 6),
+  ];
+}
+function cornerBlockerSE(): ObstacleConfig[] {
+  return [
+    vWall(130, -60, 80, 15, 6),
+    hWall(60, -130, 80, 15, 6),
+  ];
+}
+function cornerBlockerSW(): ObstacleConfig[] {
+  return [
+    vWall(-130, -60, 80, 15, 6),
+    hWall(-60, -130, 80, 15, 6),
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Maze grid helpers — segments of 100 units, leaving intentional gaps
+// ---------------------------------------------------------------------------
+
+/** Horizontal maze-barrier segment (runs along X) */
+function mazeH(z: number, x: number, w = 100, h = 18, d = 6): ObstacleConfig {
+  return { x, z, width: w, height: h, depth: d, type: 'wall' };
+}
+
+/** Vertical maze-barrier segment (runs along Z) */
+function mazeV(x: number, z: number, d = 100, h = 18, w = 6): ObstacleConfig {
+  return { x, z, width: w, height: h, depth: d, type: 'wall' };
+}
 
 /**
  * Definitions for all 5 game levels.
  *
- * Level design philosophy:
- *  - Nivel 1 (Trivial)  : few crates, almost straight path. Tutorial intro.
- *  - Nivel 2 (Desviar)  : walls creating detours, no ramps. Corner blocking.
- *  - Nivel 3 (Labirinto): first mandatory ramp, corners blocked, U-shaped walls.
- *  - Nivel 4 (Denso)   : dense labyrinth with narrow corridors, one mandatory ramp.
- *  - Nivel 5 (Complexo) : two mandatory ramps, mixed obstacles, most complex layout.
+ * Design philosophy (maze-only, no ramps):
+ *  - Nivel 1 (Tutorial)  : sparse crates, open path. Learn controls.
+ *  - Nivel 2 (Entrar)   : start outside, goal inside. Corner blockers + maze.
+ *  - Nivel 3 (Sair)     : start inside, goal outside. Corner blockers + maze.
+ *  - Nivel 4 (Atravessar): full diagonal with 4 corner blockers. No border access.
+ *  - Nivel 5 (Complexo)  : mirrored diagonal with dead ends. Most confusing.
  */
 export const LEVEL_CONFIGS: LevelConfig[] = [
-  // ─────────────────────────────────────────────
-  // Level 1 — Nivel 1
-  // ─────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  // Level 1 — Nivel 1 (Tutorial)
+  // Start: (-150,-150)  Goal: (150,150)
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 1,
     name: 'Nivel 1',
     theme: {
       groundColor: '#7C9A5E',
-      wallColor:   '#8B7355',
+      wallColor: '#8B7355',
       obstacleColor: '#A67B5B',
-      skyColor:    '#87CEEB'
+      skyColor: '#87CEEB'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -150, z: -150 },
+    goalPoint: { x: 150, z: 150 },
     obstacles: [
-      // Tutorial level — sparse crates near centre, easy to go around
-      { x:   0, z:   0, width: 12, height: 12, depth: 12, type: 'crate' },
-      { x: -25, z:  25, width: 10, height: 10, depth: 10, type: 'crate' },
-      { x:  25, z: -25, width: 10, height: 10, depth: 10, type: 'crate' },
+      // Central vertical wall — forces the player to go around
+      vWall(0, 0, 120, 18, 6),
+      // Some crates to add visual interest
+      { x: -40, z: 40, width: 12, height: 12, depth: 12, type: 'crate' },
+      { x: 40, z: -40, width: 12, height: 12, depth: 12, type: 'crate' },
+      { x: 0, z: 80, width: 12, height: 12, depth: 12, type: 'crate' },
+      { x: 0, z: -80, width: 12, height: 12, depth: 12, type: 'crate' },
     ]
   },
 
-  // ─────────────────────────────────────────────
-  // Level 2 — Nivel 2
-  // ─────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  // Level 2 — Nivel 2 (Entrar)
+  // Start: (-150,-150)  Goal: (50,50)
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 2,
     name: 'Nivel 2',
     theme: {
       groundColor: '#D3D3D3',
-      wallColor:   '#808080',
+      wallColor: '#808080',
       obstacleColor: '#A9A9A9',
-      skyColor:    '#B0C4DE'
+      skyColor: '#B0C4DE'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -150, z: -150 },
+    goalPoint: { x: 50, z: 50 },
     obstacles: [
-      // Central vertical wall — blocks the direct diagonal A→B
-      { x:   0, z:   0, width: 10, height: 18, depth: 120, type: 'wall' },
-      // Horizontal walls that force zig-zag detours
-      { x: -80, z:   0, width: 60, height: 15, depth: 10, type: 'wall' },
-      { x:  80, z:   0, width: 60, height: 15, depth: 10, type: 'wall' },
-      // Vertical barriers channelling into narrow corridors
-      { x:   0, z:  90, width: 10, height: 15, depth: 60, type: 'wall' },
-      { x:   0, z: -90, width: 10, height: 15, depth: 60, type: 'wall' },
-      // Corner blocking — NE / SW arena corners
-      { x:  130, z:  60, width: 10, height: 15, depth: 80, type: 'wall' },
-      { x:  60, z:  130, width: 80, height: 15, depth: 10, type: 'wall' },
-      { x: -130, z: -60, width: 10, height: 15, depth: 80, type: 'wall' },
-      { x:  -60, z: -130, width: 80, height: 15, depth: 10, type: 'wall' },
-      // Extra walls to reinforce detour path
-      { x: -50, z:  50, width: 40, height: 12, depth: 10, type: 'wall' },
-      { x:  50, z: -50, width: 40, height: 12, depth: 10, type: 'wall' },
+      // ── Corner blockers (confine start corner) ──
+      vWall(-150, -90, 60, 18, 6),   // west side, blocks going up along border
+      hWall(-90, -150, 60, 18, 6),   // south side, blocks going right along border
+
+      // ── Maze grid walls (horizontal lines at z = -100, 0, 100) ──
+      // z = -100: gap at x = -150 (correct path goes up)
+      mazeH(-100, -50, 100),
+      mazeH(-100, 50, 100),
+      mazeH(-100, 150, 100),
+
+      // z = 0: gap at x = -50 (correct path goes right)
+      mazeH(0, -150, 100),
+      mazeH(0, 50, 100),
+      mazeH(0, 150, 100),
+
+      // z = 100: gap at x = 50 (correct path goes up)
+      mazeH(100, -150, 100),
+      mazeH(100, -50, 100),
+      mazeH(100, 150, 100),
+
+      // ── Maze grid walls (vertical lines at x = -100, 0, 100) ──
+      // x = -100: gap at z = -50 (correct path goes right)
+      mazeV(-100, -150, 100),
+      mazeV(-100, 50, 100),
+      mazeV(-100, 150, 100),
+
+      // x = 0: gap at z = 50 (correct path goes up)
+      mazeV(0, -150, 100),
+      mazeV(0, -50, 100),
+      mazeV(0, 150, 100),
+
+      // x = 100: gap at z = 150 (correct path goes right toward goal)
+      mazeV(100, -150, 100),
+      mazeV(100, -50, 100),
+      mazeV(100, 50, 100),
+
+      // ── Goal corner blockers (seal the goal area) ──
+      vWall(50, 100, 60, 15, 6),
+      hWall(100, 50, 60, 15, 6),
     ]
   },
 
-  // ─────────────────────────────────────────────
-  // Level 3 — Nivel 3
-  // ─────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  // Level 3 — Nivel 3 (Sair)
+  // Start: (50,50)  Goal: (150,150)
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 3,
     name: 'Nivel 3',
     theme: {
       groundColor: '#696969',
-      wallColor:   '#2F4F4F',
+      wallColor: '#2F4F4F',
       obstacleColor: '#708090',
-      skyColor:    '#778899'
+      skyColor: '#778899'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: 50, z: 50 },
+    goalPoint: { x: 150, z: 150 },
     obstacles: [
-      // Mandatory ramp — the only passage through the centre barrier
-      { x:   0, z:   0, width: 36, height: 3, depth: 60, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
-      // Long centre walls flanking the ramp (forming a narrow corridor)
-      { x: -30, z:   0, width: 8, height: 18, depth: 180, type: 'wall' },
-      { x:  30, z:   0, width: 8, height: 18, depth: 180, type: 'wall' },
-      // Horizontal barriers extending from corridor walls to arena edges
-      { x: -90, z: 100, width: 120, height: 15, depth: 8, type: 'wall' },
-      { x:  90, z: -100, width: 120, height: 15, depth: 8, type: 'wall' },
-      // Corner blocking — all four corners
-      { x: -130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x: -130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x:  130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:   70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x:  130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:   70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
+      // ── Corner blockers (seal the goal corner) ──
+      vWall(150, 90, 60, 15, 6),
+      hWall(90, 150, 60, 15, 6),
+
+      // ── Corner blockers (confine start area) ──
+      vWall(0, 0, 60, 15, 6),
+      hWall(0, 0, 60, 15, 6),
+
+      // ── Maze grid walls (horizontal lines at z = -100, 0, 100) ──
+      // z = -100: gap at x = 50 (path goes down)
+      mazeH(-100, -150, 100),
+      mazeH(-100, -50, 100),
+      mazeH(-100, 150, 100),
+
+      // z = 0: gap at x = 150 (path goes down)
+      mazeH(0, -150, 100),
+      mazeH(0, -50, 100),
+      mazeH(0, 50, 100),
+
+      // z = 100: gap at x = 50 (path goes up)
+      mazeH(100, -150, 100),
+      mazeH(100, -50, 100),
+      mazeH(100, 150, 100),
+
+      // ── Maze grid walls (vertical lines at x = -100, 0, 100) ──
+      // x = -100: gap at z = -150 (path goes right)
+      mazeV(-100, -50, 100),
+      mazeV(-100, 50, 100),
+      mazeV(-100, 150, 100),
+
+      // x = 0: gap at z = -50 (path goes right)
+      mazeV(0, -150, 100),
+      mazeV(0, 50, 100),
+      mazeV(0, 150, 100),
+
+      // x = 100: gap at z = 50 (path goes up)
+      mazeV(100, -150, 100),
+      mazeV(100, -50, 100),
+      mazeV(100, 150, 100),
     ]
   },
 
-  // ─────────────────────────────────────────────
-  // Level 4 — Nivel 4
-  // ─────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  // Level 4 — Nivel 4 (Atravessar)
+  // Start: (-150,150)  Goal: (150,-150)
+  // All 4 corners blocked. No border access.
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 4,
     name: 'Nivel 4',
     theme: {
       groundColor: '#228B22',
-      wallColor:   '#8B4513',
+      wallColor: '#8B4513',
       obstacleColor: '#006400',
-      skyColor:    '#98FB98'
+      skyColor: '#98FB98'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: -150, z: 150 },
+    goalPoint: { x: 150, z: -150 },
     obstacles: [
-      // Mandatory ramp at centre
-      { x:   0, z:   0, width: 30, height: 3, depth: 50, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
-      // Corridor walls flanking the ramp
-      { x: -30, z:   0, width: 8, height: 18, depth: 140, type: 'wall' },
-      { x:  30, z:   0, width: 8, height: 18, depth: 140, type: 'wall' },
-      // Walls to funnel into the corridor
-      { x: -70, z: -60, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  70, z:  60, width: 8, height: 15, depth: 60, type: 'wall' },
-      // Trees acting as extra obstacles near the path
-      { x:  -80, z:  -80, width: 18, height: 20, depth: 18, type: 'tree' },
-      { x:   80, z:   80, width: 18, height: 20, depth: 18, type: 'tree' },
-      // Barrier walls near the corridor entrances
-      { x:  -90, z:  100, width: 40, height: 15, depth: 8, type: 'barrier' },
-      { x:   90, z: -100, width: 40, height: 15, depth: 8, type: 'barrier' },
-      // Corner blocking — all four corners
-      { x: -130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x: -130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x:  130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:   70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x:  130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:   70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
+      // ── All 4 corner blockers (no border access) ──
+      ...cornerBlockerNW(),
+      ...cornerBlockerNE(),
+      ...cornerBlockerSE(),
+      ...cornerBlockerSW(),
+
+      // ── Maze grid walls (horizontal lines at z = -100, 0, 100) ──
+      // z = -100: gap at x = 50 (path goes down toward goal)
+      mazeH(-100, -150, 100),
+      mazeH(-100, -50, 100),
+      mazeH(-100, 150, 100),
+
+      // z = 0: gap at x = -50 (path goes down)
+      mazeH(0, -150, 100),
+      mazeH(0, 50, 100),
+      mazeH(0, 150, 100),
+
+      // z = 100: gap at x = -150 (path goes down from start)
+      mazeH(100, -50, 100),
+      mazeH(100, 50, 100),
+      mazeH(100, 150, 100),
+
+      // ── Maze grid walls (vertical lines at x = -100, 0, 100) ──
+      // x = -100: gap at z = 50 (path goes right)
+      mazeV(-100, -150, 100),
+      mazeV(-100, -50, 100),
+      mazeV(-100, 150, 100),
+
+      // x = 0: gap at z = -50 (path goes right)
+      mazeV(0, -150, 100),
+      mazeV(0, 50, 100),
+      mazeV(0, 150, 100),
+
+      // x = 100: gap at z = -150 (path goes right toward goal)
+      mazeV(100, -50, 100),
+      mazeV(100, 50, 100),
+      mazeV(100, 150, 100),
     ]
   },
 
-  // ─────────────────────────────────────────────
-  // Level 5 — Nivel 5
-  // ─────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  // Level 5 — Nivel 5 (Complexo)
+  // Start: (150,-150)  Goal: (-150,150)
+  // Mirrored diagonal + dead ends
+  // ═══════════════════════════════════════════════════════════════════════
   {
     id: 5,
     name: 'Nivel 5',
     theme: {
       groundColor: '#2F4F4F',
-      wallColor:   '#1C1C1C',
+      wallColor: '#1C1C1C',
       obstacleColor: '#FF6600',
-      skyColor:    '#404040'
+      skyColor: '#404040'
     },
-    startPoint: START_POINT,
-    goalPoint:  GOAL_POINT,
+    startPoint: { x: 150, z: -150 },
+    goalPoint: { x: -150, z: 150 },
     obstacles: [
-      // First mandatory ramp (lower section, near A side)
-      { x: -30, z: -30, width: 28, height: 3, depth: 45, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
-      // Second mandatory ramp (upper section, near B side)
-      { x:  60, z:  60, width: 28, height: 3, depth: 45, type: 'ramp', rotationY: 45, rampAngle: 0.24 },
-      // Walls flanking first ramp
-      { x: -55, z:  -8, width: 8, height: 15, depth: 80, type: 'wall' },
-      { x:  -8, z: -55, width: 8, height: 15, depth: 80, type: 'wall' },
-      // Walls flanking second ramp
-      { x:  35, z:  80, width: 8, height: 15, depth: 80, type: 'wall' },
-      { x:  80, z:  35, width: 8, height: 15, depth: 80, type: 'wall' },
-      // Additional corridor walls to force detours
-      { x: -100, z:  30, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  100, z: -30, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:   30, z: -100, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -30, z:  100, width: 8, height: 15, depth: 60, type: 'wall' },
-      // Mixed obstacles — industrial structures
-      { x:  -80, z:   80, width: 22, height: 18, depth: 22, type: 'industrial' },
-      { x:   80, z:  -80, width: 22, height: 18, depth: 22, type: 'industrial' },
-      // Crate stacks
-      { x: -120, z: -120, width: 14, height: 14, depth: 14, type: 'stack' },
-      { x:  120, z:  120, width: 14, height: 14, depth: 14, type: 'stack' },
-      // Trees
-      { x:  -60, z:  120, width: 18, height: 20, depth: 18, type: 'tree' },
-      { x:   60, z: -120, width: 18, height: 20, depth: 18, type: 'tree' },
-      // Corner blocking
-      { x: -130, z: -70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -70, z: -130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x: -130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:  -70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
-      { x:  130, z:  70, width: 8, height: 15, depth: 60, type: 'wall' },
-      { x:   70, z:  130, width: 60, height: 15, depth: 8, type: 'wall' },
+      // ── All 4 corner blockers (no border access) ──
+      ...cornerBlockerNW(),
+      ...cornerBlockerNE(),
+      ...cornerBlockerSE(),
+      ...cornerBlockerSW(),
+
+      // ── Maze grid walls (horizontal lines at z = -100, 0, 100) ──
+      // z = -100: gap at x = 150 (path goes up from start)
+      mazeH(-100, -50, 100),
+      mazeH(-100, 50, 100),
+      mazeH(-100, 150, 100),
+
+      // z = 0: gap at x = 50 (path goes up)
+      mazeH(0, -150, 100),
+      mazeH(0, -50, 100),
+      mazeH(0, 150, 100),
+
+      // z = 100: gap at x = -50 (path goes up)
+      mazeH(100, -150, 100),
+      mazeH(100, 50, 100),
+      mazeH(100, 150, 100),
+
+      // ── Maze grid walls (vertical lines at x = -100, 0, 100) ──
+      // x = -100: gap at z = 150 (path goes left toward goal)
+      mazeV(-100, -150, 100),
+      mazeV(-100, -50, 100),
+      mazeV(-100, 50, 100),
+
+      // x = 0: gap at z = 50 (path goes left)
+      mazeV(0, -150, 100),
+      mazeV(0, -50, 100),
+      mazeV(0, 150, 100),
+
+      // x = 100: gap at z = -50 (path goes left)
+      mazeV(100, -150, 100),
+      mazeV(100, 50, 100),
+      mazeV(100, 150, 100),
+
+      // ── Dead-end traps (extra walls that close off tempting fake paths) ──
+      // Fake path at (-50, 50) — looks like a corridor but leads nowhere
+      hWall(-50, 50, 40, 15, 6),
+      // Fake path at (50, -50) — dead end
+      vWall(50, -50, 40, 15, 6),
+      // Shortcut blocker
+      vWall(-50, -50, 40, 18, 6),
+      hWall(-50, -50, 40, 18, 6),
     ]
   },
 ];
