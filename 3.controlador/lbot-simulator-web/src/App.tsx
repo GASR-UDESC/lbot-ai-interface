@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { parseLbmlSequence } from '../shared/lbml.js';
 import type { ServerEvent } from '../shared/protocol.js';
 import { CameraPreview } from './components/CameraPreview.js';
@@ -6,6 +6,7 @@ import { CommandPanel } from './components/CommandPanel.js';
 import { ErrorBoundary } from './components/ErrorBoundary.js';
 import { SimulatorCanvas, type SimulatorCanvasHandle } from './components/SimulatorCanvas.js';
 import { StatusPanel } from './components/StatusPanel.js';
+import { TopNav } from './components/TopNav.js';
 import { getState, getStatus, pushState, sendCommand, sendReset } from './lib/api.js';
 import { connectToServerEvents, type EventConnection } from './lib/events.js';
 import type { SimulatorSnapshot, StatusMessage } from './simulator/types.js';
@@ -224,62 +225,47 @@ export default function App() {
     setCameraModeLabel(enabled ? 'Vista Normal' : '3a Pessoa');
   }, []);
 
-  const layoutTitle = useMemo(() => 'LBot Simulator Web', []);
-
   return (
-    <div className="app-shell">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Standalone simulator</p>
-          <h1>{layoutTitle}</h1>
-          <p className="hero-copy">
-            Simulador React para executar LBML pela interface web ou via HTTP, controlando a aba ativa em tempo real.
-          </p>
-        </div>
-
-        <div className="hero-callout">
-          <span className="callout-label">HTTP</span>
-          <code>POST /api/commands</code>
-          <code>POST /api/reset</code>
-        </div>
-      </header>
-
-      <main className="layout-grid">
-        <section className="left-column">
-          <StatusPanel
-            connected={connected}
-            snapshot={snapshot}
-            serverStateSummary={serverStateSummary}
-            message={message}
-          />
-
-          <CameraPreview
-            connected={connected}
-            onCanvasReady={handlePreviewCanvasReady}
-          />
-
-          <CommandPanel
-            value={command}
-            onChange={setCommand}
-            onExecute={() => void executeLocally()}
-            onReset={() => void resetSimulator()}
-            onToggleCamera={toggleCamera}
-            isExecuting={snapshot.isAnimating}
-            cameraModeLabel={cameraModeLabel}
-            history={history}
-          />
-        </section>
-
-        <section className="canvas-column">
-          <ErrorBoundary>
-            <SimulatorCanvas
-              onReady={handleCanvasReady}
-              onSnapshotChange={handleSnapshotChange}
+    <>
+      <TopNav />
+      <div className="app-shell app-shell--with-nav">
+        <main className="layout-grid">
+          <section className="left-column">
+            <StatusPanel
+              connected={connected}
+              snapshot={snapshot}
+              serverStateSummary={serverStateSummary}
+              message={message}
             />
-          </ErrorBoundary>
-        </section>
-      </main>
-    </div>
+
+            <CameraPreview
+              connected={connected}
+              onCanvasReady={handlePreviewCanvasReady}
+            />
+
+            <CommandPanel
+              value={command}
+              onChange={setCommand}
+              onExecute={() => void executeLocally()}
+              onReset={() => void resetSimulator()}
+              onToggleCamera={toggleCamera}
+              isExecuting={snapshot.isAnimating}
+              cameraModeLabel={cameraModeLabel}
+              history={history}
+            />
+          </section>
+
+          <section className="canvas-column">
+            <ErrorBoundary>
+              <SimulatorCanvas
+                onReady={handleCanvasReady}
+                onSnapshotChange={handleSnapshotChange}
+              />
+            </ErrorBoundary>
+          </section>
+        </main>
+      </div>
+    </>
   );
 }
 

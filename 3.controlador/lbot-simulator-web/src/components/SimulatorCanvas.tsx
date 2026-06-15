@@ -315,6 +315,13 @@ export function SimulatorCanvas({ onReady, onSnapshotChange }: SimulatorCanvasPr
       <div className="simulator-canvas simulator-canvas--error">
         <p>Falha ao inicializar WebGL: {webglError}</p>
         <p>Tente recarregar a pagina ou use um navegador com suporte a WebGL.</p>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => window.location.reload()}
+        >
+          Recarregar
+        </button>
       </div>
     );
   }
