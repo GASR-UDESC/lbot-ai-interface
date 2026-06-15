@@ -225,9 +225,9 @@ export class GamePage implements OnInit, OnDestroy {
     });
   }
 
-  /** "Reiniciar Posição" HUD button — resets robot, timer keeps running. */
+  /** "Reiniciar Posição" HUD button — teleports robot to start, timer keeps running. */
   onResetRobot(): void {
-    this.simulator?.resetRobot();
+    this.simulator?.resetRobotPositionOnly();
   }
 
   /** Triggered by clicks on links that could navigate away from the game. */

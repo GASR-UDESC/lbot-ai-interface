@@ -461,6 +461,23 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
     });
   }
 
+  /** Teleporta o robô para a posição inicial sem resetar o estado de vitória ou o comando atual. */
+  resetRobotPositionOnly(): void {
+    this.robotBody.position.set(this.startPoint.x, 0.5, this.startPoint.z);
+    this.robotBody.velocity.set(0, 0, 0);
+    this.robotBody.angularVelocity.set(0, 0, 0);
+    const quaternion = new CANNON.Quaternion();
+    quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 0);
+    this.robotBody.quaternion.copy(quaternion);
+
+    this.ngZone.run(() => {
+      this.robotState.x = this.startPoint.x;
+      this.robotState.z = this.startPoint.z;
+      this.robotState.rotation = 0;
+      this.cdr.detectChanges();
+    });
+  }
+
   /**
    * Loads a level from configuration: swaps ground, clears old obstacles,
    * spawns new obstacles, repositions markers and resets the robot.
