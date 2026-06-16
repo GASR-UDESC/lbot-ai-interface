@@ -29,6 +29,14 @@ export interface VirtualControlSessionDto {
 }
 
 /**
+ * DTO for description validation response.
+ */
+export interface ValidateDescriptionResponseDto {
+  valid: boolean;
+  message: string;
+}
+
+/**
  * Request payload for creating a new virtual control session.
  */
 export interface CreateVirtualControlSessionRequest {
@@ -84,6 +92,19 @@ export class VirtualControlService {
     return this.http.post<VirtualControlSessionDto>(
       `${this.baseUrl}/virtual-controls/sessions`,
       request,
+      { headers: this.defaultHeaders }
+    );
+  }
+
+  /**
+   * Validates a movement description via AI backend.
+   * @param movementDescription - The description to validate
+   * @returns Observable with validation result
+   */
+  public validateDescription(movementDescription: string): Observable<ValidateDescriptionResponseDto> {
+    return this.http.post<ValidateDescriptionResponseDto>(
+      `${this.baseUrl}/virtual-controls/validate-description`,
+      { movementDescription },
       { headers: this.defaultHeaders }
     );
   }

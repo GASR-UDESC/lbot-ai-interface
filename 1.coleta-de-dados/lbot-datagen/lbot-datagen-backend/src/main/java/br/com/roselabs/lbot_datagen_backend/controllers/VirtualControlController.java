@@ -1,6 +1,8 @@
 package br.com.roselabs.lbot_datagen_backend.controllers;
 
 import br.com.roselabs.lbot_datagen_backend.dtos.CreateVirtualControlSessionDTO;
+import br.com.roselabs.lbot_datagen_backend.dtos.ValidateDescriptionRequestDTO;
+import br.com.roselabs.lbot_datagen_backend.dtos.ValidateDescriptionResponseDTO;
 import br.com.roselabs.lbot_datagen_backend.dtos.VirtualControlSessionDTO;
 import br.com.roselabs.lbot_datagen_backend.services.VirtualControlService;
 import jakarta.persistence.EntityNotFoundException;
@@ -49,6 +51,20 @@ public class VirtualControlController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/validate-description")
+    public ResponseEntity<ValidateDescriptionResponseDTO> validateDescription(
+            @RequestBody ValidateDescriptionRequestDTO requestDto) {
+        try {
+            ValidateDescriptionResponseDTO response = virtualControlService.validateDescription(
+                    requestDto.getMovementDescription());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ValidateDescriptionResponseDTO(false,
+                            "Erro interno ao validar descrição. Tente novamente."));
         }
     }
 }

@@ -18,6 +18,7 @@ export class VirtualControlsComponent implements OnInit {
   public userDescription: string = '';
   public isExecuting: boolean = false;
   public generatedLbml: string = '';
+  public validationError: string = '';
 
   // Increment values
   public readonly DISTANCE_INCREMENT = 10; // 10cm
@@ -117,14 +118,30 @@ export class VirtualControlsComponent implements OnInit {
     }
 
     this.isExecuting = true;
+    this.validationError = '';
 
     try {
-      // Build LBML from timeline
+      // Step 1: Validate description via backend AI
+      const validationResult = await this.virtualControlService.validateDescription(
+        this.userDescription
+      ).toPromise();
+
+      if (!validationResult || !validationResult.valid) {
+        this.validationError = validationResult?.message ||
+          'A descrição não parece descrever um movimento válido.';
+        console.warn('[VirtualControls] Description validation failed:', this.validationError);
+        this.isExecuting = false;
+        return;
+      }
+
+      console.log('[VirtualControls] Description validated successfully');
+
+      // Step 2: Build LBML from timeline
       const lbml = this.commandBuilder.buildLbmlFromTimeline(this.timeline);
 
       console.log('[VirtualControls] Executing LBML:', lbml);
 
-      // Execute the LBML command
+      // Step 3: Execute the LBML command
       this.simulatorBridge.executeLbml(lbml);
 
       // Wait for execution to complete
@@ -133,7 +150,7 @@ export class VirtualControlsComponent implements OnInit {
 
       console.log('[VirtualControls] Execution completed');
 
-      // Save session to backend
+      // Step 4: Save session to backend
       this.virtualControlService.createSession(
         this.userDescription,
         lbml,
@@ -151,6 +168,7 @@ export class VirtualControlsComponent implements OnInit {
       this.reset();
     } catch (error) {
       console.error('[VirtualControls] Execution error:', error);
+      this.validationError = 'Erro ao validar ou executar. Tente novamente.';
     } finally {
       this.isExecuting = false;
     }
@@ -163,6 +181,7 @@ export class VirtualControlsComponent implements OnInit {
     this.timeline = [];
     this.userDescription = '';
     this.generatedLbml = '';
+    this.validationError = '';
   }
 
   /**

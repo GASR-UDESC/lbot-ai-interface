@@ -1,6 +1,7 @@
 package br.com.roselabs.lbot_datagen_backend.services;
 
 import br.com.roselabs.lbot_datagen_backend.dtos.CreateVirtualControlSessionDTO;
+import br.com.roselabs.lbot_datagen_backend.dtos.ValidateDescriptionResponseDTO;
 import br.com.roselabs.lbot_datagen_backend.dtos.VirtualControlSessionDTO;
 import br.com.roselabs.lbot_datagen_backend.entities.VirtualControlCommand;
 import br.com.roselabs.lbot_datagen_backend.entities.VirtualControlSession;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class VirtualControlService {
 
     private final VirtualControlSessionRepository sessionRepository;
+    private final AIService aiService;
 
     @Transactional
     public VirtualControlSessionDTO createSession(CreateVirtualControlSessionDTO createDto) {
@@ -61,5 +63,18 @@ public class VirtualControlService {
         VirtualControlSession session = sessionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Virtual Control Session not found with id: " + id));
         return new VirtualControlSessionDTO(session);
+    }
+
+    @Transactional(readOnly = true)
+    public ValidateDescriptionResponseDTO validateDescription(String movementDescription) {
+        boolean isValid = aiService.validateMovementDescription(movementDescription);
+
+        if (isValid) {
+            return new ValidateDescriptionResponseDTO(true, "Descrição válida.");
+        } else {
+            return new ValidateDescriptionResponseDTO(false,
+                    "A descrição não parece descrever um movimento válido. " +
+                    "Por favor, descreva um movimento que o robô possa realizar (ex: andar, girar, deslocar).");
+        }
     }
 }

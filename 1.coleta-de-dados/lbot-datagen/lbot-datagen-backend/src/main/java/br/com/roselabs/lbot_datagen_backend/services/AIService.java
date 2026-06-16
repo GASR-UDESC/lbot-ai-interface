@@ -113,6 +113,46 @@ public class AIService {
         return isValid;
     }
 
+    public boolean validateMovementDescription(String description) {
+        try {
+            log.info("Validando descrição de movimento: {}", description);
+
+            String validationPrompt = buildValidationPrompt(description);
+
+            OpenAiChatOptions options = OpenAiChatOptions.builder()
+                    .model("gpt-4.1-nano")
+                    .temperature(0D)
+                    .build();
+
+            Prompt chatPrompt = new Prompt(validationPrompt, options);
+            String result = chatModel.call(chatPrompt).getResult().getOutput().getText();
+            String cleanResult = result.trim().toUpperCase();
+
+            // Cuidado: "INVALIDO" contém "VALIDO" como substring!
+            // Verificamos INVALIDO primeiro (mais específico)
+            boolean isInvalid = cleanResult.contains("INVALIDO");
+            boolean isValid = !isInvalid && cleanResult.contains("VALIDO");
+            log.info("Resultado da validação: {} (raw: {})", isValid ? "VALIDO" : "INVALIDO", result);
+
+            return isValid;
+        } catch (Exception e) {
+            log.error("Erro ao validar descrição de movimento: {}", e.getMessage(), e);
+            // Em caso de erro na API, consideramos inválido por segurança
+            return false;
+        }
+    }
+
+    private String buildValidationPrompt(String description) {
+        return "Você é um validador de descrições de movimento para um robô terrestre.\n" +
+                "Analise o texto abaixo e determine se ele descreve um movimento físico " +
+                "que um robô terrestre (que se desloca no chão e gira) pode realizar.\n\n" +
+                "Regras:\n" +
+                "- Textos vagos, figurativos ou criativos são válidos se puderem ser interpretados como movimento\n" +
+                "- Textos sobre cozinhar, calcular, tocar música, ou ações completamente não físicas são inválidos\n" +
+                "- Responda APENAS com uma palavra: VALIDO ou INVALIDO\n\n" +
+                "Texto: \"" + description + "\"\n";
+    }
+
     private String loadPromptFromFile(String filePath) throws IOException {
         ClassPathResource resource = new ClassPathResource(filePath);
         return resource.getContentAsString(StandardCharsets.UTF_8);
