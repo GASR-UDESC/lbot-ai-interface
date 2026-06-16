@@ -55,6 +55,7 @@ export class GamePage implements OnInit, OnDestroy {
   public readonly RotateCcwIcon = RotateCcw;
 
   @ViewChild(RoboSimulatorComponent) simulator?: RoboSimulatorComponent;
+  @ViewChild(LbotChat) lbotChat!: LbotChat;
 
   // ── reactive state ──────────────────────────────────────────────────────
   /** Current level config to pass down to the simulator. */
@@ -74,6 +75,12 @@ export class GamePage implements OnInit, OnDestroy {
 
   /** Set when the leaderboard save fails. */
   saveError = signal<boolean>(false);
+
+  /** Controls visibility of the rating warning modal. */
+  showRatingWarningModal = signal<boolean>(false);
+
+  /** Message displayed in the rating warning modal. */
+  ratingWarningMessage = signal<string>('');
 
   /** Cached payload for retry after a failed save. */
   private pendingSavePayload: VictorySavePayload | null = null;
@@ -110,6 +117,9 @@ export class GamePage implements OnInit, OnDestroy {
 
   /** Name of the level that just completed. */
   completedLevelName = signal<string>('');
+
+  /** True when the current level has been completed but not yet advanced past. */
+  currentLevelCompleted = signal<boolean>(false);
 
   // ── internals ───────────────────────────────────────────────────────────
   private timerInterval?: ReturnType<typeof setInterval>;
@@ -160,6 +170,7 @@ export class GamePage implements OnInit, OnDestroy {
     const finishedName = this.levelConfig.getLevel(finishedLevel).name;
     this.completedLevelNumber.set(finishedLevel);
     this.completedLevelName.set(finishedName);
+    this.currentLevelCompleted.set(true);
 
     this.gameState.completeLevel();
 
@@ -168,8 +179,38 @@ export class GamePage implements OnInit, OnDestroy {
     }
   }
 
-  /** "Próximo Nível" button in LevelTransition overlay. */
+  /** "Próximo Nível" button in LevelTransition overlay or HUD. */
   onNextLevel(): void {
+    const stats = this.lbotChat.getCurrentLevelMessageStats();
+
+    if (stats.total > 0 && stats.rated === 0) {
+      this.ratingWarningMessage.set(
+        'Você não avaliou nenhuma mensagem deste nível. ' +
+        'Avaliar as mensagens ajuda a melhorar o tradutor!'
+      );
+      this.showRatingWarningModal.set(true);
+      return;
+    }
+
+    this.proceedToNextLevel();
+  }
+
+  /** Continues to next level after the rating warning modal. */
+  onConfirmContinue(): void {
+    this.showRatingWarningModal.set(false);
+    this.proceedToNextLevel();
+  }
+
+  /** Closes the rating warning modal and hides the level transition overlay. */
+  onCancelContinue(): void {
+    this.showRatingWarningModal.set(false);
+    // Hide the transition overlay so the user can interact with the chat again.
+    this.gameState.phase.set('playing');
+  }
+
+  private proceedToNextLevel(): void {
+    this.lbotChat.clearChatForNextLevel();
+    this.currentLevelCompleted.set(false);
     this.gameState.nextLevel();
     // Restart the per-level timer display.
     this.startTimer();

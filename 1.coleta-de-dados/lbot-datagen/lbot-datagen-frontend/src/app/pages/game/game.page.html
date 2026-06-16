@@ -18,13 +18,17 @@
       ></app-robo-simulator>
 
       <!-- HUD overlay -->
-      <div class="hud" *ngIf="gameState.phase() === 'playing'">
+      <div class="hud" *ngIf="gameState.phase() === 'playing' || currentLevelCompleted()">
         <div class="hud-level">
           <span class="hud-label">NÍVEL {{ gameState.currentLevel() }}</span>
           <span class="hud-level-name">{{ currentLevelConfig()?.name }}</span>
         </div>
-        <div class="hud-timer">{{ timerDisplay() }}</div>
-        <button class="hud-reset-btn" (click)="onResetRobot()">
+        <div class="hud-timer" *ngIf="!currentLevelCompleted()">{{ timerDisplay() }}</div>
+        <div class="hud-complete-label" *ngIf="currentLevelCompleted()">NÍVEL COMPLETO!</div>
+        <button class="hud-next-btn" *ngIf="currentLevelCompleted()" (click)="onNextLevel()">
+          Próximo Nível →
+        </button>
+        <button class="hud-reset-btn" *ngIf="!currentLevelCompleted()" (click)="onResetRobot()">
           <lucide-icon [img]="RotateCcwIcon" [size]="16" style="vertical-align: middle;"></lucide-icon> Reiniciar Posição
         </button>
       </div>
@@ -67,6 +71,17 @@
   (retrySave)="onRetrySave()"
   (playAgain)="onPlayAgain()"
 ></app-victory-screen>
+
+<!-- ── Rating warning modal ── -->
+<app-confirm-modal
+  *ngIf="showRatingWarningModal()"
+  title="Avaliação Necessária"
+  [message]="ratingWarningMessage()"
+  confirmText="Continuar assim mesmo"
+  cancelText="Voltar ao chat"
+  (confirm)="onConfirmContinue()"
+  (cancel)="onCancelContinue()"
+></app-confirm-modal>
 
 <!-- ── Confirm exit modal ── -->
 <app-confirm-modal

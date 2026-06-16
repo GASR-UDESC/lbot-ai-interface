@@ -229,6 +229,30 @@ export class LbotChat implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
+   * Returns the count of bot messages and how many are rated
+   * for the current level.
+   */
+  public getCurrentLevelMessageStats(): { total: number; rated: number } {
+    const botMessages = this.messages.filter(m => m.type === 'bot' && m.messageId);
+    const total = botMessages.length;
+    const rated = botMessages.filter(m => m.rated).length;
+    return { total, rated };
+  }
+
+  /**
+   * Clears chat messages for the next level while keeping the session.
+   */
+  public clearChatForNextLevel(): void {
+    this.messages = [LbotChat.INITIAL_MESSAGE];
+    this.messageInput = '';
+    this.isLoading = false;
+    this.showObservation = false;
+    this.observation = '';
+    this.closeReevaluationPopup();
+    this.ratings.clear();
+  }
+
+  /**
    * Shows the observation popup when user wants to end the chat.
    */
   public showObservationPopup(): void {
