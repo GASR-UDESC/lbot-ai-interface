@@ -42,7 +42,7 @@ export class SimulatorEngine {
     this.robotGroup = robotGroup;
     this.world = new CANNON.World();
     this.world.gravity.set(0, -9.81, 0);
-    this.world.broadphase = new CANNON.NaiveBroadphase();
+    this.world.broadphase = new CANNON.SAPBroadphase(this.world);
 
     const groundShape = new CANNON.Plane();
     const groundBody = new CANNON.Body({ mass: 0 });
@@ -56,6 +56,10 @@ export class SimulatorEngine {
     this.robotBody.position.set(0, 6, 0);
     this.robotBody.linearDamping = 0.05;
     this.robotBody.angularDamping = 0.99;
+
+    // Impede que o robô tombe para os lados (só pode rotacionar no eixo Y)
+    this.robotBody.angularFactor = new CANNON.Vec3(0, 1, 0);
+
     this.world.addBody(this.robotBody);
 
     for (const obj of ARENA_OBJECTS) {
@@ -98,14 +102,31 @@ export class SimulatorEngine {
 
   step(): void {
     this.world.step(1 / 60);
+
+    // Prevent robot from tipping over on X/Z axes
     this.robotBody.angularVelocity.x = 0;
     this.robotBody.angularVelocity.z = 0;
+    this.robotBody.angularFactor = new CANNON.Vec3(0, 1, 0);
+
+    // Clamp Y position to prevent flying or going underground
+    if (this.robotBody.position.y > 12) {
+      this.robotBody.position.y = 12;
+      this.robotBody.velocity.y = 0;
+    }
+    if (this.robotBody.position.y < 6) {
+      this.robotBody.position.y = 6;
+      this.robotBody.velocity.y = 0;
+    }
+
+    // Limit upward velocity
+    if (this.robotBody.velocity.y > 0.5) {
+      this.robotBody.velocity.y = 0.5;
+    }
 
     if (this.activeAnimation) {
       const anim = this.activeAnimation;
       const elapsed = performance.now() - anim.startTime;
       const progress = Math.min(elapsed / anim.duration, 1);
-      const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
       if (anim.runToken !== this.executionToken) {
         this.activeAnimation = null;
@@ -114,8 +135,6 @@ export class SimulatorEngine {
         this.activeAnimation = null;
 
         if (anim.kind === 'movement') {
-          this.robotBody.position.x = anim.targetPosX;
-          this.robotBody.position.z = anim.targetPosZ;
           this.robotBody.velocity.x = 0;
           this.robotBody.velocity.z = 0;
         } else {
@@ -130,12 +149,47 @@ export class SimulatorEngine {
         anim.resolve(true);
       } else {
         if (anim.kind === 'movement') {
-          this.robotBody.position.x = anim.startPosX + (anim.targetPosX - anim.startPosX) * eased;
-          this.robotBody.position.z = anim.startPosZ + (anim.targetPosZ - anim.startPosZ) * eased;
-          this.robotBody.velocity.x = 0;
-          this.robotBody.velocity.z = 0;
+          // Direção do movimento
+          const dx = anim.targetPosX - anim.startPosX;
+          const dz = anim.targetPosZ - anim.startPosZ;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          const dirX = dx / dist;
+          const dirZ = dz / dist;
+
+          // Velocidade com desaceleração suave
+          const speed = ROBOT_SPEED * (1 - Math.pow(progress, 2));
+          this.robotBody.velocity.x = dirX * speed;
+          this.robotBody.velocity.z = dirZ * speed;
+
+          // Detecta se está travado (colidiu e parou de andar)
+          const moved = Math.sqrt(
+            Math.pow(this.robotBody.position.x - anim.startPosX, 2) +
+            Math.pow(this.robotBody.position.z - anim.startPosZ, 2)
+          );
+
+          if (moved > dist * 0.95) {
+            // Atingiu o destino
+            this.activeAnimation = null;
+            this.robotBody.velocity.x = 0;
+            this.robotBody.velocity.z = 0;
+            this.robotBody.velocity.y = 0;
+            this.robotBody.position.y = 6;
+            this.syncVisual();
+            this.updateStateFromBody();
+            anim.resolve(true);
+            return;
+          }
+
+          // Se bateu e parou de andar (verificado no próximo frame via posição)
+          if (this.robotBody.velocity.y > 0.5 || this.robotBody.position.y > 10) {
+            this.robotBody.velocity.y = 0;
+            this.robotBody.position.y = 6;
+            this.activeAnimation = null;
+            anim.resolve(false);
+            return;
+          }
         } else {
-          const currentRotation = anim.startRotation + (anim.targetRotation - anim.startRotation) * eased;
+          const currentRotation = anim.startRotation + (anim.targetRotation - anim.startRotation) * progress;
           const quaternion = new CANNON.Quaternion();
           quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (currentRotation * Math.PI) / 180);
           this.robotBody.quaternion.copy(quaternion);

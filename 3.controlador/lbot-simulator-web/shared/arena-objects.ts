@@ -87,13 +87,13 @@ export const ARENA_OBJECTS: ArenaObject[] = [
 
 export const PHYSICAL_WALLS: PhysicalWall[] = [
   // North
-  { x: 0, z: 204, width: 408, depth: 8, height: 15 },
+  { x: 0, z: 204, width: 408, depth: 8, height: 30 },
   // South
-  { x: 0, z: -204, width: 408, depth: 8, height: 15 },
+  { x: 0, z: -204, width: 408, depth: 8, height: 30 },
   // East
-  { x: 204, z: 0, width: 8, depth: 400, height: 15 },
+  { x: 204, z: 0, width: 8, depth: 400, height: 30 },
   // West
-  { x: -204, z: 0, width: 8, depth: 400, height: 15 },
+  { x: -204, z: 0, width: 8, depth: 400, height: 30 },
 ];
 
 export interface AABB {

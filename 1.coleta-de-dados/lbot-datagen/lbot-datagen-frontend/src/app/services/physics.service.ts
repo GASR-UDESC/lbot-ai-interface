@@ -20,7 +20,7 @@ export class PhysicsService {
   initWorld(): CANNON.World {
     const world = new CANNON.World();
     world.gravity.set(0, -9.81, 0);
-    world.broadphase = new CANNON.NaiveBroadphase();
+    world.broadphase = new CANNON.SAPBroadphase(world);
 
     this.setupContactMaterials(world);
 
@@ -82,7 +82,7 @@ export class PhysicsService {
   private createArenaWallsBodies(world: CANNON.World): void {
     const wallThickness = 5;
     const arenaSize = 400;
-    const wallHeight = 15;
+    const wallHeight = 30;
 
     const walls = [
       { x: 0, z: arenaSize / 2 + wallThickness / 2, w: (arenaSize + wallThickness) / 2, d: wallThickness / 2 },
@@ -112,6 +112,9 @@ export class PhysicsService {
     robotBody.linearDamping = 0.05;
     robotBody.angularDamping = 0.99;
 
+    // Impede que o robô tombe para os lados (só pode rotacionar no eixo Y)
+    robotBody.angularFactor = new CANNON.Vec3(0, 1, 0);
+
     robotBody.addEventListener('collide', (e: any) => {
       console.log('Robô colidiu!');
     });
@@ -124,7 +127,7 @@ export class PhysicsService {
    * Steps the physics simulation forward
    */
   step(world: CANNON.World, timeStep: number = 1 / 60): void {
-    world.step(timeStep);
+    world.step(timeStep, timeStep, 3);
   }
 
   /**
@@ -159,6 +162,19 @@ export class PhysicsService {
     if (robotBody.position.y > 10 && robotBody.velocity.y <= 0) {
       robotBody.velocity.y -= 2;
     }
+
+    // Clamp Y position to prevent flying or going underground
+    if (robotBody.position.y > 12) {
+      robotBody.position.y = 12;
+      robotBody.velocity.y = 0;
+    }
+    if (robotBody.position.y < 6) {
+      robotBody.position.y = 6;
+      robotBody.velocity.y = 0;
+    }
+
+    // Reinforce angular factor to prevent tipping
+    robotBody.angularFactor = new CANNON.Vec3(0, 1, 0);
   }
 
   /**
