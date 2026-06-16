@@ -88,7 +88,7 @@
 }
 
 .reset-button {
-  background: var(--color-primary);
+  background: var(--color-primary-green);
   color: #fff;
   border: none;
   padding: 12px 24px;
@@ -140,7 +140,7 @@
 }
 
 .reset-button:hover:not(:disabled) {
-  background: var(--color-primary-active);
+  background: var(--color-primary-green-active);
   box-shadow: 0 6px 20px rgba(0, 82, 255, 0.4);
 }
 
@@ -169,7 +169,7 @@
 }
 
 .reset-button:disabled, .camera-button:disabled, .goal-button:disabled {
-  background: var(--color-primary-disabled);
+  background: var(--color-primary-green-disabled);
   cursor: not-allowed;
   opacity: 0.6;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

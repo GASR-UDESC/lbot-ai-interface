@@ -19,7 +19,7 @@
 }
 
 .back-btn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-primary-green);
+  color: var(--color-primary-green);
   box-shadow: 0 2px 8px rgba(0, 82, 255, 0.1);
 }

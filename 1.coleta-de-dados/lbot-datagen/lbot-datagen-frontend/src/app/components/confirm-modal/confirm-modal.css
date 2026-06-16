@@ -75,7 +75,7 @@
 }
 
 .confirm-btn {
-  background: var(--color-primary);
+  background: var(--color-primary-green);
   color: var(--color-on-primary);
   border: none;
 }

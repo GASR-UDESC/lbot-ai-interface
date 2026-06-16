@@ -1,7 +1,7 @@
 :root {
-  --color-primary: #0052ff;
-  --color-primary-active: #003ecc;
-  --color-primary-disabled: #a8b8cc;
+  --color-primary-green: #008000;
+  --color-primary-green-active: #006600;
+  --color-primary-green-disabled: #8FBC8F;
   --color-primary-error-text: #cf202f;
   --color-ink: #0a0b0d;
   --color-body: #5b616e;
@@ -23,7 +23,7 @@
   --color-on-dark-soft: #a8acb3;
   --color-star-rating: #f4b000;
   --color-scrim: rgba(0, 0, 0, 0.6);
-  --color-legal-link: #0052ff;
+  --color-legal-link: #008000;
   --color-semantic-up: #05b169;
   --color-semantic-down: #cf202f;
 
@@ -163,7 +163,7 @@ app-root {
 
 .btn-filled {
   border: none;
-  background: var(--color-primary);
+  background: var(--color-primary-green);
   color: var(--color-on-primary);
   border-radius: var(--rounded-pill);
   font-weight: 600;
@@ -176,10 +176,10 @@ app-root {
 }
 
 .btn-filled:hover {
-  background: var(--color-primary-active);
+  background: var(--color-primary-green-active);
 }
 
 .btn-filled:disabled {
-  background: var(--color-primary-disabled);
+  background: var(--color-primary-green-disabled);
   cursor: not-allowed;
 }

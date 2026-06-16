@@ -23,7 +23,7 @@
 
 .header h2 {
   margin: 0 0 var(--spacing-xs) 0;
-  color: var(--color-primary);
+  color: var(--color-primary-green);
   font-size: var(--typography-title-md-size);
   font-weight: 600;
   line-height: var(--typography-title-md-line-height);
@@ -86,12 +86,12 @@
 
 .control-btn:hover:not(:disabled) {
   background: rgba(0, 82, 255, 0.08);
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-green);
 }
 
 .control-btn:active:not(:disabled) {
   background: rgba(0, 82, 255, 0.12);
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-green);
 }
 
 .control-btn:disabled {
@@ -100,7 +100,7 @@
 }
 
 .control-btn lucide-icon {
-  color: var(--color-primary);
+  color: var(--color-primary-green);
 }
 
 .control-btn .label {
@@ -119,7 +119,7 @@
 
 .timeline-section h3 {
   margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-primary);
+  color: var(--color-primary-green);
   font-size: var(--typography-title-sm-size);
   font-weight: var(--typography-title-sm-weight);
   line-height: var(--typography-title-sm-line-height);
@@ -189,7 +189,7 @@
 
 .description-input:focus {
   outline: none;
-  border: 2px solid var(--color-primary);
+  border: 2px solid var(--color-primary-green);
 }
 
 .remove-btn {
@@ -252,7 +252,7 @@
 
 .user-description-input:focus {
   outline: none;
-  border: 2px solid var(--color-primary);
+  border: 2px solid var(--color-primary-green);
 }
 
 .user-description-input:disabled {
@@ -354,17 +354,17 @@
 }
 
 .execute-btn {
-  background: var(--color-primary);
+  background: var(--color-primary-green);
   color: var(--color-on-primary);
   border: none;
 }
 
 .execute-btn:hover:not(:disabled) {
-  background: var(--color-primary-active);
+  background: var(--color-primary-green-active);
 }
 
 .execute-btn:disabled {
-  background: var(--color-primary-disabled);
+  background: var(--color-primary-green-disabled);
   color: var(--color-on-primary);
   opacity: 0.6;
 }

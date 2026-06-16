@@ -39,7 +39,7 @@
   font-size: var(--typography-uppercase-tag-size, 8px);
   font-weight: 600;
   line-height: var(--typography-uppercase-tag-line-height, 1.25);
-  color: var(--color-primary);
+  color: var(--color-primary-green);
   background: rgba(0, 82, 255, 0.08);
   border-radius: var(--rounded-pill);
   padding: 4px 14px;
@@ -102,7 +102,7 @@
 .next-btn {
   margin-top: 8px;
   padding: 14px 36px;
-  background: var(--color-primary);
+  background: var(--color-primary-green);
   color: var(--color-on-primary);
   border: none;
   border-radius: var(--rounded-pill);
@@ -114,5 +114,5 @@
 }
 
 .next-btn:hover {
-  background: var(--color-primary-active);
+  background: var(--color-primary-green-active);
 }
