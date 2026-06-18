@@ -14,12 +14,14 @@ from .messages import (
     inject_camera_image,
     summarize_for_display,
 )
-from .prompt import get_system_prompt, get_tools_description
+from .prompt import build_tools_for_llm, get_system_prompt
 from .tool_handler import (
     TranslationError,
     handle_camera,
+    handle_go_to,
     handle_move,
     handle_proximity,
+    handle_search_object,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,6 +33,7 @@ class ReActAgent:
     def __init__(
         self,
         mcp_client: MCPClient,
+        tools: list[dict],
         base_url: str | None = None,
         api_key: str | None = None,
         model: str | None = None,
@@ -39,6 +42,7 @@ class ReActAgent:
         on_event: EventCallback = None,
     ):
         self._mcp = mcp_client
+        self._tools = tools
         self._max_steps = max_steps
         self._verbose = verbose
         self._on_event = on_event
@@ -47,9 +51,18 @@ class ReActAgent:
         model = model or os.environ.get("LBOT_LLM_MODEL", "auto")
         self._llm = OpenAI(base_url=base_url, api_key=api_key)
         self._model = model
-        self._tools = get_tools_description()
         self._messages = build_initial_messages(get_system_prompt())
         self._cancelled = False
+
+    @classmethod
+    async def create(
+        cls,
+        mcp_client: MCPClient,
+        **kwargs,
+    ) -> "ReActAgent":
+        raw_tools = await mcp_client.list_tools()
+        tools = build_tools_for_llm(raw_tools)
+        return cls(mcp_client, tools=tools, **kwargs)
 
     def _emit(self, event: str, data: dict[str, Any]) -> None:
         if self._on_event is not None:
@@ -161,6 +174,20 @@ class ReActAgent:
                         elif tool_name == "move":
                             command = args.get("command", "")
                             result = await handle_move(self._mcp, command)
+                            append_tool_result(self._messages, tc.id, tool_name, result)
+                            display = result
+                        elif tool_name == "go_to":
+                            result = await handle_go_to(
+                                self._mcp,
+                                args.get("target", ""),
+                                args.get("direction", "frente"),
+                            )
+                            append_tool_result(self._messages, tc.id, tool_name, result)
+                            display = result
+                        elif tool_name == "search_object":
+                            result = await handle_search_object(
+                                self._mcp, args.get("description", "")
+                            )
                             append_tool_result(self._messages, tc.id, tool_name, result)
                             display = result
                         else:

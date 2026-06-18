@@ -57,7 +57,7 @@ async def _async_main(show_thinking: bool):
 
 
 async def _run_repl(client: MCPClient, show_thinking: bool):
-    agent = ReActAgent(client, on_event=_print_event if show_thinking else None)
+    agent = await ReActAgent.create(client, on_event=_print_event if show_thinking else None)
     loop = asyncio.get_running_loop()
     running_task = None
 
