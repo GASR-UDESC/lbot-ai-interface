@@ -5,6 +5,7 @@ import { ARENA_OBJECTS, PHYSICAL_WALLS } from '../../shared/arena-objects.js';
 import type { SimulatorSnapshot, StatusMessage } from './types.js';
 
 const ROBOT_SPEED = 30;
+const AVERAGE_MOVE_SPEED = ROBOT_SPEED * 2 / 3;
 const ROTATION_SPEED = 90;
 
 type AnimationKind = 'movement' | 'rotation';
@@ -314,7 +315,7 @@ export class SimulatorEngine {
       this.activeAnimation = {
         kind: 'movement',
         startTime: performance.now(),
-        duration: (distance / ROBOT_SPEED) * 1000,
+        duration: (distance / AVERAGE_MOVE_SPEED) * 1000,
         startPosX: this.robotBody.position.x,
         startPosZ: this.robotBody.position.z,
         targetPosX: targetX,

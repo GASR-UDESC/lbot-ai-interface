@@ -8,6 +8,7 @@ from ..context import get_backend
 
 @mcp.tool()
 async def camera() -> str:
+    """Captura uma imagem da câmera frontal do robô. Use para ver o que está à frente: objetos, cores, paredes, outros robôs."""
     try:
         backend = get_backend()
         data = await backend.get_camera()

@@ -9,13 +9,7 @@ LBML_SEQUENCE_RE = re.compile(r"^(D\d+[FBLR];|R\d+[LR];)+$")
 
 @mcp.tool()
 async def move(command: str) -> str:
-    """Executa um comando de movimento em formato LBML.
-
-    Args:
-        command: Comando LBML (ex: 'D30F;R90L;').
-                 D = deslocamento em cm, R = rotacao em graus.
-                 F = frente, B = tras, L = esquerda, R = direita.
-    """
+    """Executa um movimento do robô. O comando deve ser em linguagem natural (português). Exemplos: 'ande 30cm para frente', 'vire 90 graus para direita', 'ande 15cm para frente, depois vire 180 graus'. O movimento é relativo à posição atual do robô."""
     if not LBML_SEQUENCE_RE.match(command):
         return (
             "Erro: formato LBML invalido. "
