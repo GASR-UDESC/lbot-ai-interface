@@ -2,10 +2,6 @@ import json
 from typing import Any
 
 
-class TranslationError(Exception):
-    pass
-
-
 async def handle_camera(
     mcp_client: Any,
 ) -> dict[str, Any]:
@@ -38,17 +34,7 @@ async def handle_move(
     mcp_client: Any,
     command_nl: str,
 ) -> str:
-    translate_result = await mcp_client.call_tool(
-        "translate", {"command": command_nl}
-    )
-
-    lbml_text = translate_result.strip()
-    if lbml_text == "ERRO" or not lbml_text:
-        raise TranslationError(
-            f"Não foi possível traduzir o comando: '{command_nl}'"
-        )
-
-    return await mcp_client.call_tool("move", {"command": lbml_text})
+    return await mcp_client.call_tool("move", {"command": command_nl})
 
 
 async def handle_go_to(

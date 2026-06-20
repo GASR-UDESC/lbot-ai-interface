@@ -16,7 +16,6 @@ from .messages import (
 )
 from .prompt import build_tools_for_llm, get_system_prompt
 from .tool_handler import (
-    TranslationError,
     handle_camera,
     handle_go_to,
     handle_move,
@@ -194,10 +193,6 @@ class ReActAgent:
                             result = await self._mcp.call_tool(tool_name, args)
                             append_tool_result(self._messages, tc.id, tool_name, result)
                             display = result
-                    except TranslationError as e:
-                        error_msg = f"Missão abortada: {e}"
-                        self._emit("error", {"step": step, "error": error_msg})
-                        return error_msg
                     except Exception as e:
                         error_result = f"Erro: {e}"
                         logger.warning("[Step %d] Tool error: %s", step, e)

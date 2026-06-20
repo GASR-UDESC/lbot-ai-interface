@@ -19,8 +19,6 @@ def build_tools_for_llm(raw_tools: list[dict]) -> list[dict]:
     result = []
     for tool in raw_tools:
         name = tool["name"]
-        if name == "translate":
-            continue
         result.append({
             "type": "function",
             "function": {

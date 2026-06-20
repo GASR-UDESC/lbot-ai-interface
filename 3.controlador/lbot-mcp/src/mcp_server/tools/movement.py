@@ -1,26 +1,25 @@
-import re
 import httpx
 
 from ..server import mcp
-from ..context import get_backend
-
-LBML_SEQUENCE_RE = re.compile(r"^(D\d+[FBLR];|R\d+[LR];)+$")
+from ..context import get_backend, get_translator
+from ..translator import TranslationError
 
 
 @mcp.tool()
 async def move(command: str) -> str:
     """Executa um movimento do robô. O comando deve ser em linguagem natural (português). Exemplos: 'ande 30cm para frente', 'vire 90 graus para direita', 'ande 15cm para frente, depois vire 180 graus'. O movimento é relativo à posição atual do robô."""
-    if not LBML_SEQUENCE_RE.match(command):
+    try:
+        translator = get_translator()
+        lbml = translator.translate(command)
+    except TranslationError:
         return (
-            "Erro: formato LBML invalido. "
-            "Use o formato 'D30F;R90L;' "
-            "(D=deslocamento em cm, R=rotacao em graus; "
-            "F=frente, B=tras, L=esquerda, R=direita)."
+            "Erro: não entendi o comando. Use frases como "
+            "'ande 30cm para frente', 'vire 90 graus para direita'."
         )
 
     try:
         backend = get_backend()
-        result = await backend.execute_lbml(command)
+        result = await backend.execute_lbml(lbml)
 
         if result.get("accepted"):
             return f"Comando executado: {command}"
