@@ -13,7 +13,7 @@ class LBotBackend(ABC):
         ...
 
     @abstractmethod
-    async def execute_lbml(self, lbml: str) -> dict:
+    async def execute_lbml(self, lbml: str, *, wait: bool = False) -> dict:
         ...
 
     @abstractmethod

@@ -79,7 +79,16 @@ class SimulatorBackend(LBotBackend):
 
         return data["readings"]
 
-    async def execute_lbml(self, lbml: str) -> dict:
+    async def execute_lbml(self, lbml: str, *, wait: bool = False) -> dict:
+        import asyncio
+        from ..lbml import calculate_duration_s
+
+        # Se wait=True, calcula a duracao ANTES de enviar
+        # (evita delay adicional do calculo apos o envio)
+        wait_seconds = None
+        if wait:
+            wait_seconds = calculate_duration_s(lbml)
+
         try:
             response = await self.client.post(
                 f"{self.base_url}/api/commands",
@@ -93,6 +102,10 @@ class SimulatorBackend(LBotBackend):
         if not data.get("accepted"):
             error = data.get("error", ERROR_COMMAND_FAILED)
             raise RuntimeError(error)
+
+        # Aguarda o tempo calculado para o movimento terminar
+        if wait_seconds is not None and wait_seconds > 0:
+            await asyncio.sleep(wait_seconds)
 
         return {
             "accepted": data["accepted"],

@@ -19,7 +19,7 @@ async def move(command: str) -> str:
 
     try:
         backend = get_backend()
-        result = await backend.execute_lbml(lbml)
+        result = await backend.execute_lbml(lbml, wait=True)
 
         if result.get("accepted"):
             return f"Comando executado: {command}"
