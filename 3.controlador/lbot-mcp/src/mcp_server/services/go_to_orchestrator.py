@@ -11,8 +11,9 @@ from .detector import (
     FRAME_WIDTH,
     FRAME_HEIGHT,
 )
-from ..lbml import move_duration_s, rotate_duration_s
 from .vision import ask_llm_if_object_visible
+
+MOVE_DELAY_SECONDS = 2
 FOV_HORIZONTAL = 100
 CENTER_THRESHOLD_PX = 64
 MAX_CENTER_ATTEMPTS = 5
@@ -149,14 +150,14 @@ class GoToOrchestrator:
         _log(f"  [movimento] Rotacionando {int(abs(degrees))} graus para {'direita' if direction == 'R' else 'esquerda'} ({cmd})")
         await self._backend.execute_lbml(cmd)
         self._steps_taken.append(f"rotate_{cmd.strip(';')}")
-        await asyncio.sleep(rotate_duration_s(abs(degrees)))
+        await asyncio.sleep(MOVE_DELAY_SECONDS)
 
     async def _move_forward(self, cm: int) -> None:
         cmd = f"D{cm}F;"
         _log(f"  [movimento] Avancando {cm}cm para frente ({cmd})")
         await self._backend.execute_lbml(cmd)
         self._steps_taken.append(f"forward_{cm}cm")
-        await asyncio.sleep(move_duration_s(cm))
+        await asyncio.sleep(MOVE_DELAY_SECONDS)
 
     async def _get_front_sensor(self) -> float | None:
         try:
