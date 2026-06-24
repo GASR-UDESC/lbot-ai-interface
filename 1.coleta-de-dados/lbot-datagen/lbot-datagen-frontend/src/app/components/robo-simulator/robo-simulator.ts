@@ -375,59 +375,36 @@ export class RoboSimulatorComponent implements OnInit, AfterViewInit, OnDestroy,
       const startTime = Date.now();
       const duration = (distance / this.ROBOT_SPEED) * 1000;
       const startPos = this.robotBody.position.clone();
-      const targetPos = new CANNON.Vec3(targetX, startPos.y, targetZ);
-
-      // Direção do movimento
-      const dx = targetPos.x - startPos.x;
-      const dz = targetPos.z - startPos.z;
-      const totalDist = Math.sqrt(dx * dx + dz * dz);
-      const dirX = dx / totalDist;
-      const dirZ = dz / totalDist;
-
-      let lastPos = { x: startPos.x, z: startPos.z };
-      let stalledFrames = 0;
+      const targetPos = new CANNON.Vec3(targetX, this.robotBody.position.y, targetZ);
 
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = progress < 0.5 ?
+          2 * progress * progress :
+          1 - Math.pow(-2 * progress + 2, 2) / 2;
 
-        // Velocidade constante (sem ease) para deixar a física controlar
-        const speed = this.ROBOT_SPEED;
-        const currentSpeed = speed * (1 - Math.pow(progress, 2)); // Desaceleração suave
-
-        // Aplica velocidade na direção alvo
-        this.robotBody.velocity.x = dirX * currentSpeed;
-        this.robotBody.velocity.z = dirZ * currentSpeed;
-        this.robotBody.angularVelocity.x = 0;
-        this.robotBody.angularVelocity.z = 0;
-
-        // Detecta se está travado (colidiu e parou de andar)
-        const currentX = this.robotBody.position.x;
-        const currentZ = this.robotBody.position.z;
-        const moved = Math.sqrt(
-          Math.pow(currentX - lastPos.x, 2) + Math.pow(currentZ - lastPos.z, 2)
+        const currentPos = new CANNON.Vec3(
+          startPos.x + (targetPos.x - startPos.x) * easeProgress,
+          this.robotBody.position.y,
+          startPos.z + (targetPos.z - startPos.z) * easeProgress
         );
 
-        if (moved < 0.1) {
-          stalledFrames++;
+        this.robotBody.position.x = currentPos.x;
+        this.robotBody.position.z = currentPos.z;
+
+        this.robotBody.velocity.x *= 0.8;
+        this.robotBody.velocity.z *= 0.8;
+        this.robotBody.angularVelocity.x *= 0.5;
+        this.robotBody.angularVelocity.z *= 0.5;
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
         } else {
-          stalledFrames = 0;
-        }
-
-        lastPos = { x: currentX, z: currentZ };
-
-        // Parar se bateu (travado por 3 frames) ou atingiu o destino
-        if (stalledFrames > 3 || progress >= 1) {
           this.robotBody.velocity.x = 0;
           this.robotBody.velocity.z = 0;
-          this.robotBody.velocity.y = 0;
-          // Mantém posição Y no chão
-          this.robotBody.position.y = 6;
           resolve();
-          return;
         }
-
-        requestAnimationFrame(animate);
       };
 
       animate();
