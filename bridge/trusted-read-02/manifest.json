@@ -1,0 +1,57 @@
+{
+  "bridgeVersion": "3.6",
+  "kind": "google-docs-trusted-read",
+  "status": "complete",
+  "outputDir": "/Users/guilherme.mendesrosa/code/lbot-ai-interface/bridge/trusted-read-02",
+  "target": {
+    "documentId": "1TqTWOVub5ioYSbz-kHQJjySBSdqXlyfcxDJv8jeAp1Q",
+    "title": "SIC — Controle de robôs móveis por linguagem natural",
+    "revisionId": "AIroW379ox4WzZ8_JG0pDMdroik2_EP1pwFkGKJfooCMquLTk5qqAFx_SSirsn67fz60QIUbamk4rVYGO44gJJkigxlTsc7S908kSc981uQ",
+    "documentUrl": "https://docs.google.com/document/d/1TqTWOVub5ioYSbz-kHQJjySBSdqXlyfcxDJv8jeAp1Q",
+    "selectedTabId": "t.0"
+  },
+  "dropdownMetadata": {
+    "status": "unavailable",
+    "resolvedTool": null,
+    "authoritative": false,
+    "count": 0
+  },
+  "controlAwareness": {
+    "hasProtectedControls": false,
+    "authoritativeDropdownCount": 0,
+    "opaqueControlCount": 0,
+    "affectedParagraphCount": 0,
+    "nativeElementCounts": {},
+    "preservationRequired": false,
+    "recommendedBehavior": "No protected controls were detected in the scanned scope."
+  },
+  "warnings": [],
+  "files": {
+    "document_result": {
+      "path": "/Users/guilherme.mendesrosa/code/lbot-ai-interface/bridge/trusted-read-02/document-result.json",
+      "bytes": 17068,
+      "sha256": "fc2bfcc57f4e03e14e3236627a22d3ec8248c72a48fb80535febaf50154464a0"
+    },
+    "control_inventory": {
+      "path": "/Users/guilherme.mendesrosa/code/lbot-ai-interface/bridge/trusted-read-02/control-inventory.json",
+      "bytes": 1062,
+      "sha256": "84814ac7fdd93d8edfeecb4c49d54809ca299bce26b2f4f4b58d42ba5c4b3836"
+    },
+    "document_outline": {
+      "path": "/Users/guilherme.mendesrosa/code/lbot-ai-interface/bridge/trusted-read-02/document-outline.json",
+      "bytes": 3123,
+      "sha256": "43d7b1dd482b4db83103836cce62e3ee024b256cb986ea63b738a05f57813141"
+    },
+    "document_text": {
+      "path": "/Users/guilherme.mendesrosa/code/lbot-ai-interface/bridge/trusted-read-02/document-text.md",
+      "bytes": 1249,
+      "sha256": "51b9b21242aea8f906e34cc4406eea12274a7875cc21e40d8bb066a2afb9ea74"
+    },
+    "receipt": {
+      "path": "/Users/guilherme.mendesrosa/code/lbot-ai-interface/bridge/trusted-read-02/receipt.json",
+      "bytes": 993,
+      "sha256": "45ca4e1a4bc47dabec57ee01068077283cdbccae7b4986f9f8297abc414d2d45"
+    }
+  },
+  "error": null
+}

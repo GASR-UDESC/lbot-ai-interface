@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "kind": "google-docs-normalized-read",
+  "document": {
+    "documentId": "1TqTWOVub5ioYSbz-kHQJjySBSdqXlyfcxDJv8jeAp1Q",
+    "title": "SIC — Controle de robôs móveis por linguagem natural",
+    "revisionId": "AIroW379ox4WzZ8_JG0pDMdroik2_EP1pwFkGKJfooCMquLTk5qqAFx_SSirsn67fz60QIUbamk4rVYGO44gJJkigxlTsc7S908kSc981uQ",
+    "documentUrl": "https://docs.google.com/document/d/1TqTWOVub5ioYSbz-kHQJjySBSdqXlyfcxDJv8jeAp1Q"
+  },
+  "selectedTabId": "t.0",
+  "controlSummary": {
+    "total": 0,
+    "opaque": 0,
+    "authoritativeDropdowns": 0,
+    "affectedParagraphs": 0
+  },
+  "paragraphs": [
+    {
+      "paragraphId": "P00001",
+      "path": "tabs.t.0.body.content[1]",
+      "tabId": "t.0",
+      "tabTitle": "Tab 1",
+      "segmentId": null,
+      "startIndex": 1,
+      "endIndex": 122,
+      "namedStyleType": "TITLE",
+      "isListItem": false,
+      "listId": null,
+      "nestingLevel": null,
+      "table": null,
+      "text": "Controle de robôs móveis por linguagem natural: desenvolvimento e integração de um agente inteligente ao simulador L-Bot",
+      "protectedControls": []
+    },
+    {
+      "paragraphId": "P00002",
+      "path": "tabs.t.0.body.content[2]",
+      "tabId": "t.0",
+      "tabTitle": "Tab 1",
+      "segmentId": null,
+      "startIndex": 122,
+      "endIndex": 123,
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false,
+      "listId": null,
+      "nestingLevel": null,
+      "table": null,
+      "text": "",
+      "protectedControls": []
+    },
+    {
+      "paragraphId": "P00003",
+      "path": "tabs.t.0.body.content[3]",
+      "tabId": "t.0",
+      "tabTitle": "Tab 1",
+      "segmentId": null,
+      "startIndex": 123,
+      "endIndex": 130,
+      "namedStyleType": "HEADING_1",
+      "isListItem": false,
+      "listId": null,
+      "nestingLevel": null,
+      "table": null,
+      "text": "Resumo",
+      "protectedControls": []
+    },
+    {
+      "paragraphId": "P00004",
+      "path": "tabs.t.0.body.content[4]",
+      "tabId": "t.0",
+      "tabTitle": "Tab 1",
+      "segmentId": null,
+      "startIndex": 130,
+      "endIndex": 537,
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false,
+      "listId": null,
+      "nestingLevel": null,
+      "table": null,
+      "text": "Este trabalho apresenta uma interface para controle de robôs móveis por comandos em linguagem natural em português. A proposta integra um modelo de tradução para a linguagem de comandos LBML, um simulador robótico 3D e um servidor MCP com recursos de câmera e sensores de proximidade. O objetivo é tornar a interação com robôs mais acessível e investigar o uso de modelos de linguagem no controle robótico.",
+      "protectedControls": []
+    },
+    {
+      "paragraphId": "P00005",
+      "path": "tabs.t.0.body.content[5]",
+      "tabId": "t.0",
+      "tabTitle": "Tab 1",
+      "segmentId": null,
+      "startIndex": 537,
+      "endIndex": 538,
+      "namedStyleType": "NORMAL_TEXT",
+      "isListItem": false,
+      "listId": null,
+      "nestingLevel": null,
+      "table": null,
+      "text": "",
+      "protectedControls": []
+    }
+  ]
+}
