@@ -1,90 +1,56 @@
-# lbot-simulator-web
+# Simulador LBot com estado único
 
-Simulador standalone em React para executar comandos LBML na web.
+Física Cannon em metros/segundos no servidor, com passos fixos de 60 Hz. A interface Three.js recebe estados e não controla a evolução física. LBML, diagnóstico e sensores usam centímetros/graus na fronteira da API.
 
-## O que faz
+## Executar
 
-- Renderiza o simulador 3D no navegador com `three` e `cannon-es`
-- Aceita comandos LBML pela UI
-- Aceita comandos LBML por HTTP
-- Encaminha os comandos HTTP para a aba ativa do simulador via SSE
-- Expõe status e ultimo estado conhecido da simulacao
+Requisitos: Node.js 22+, npm e Chromium gerenciado pelo Playwright.
 
-## Requisitos
-
-- Node.js 20+
-- npm 10+
-
-## Rodando em desenvolvimento
-
-```bash
-npm install
+```sh
+npm ci
+npm run setup:camera
 npm run dev
 ```
 
-Servicos:
+Interface: `http://localhost:5173`. API: `http://127.0.0.1:3001`. A API também serve a interface em sua própria porta. A câmera 3D funciona sem uma aba aberta pelo usuário. Se Chromium ou WebGL falhar, retorna `camera_unavailable`; não substitui a imagem por um mapa.
 
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:3001`
+Produção:
 
-## Scripts
-
-```bash
-npm run dev
-npm run check
-npm run test
+```sh
 npm run build
+npm run start
 ```
 
-## Endpoints
+Verificação, incluindo câmera real em Chromium:
 
-### Health
-
-```bash
-curl http://localhost:3001/api/health
+```sh
+npm run build
+npm test
 ```
 
-### Status
+## API
 
-```bash
-curl http://localhost:3001/api/status
+- `GET /api/health`, `/api/status`, `/api/state`: diagnóstico do servidor e operação.
+- `POST /api/commands`: `{command:"D30F;R90L;", command_id?:string, session_id?:string}`.
+- `GET /api/commands/:id`: progresso e conclusão efetiva, deslocamento medido e motivo de interrupção.
+- `POST /api/stop`: parada imediata, fora da execução normal.
+- `POST /api/reset`: interrompe a operação, reinicia a pose e cria outra sessão.
+- `GET /api/camera`: PNG 640×480, identificação/revisão da captura e intrínsecos.
+- `GET /api/sensors`: distâncias ao obstáculo frontal/traseiro mais próximo, validade e revisão.
+- `GET /api/events`: SSE de cena e estado. Várias abas observam o mesmo servidor.
+
+Estados de comando: `accepted`, `running`, `completed`, `blocked`, `cancelled`, `failed`, `timed_out`. Reutilizar um identificador com o mesmo comando é idempotente; outro comando recebe conflito. Operações concorrentes recebem `busy`. A UI acompanha o mesmo ciclo usado pelo MCP.
+
+Convenção: orientação 0 aponta para +Z; esquerda aumenta a orientação, direita diminui. Deslocamentos são relativos ao robô. `D20L;` significa girar 90° à esquerda e avançar 20 cm, não deslocamento lateral. Giro acumulado é preservado para sequências e 360°.
+
+Objetos e parâmetros da câmera são compartilhados entre renderização e física. A câmera não retorna pose absoluta; `/api/state` é diagnóstico e não deve ser percepção do agente.
+
+## Avaliação reproduzível
+
+```sh
+PORT=3003 LBOT_ENABLE_EVAL=1 npm run start
 ```
 
-### Ultimo estado conhecido
+Habilita `POST /api/scenario` para configurar objetos e pose de teste. É uma função de diagnóstico, desligada por padrão e ausente do MCP. O avaliador fica em `../lbot-mcp/evals/run.py`. Não execute a avaliação na mesma instância usada interativamente.
 
-```bash
-curl http://localhost:3001/api/state
-```
-
-### Executar comando LBML
-
-```bash
-curl -X POST http://localhost:3001/api/commands \
-  -H 'Content-Type: application/json' \
-  -d '{"command":"D40F;R90L;D20F;"}'
-```
-
-### Resetar simulador
-
-```bash
-curl -X POST http://localhost:3001/api/reset \
-  -H 'Content-Type: application/json' \
-  -d '{}'
-```
-
-## Observacoes
-
-- A API envia comandos para a aba ativa conectada em `/api/events`
-- Se nenhuma aba estiver conectada, `POST /api/commands` e `POST /api/reset` retornam `409`
-- Ao abrir uma nova aba do simulador, ela assume a conexao ativa
-
-## Formato LBML aceito
-
-- Deslocamento: `D<valor><F|B|L|R>;`
-- Rotacao: `R<angulo><L|R>;`
-
-Exemplos:
-
-- `D40F;`
-- `R90L;`
-- `D40F;R90L;D20F;`
+Comandos aceitos e terminais são registrados em `runs/simulator.jsonl`; `LBOT_TRACE_DIR` permite reunir logs com o harness. Consulte `../IMPLEMENTACAO_HARNESS_SIMULADOR.md` para o fluxo completo e os resultados locais.

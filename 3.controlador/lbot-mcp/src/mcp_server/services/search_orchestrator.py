@@ -1,473 +1,354 @@
 import asyncio
-import sys
+import math
+import os
 import time
 
 import cv2
-import numpy as np
 
-from .detector import (
-    decode_frame,
-    detect_object,
-    parse_description,
-    FRAME_WIDTH,
-    FRAME_HEIGHT,
-)
-from .vision import ask_llm_if_object_visible
-
-MOVE_DELAY_SECONDS = 2
-FOV_HORIZONTAL = 100
-CENTER_THRESHOLD_PX = 64
-MAX_CENTER_ATTEMPTS = 5
-MAX_APPROACH_STEPS = 10
-MAX_RESCANS = 2
-MIN_SAFE_DISTANCE_CM = 20
-TARGET_DISTANCE_CM = 50
-CAMERA_TIMEOUT = 5.0
-SCAN_STEP_DEGREES = 45
-SCAN_STEPS = 8
-STAR_STEP_DEGREES = 45
-STAR_STEPS = 8
-STAR_OFFSET_HALF_CM = 50
-STAR_OFFSET_CM = 100
-OPENCV_RETRY_FORWARD_1 = 50
-OPENCV_RETRY_FORWARD_2 = 30
+from .detector import COLOR_RANGES, decode_frame, parse_description, propose_regions
+from .vision import locate_object
 
 
-def _log(msg: str) -> None:
-    print(f"[SEARCH_OBJECT] {msg}", file=sys.stderr, flush=True)
+class SearchBudgetExpired(Exception):
+    """A deliberate search limit, separate from a failed perception request."""
 
 
 class SearchOrchestrator:
+    def __init__(self, backend, *, perception=locate_object, clock=time.monotonic):
+        self.backend = backend
+        self.perception = perception
+        self.steps = []
+        self.last = None
+        self.camera = None
+        self.description = ""
+        self.session = None
+        self.clock = clock
+        self.deadline = None
+        self.observations = 0
+        self.heading = 0.0  # Relative odometry, never simulator absolute pose.
 
-    def __init__(self, backend, *, llm_client, llm_model: str = "auto"):
-        self._backend = backend
-        self._llm_client = llm_client
-        self._llm_model = llm_model
-        self._steps_taken: list[str] = []
-        self._last_bbox: tuple | None = None
-        self._rescan_count = 0
-        self._original_description: str = ""
-        self._object_type: str = "cubo"
-        self._object_color: str | None = None
-
-
-    async def run(self, description: str) -> dict:
-        t0 = time.monotonic()
-
-        self._original_description = description
-        self._object_type, self._object_color = parse_description(description)
-
-        _log(f"=== INICIANDO BUSCA: type={self._object_type} color={self._object_color} desc='{description}' ===")
-
-        _log("[FASE 1] Varredura 360 graus (scan 8x45)")
-        scan_result = await self._scan(self._object_type, self._object_color)
-
-        if scan_result is None:
-            _log(f"[FASE 2] Scan nao encontrou. Iniciando exploracao em estrela 8x{STAR_STEP_DEGREES}graus com {STAR_OFFSET_HALF_CM}cm (star_explore)")
-            scan_result = await self._star_explore(
-                self._object_type, self._object_color, offset_cm=STAR_OFFSET_HALF_CM
+    async def _execute(self, command):
+        result = await self.backend.execute_lbml(
+            command, wait=True, session_id=self.session
+        )
+        self.steps.append({"command": command, **result})
+        if result.get("status") != "completed":
+            raise RuntimeError(
+                result.get("reason") or result.get("status", "execution_unknown")
             )
+        return result
 
-        if scan_result is None:
-            _log(f"[FASE 2B] Star explore {STAR_OFFSET_HALF_CM}cm nao encontrou. Iniciando exploracao em estrela 8x{STAR_STEP_DEGREES}graus com {STAR_OFFSET_CM}cm (star_explore)")
-            scan_result = await self._star_explore(
-                self._object_type, self._object_color
-            )
+    async def _rotate(self, degrees):
+        if abs(degrees) < 1:
+            return
+        result = await self._execute(
+            f"R{max(1, round(abs(degrees)))}{'L' if degrees > 0 else 'R'};"
+        )
+        self.heading += result["rotation_degrees"]
 
-        if scan_result is None:
-            _log("[RESULTADO] OBJETO NAO ENCONTRADO apos todas as tentativas")
-            return {
-                "status": "not_found",
-                "object_type": self._object_type,
-                "object_color": self._object_color,
-                "bounding_box": None,
-                "final_distance_cm": None,
-                "steps_taken": self._steps_taken,
-            }
+    async def _travel(self, cm, forward=True):
+        remaining = max(0, round(cm))
+        direction = "frente" if forward else "tras"
+        while remaining:
+            data = await self.backend.get_proximity()
+            self._check_session(data)
+            if data.get("validity", {}).get(direction) == "unavailable":
+                raise RuntimeError("sensor_unavailable")
+            distance = data.get("readings", {}).get(direction)
+            if distance is None:
+                raise RuntimeError("sensor_unavailable")
+            step = min(20, remaining)
+            if distance - step < 20:
+                raise RuntimeError("obstacle_blocked")
+            await self._execute(f"D{step}{'F' if forward else 'B'};")
+            remaining -= step
 
-        obj = scan_result["object"]
-        self._last_bbox = obj["bbox"]
-        _log(f"[FASE 3] Objeto detectado! bbox={obj['bbox']} center={obj['center']}. Iniciando centralizacao (center)")
+    def _check_session(self, data):
+        session = data.get("session_id")
+        if session is None:
+            raise RuntimeError("invalid_observation")
+        if self.session is not None and session != self.session:
+            raise RuntimeError("stale_session")
+        self.session = session
 
-        centered = await self._center(obj["center"])
-        if not centered:
-            _log("[RESULTADO] NAO FOI POSSIVEL CENTRALIZAR o objeto")
-            return {
-                "status": "not_found",
-                "reason": "could not center",
-                "object_type": self._object_type,
-                "object_color": self._object_color,
-                "bounding_box": self._last_bbox,
-                "final_distance_cm": None,
-                "steps_taken": self._steps_taken,
-            }
+    async def _observe(self, track=False):
+        self.camera = await self.backend.get_camera()
+        self._check_session(self.camera)
+        frame = decode_frame(self.camera["image"])
+        # OpenCV tracks a semantically selected target, without requiring rigid shape classification.
+        if track and self.last and self.last.get("bbox"):
+            _, color = parse_description(self.description)
+            candidates = propose_regions(frame, color) if color else []
+            old = self.last["bbox"]
+            old_cx = old[0] + old[2] / 2
+            old_cy = old[1] + old[3] / 2
+            nearby = [
+                c
+                for c in candidates
+                if abs(c[0] + c[2] / 2 - old_cx) < 100
+                and abs(c[1] + c[3] / 2 - old_cy) < 100
+                and 0.3 < (c[2] * c[3]) / (old[2] * old[3]) < 3
+            ]
+            if len(nearby) == 1:
+                b = nearby[0]
+                self.last = {
+                    **self.last,
+                    "bbox": b,
+                    "frame_id": self.camera["frame_id"],
+                    "revision": self.camera["revision"],
+                    "sensor_association": False,
+                }
+                return self.last
+        self.last = await self.perception(self.camera, self.description)
+        return self.last
 
-        _log("[FASE 4] Objeto centralizado. Iniciando aproximacao (approach)")
-        approach_result = await self._approach(self._object_type, self._object_color)
+    async def _scan(self):
+        inconclusive = False
+        for _ in range(8):
+            remaining = self.deadline - self.clock()
+            # Reserve time to return safely from an exploration offset. The parent skill
+            # still has its own hard timeout; inference failures are never object absence.
+            if remaining <= 10:
+                raise SearchBudgetExpired()
+            budget = asyncio.timeout(remaining - 10)
+            try:
+                async with budget:
+                    observation = await self._observe()
+            except TimeoutError:
+                if budget.expired():
+                    raise SearchBudgetExpired() from None
+                raise
+            self.observations += 1
+            if observation["status"] == "detected":
+                return observation
+            inconclusive |= observation["status"] == "inconclusive"
+            await self._rotate(45)
+        if inconclusive:
+            raise RuntimeError("perception_inconclusive")
+        return None
 
-        elapsed = round(time.monotonic() - t0, 2)
-        _log(f"[RESULTADO] status={approach_result.get('status')} distance={approach_result.get('final_distance_cm')} elapsed={elapsed}s steps={len(self._steps_taken)}")
+    async def _search(self):
+        found = await self._scan()
+        if not found:
+            for _ in range(4):
+                sensor = await self.backend.get_proximity()
+                self._check_session(sensor)
+                if sensor.get("validity", {}).get("frente") == "unavailable":
+                    raise RuntimeError("sensor_unavailable")
+                available = sensor.get("readings", {}).get("frente")
+                if available is None:
+                    raise RuntimeError("sensor_unavailable")
+                advance = min(50, max(0, math.floor(available - 20)))
+                if advance >= 5:
+                    heading = self.heading
+                    await self._travel(advance)
+                    try:
+                        found = await self._scan()
+                    except SearchBudgetExpired:
+                        await self._rotate((heading - self.heading + 180) % 360 - 180)
+                        await self._travel(advance, False)
+                        raise
+                    if found:
+                        break
+                    await self._travel(advance, False)
+                await self._rotate(90)
+        return found
+
+    async def run(self, description):
+        self.description = description
+        seconds = min(
+            float(os.getenv("LBOT_SEARCH_BUDGET", "150")),
+            float(os.getenv("LBOT_SKILL_TIMEOUT", "180")) - 15,
+        )
+        if seconds <= 10:
+            raise ValueError("invalid_search_budget")
+        self.deadline = self.clock() + seconds
+        complete = True
+        try:
+            found = await self._search()
+        except SearchBudgetExpired:
+            await self._rotate((-self.heading + 180) % 360 - 180)
+            found, complete = None, False
         return {
-            "status": approach_result.get("status", "not_found"),
-            "reason": approach_result.get("reason"),
-            "object_type": self._object_type,
-            "object_color": self._object_color,
-            "bounding_box": self._last_bbox,
-            "final_distance_cm": approach_result.get("final_distance_cm"),
-            "steps_taken": self._steps_taken,
-            "elapsed_seconds": elapsed,
+            "status": "completed",
+            "detected": bool(found),
+            "centered": False,
+            "approached": False,
+            "observation": found,
+            "reason": None if found else "not_located_within_search",
+            "coverage": {
+                "observations": self.observations,
+                "search_complete": complete,
+                "limit_reason": None if complete else "time_budget",
+            },
+            "steps": self.steps,
         }
 
-    async def _scan(
-        self, object_type: str, object_color: str | None
-    ) -> dict | None:
-        for i in range(SCAN_STEPS):
-            angle = i * SCAN_STEP_DEGREES
-            self._steps_taken.append(f"scan_frame_{i}")
-            _log(f"  [scan {i}/{SCAN_STEPS}] Tirando foto na orientacao {angle} graus")
-
-            try:
-                camera_data = await asyncio.wait_for(
-                    self._backend.get_camera(), timeout=CAMERA_TIMEOUT
-                )
-            except asyncio.TimeoutError:
-                self._steps_taken.append("camera_timeout")
-                _log(f"  [scan {i}/{SCAN_STEPS}] TIMEOUT da camera, pulando")
-                continue
-            except Exception:
-                self._steps_taken.append("camera_error")
-                _log(f"  [scan {i}/{SCAN_STEPS}] ERRO da camera, pulando")
-                continue
-
-            image_base64 = camera_data["image"]
-            frame = decode_frame(image_base64)
-
-            if frame is None or frame.shape[0] == 0:
-                _log(f"  [scan {i}/{SCAN_STEPS}] Frame vazio, pulando")
-                continue
-
-            llm_description = self._original_description
-            if not llm_description:
-                llm_description = f"{object_color} {object_type}" if object_color else object_type
-
-            _log(f"  [scan {i}/{SCAN_STEPS}] Perguntando para LLM se '{llm_description}' esta visivel...")
-            llm_sees = await ask_llm_if_object_visible(
-                self._llm_client, self._llm_model,
-                image_base64, llm_description,
-            )
-
-            if not llm_sees:
-                self._steps_taken.append(f"llm_not_found_at_{angle}deg")
-                _log(f"  [scan {i}/{SCAN_STEPS}] LLM: NAO VIU objeto em {angle} graus")
-                if i < SCAN_STEPS - 1:
-                    _log(f"  [scan {i}/{SCAN_STEPS}] Girando -{SCAN_STEP_DEGREES} graus (esquerda)")
-                    await self._rotate(-SCAN_STEP_DEGREES)
-                continue
-
-            self._steps_taken.append(f"llm_detected_at_{angle}deg")
-            _log(f"  [scan {i}/{SCAN_STEPS}] LLM: AVISTOU objeto em {angle} graus! Confirmando com OpenCV...")
-            result = detect_object(frame, object_type, object_color)
-
-            if result is not None:
-                self._steps_taken.append(f"cv_confirmed_at_{angle}deg")
-                _log(f"  [scan {i}/{SCAN_STEPS}] OpenCV: CONFIRMOU deteccao em {angle} graus. bbox={result['bbox']}")
-                return {"object": result, "angle": angle}
-
-            self._steps_taken.append(f"cv_not_confirmed_at_{angle}deg")
-            _log(f"  [scan {i}/{SCAN_STEPS}] OpenCV: NAO CONFIRMOU, continuando")
-            if i < SCAN_STEPS - 1:
-                _log(f"  [scan {i}/{SCAN_STEPS}] Girando -{SCAN_STEP_DEGREES} graus (esquerda)")
-                await self._rotate(-SCAN_STEP_DEGREES)
-
-        _log(f"  [scan] Fim da varredura 360 ({SCAN_STEPS}x{SCAN_STEP_DEGREES}graus)")
-        return None
-
-    async def _capture_frame(self) -> np.ndarray | None:
-        try:
-            camera_data = await asyncio.wait_for(
-                self._backend.get_camera(), timeout=CAMERA_TIMEOUT
-            )
-            return decode_frame(camera_data["image"])
-        except asyncio.TimeoutError:
-            self._steps_taken.append("camera_timeout")
-            _log("  [capture] TIMEOUT da camera")
-            return None
-        except Exception:
-            self._steps_taken.append("camera_error")
-            _log("  [capture] ERRO da camera")
-            return None
-
-    async def _rotate(self, degrees: float) -> None:
-        direction = "R" if degrees > 0 else "L"
-        cmd = f"R{int(abs(degrees))}{direction};"
-        _log(f"  [movimento] Rotacionando {int(abs(degrees))} graus para {'direita' if direction == 'R' else 'esquerda'} ({cmd})")
-        await self._backend.execute_lbml(cmd)
-        self._steps_taken.append(f"rotate_{cmd.strip(';')}")
-        await asyncio.sleep(MOVE_DELAY_SECONDS)
-
-    async def _move_forward(self, cm: int) -> None:
-        cmd = f"D{cm}F;"
-        _log(f"  [movimento] Avancando {cm}cm para frente ({cmd})")
-        await self._backend.execute_lbml(cmd)
-        self._steps_taken.append(f"forward_{cm}cm")
-        await asyncio.sleep(MOVE_DELAY_SECONDS)
-
-    async def _move_backward(self, cm: int) -> None:
-        cmd = f"D{cm}B;"
-        _log(f"  [movimento] Recuando {cm}cm para tras ({cmd})")
-        await self._backend.execute_lbml(cmd)
-        self._steps_taken.append(f"backward_{cm}cm")
-        await asyncio.sleep(MOVE_DELAY_SECONDS)
-
-    async def _star_explore(
-        self, object_type: str, object_color: str | None, offset_cm: int = STAR_OFFSET_CM
-    ) -> dict | None:
-        _log(f"  [star {offset_cm}cm] Iniciando exploracao em estrela: {STAR_STEPS}x{STAR_STEP_DEGREES}graus, offset={offset_cm}cm")
-        self._steps_taken.append(f"star_explore_{offset_cm}cm_start")
-
-        for direction in range(STAR_STEPS):
-            self._steps_taken.append(f"star_explore_{offset_cm}cm_direction_{direction}")
-            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Girando {STAR_STEP_DEGREES} graus para nova direcao")
-            await self._rotate(STAR_STEP_DEGREES)
-
-            try:
-                sensor_data = await asyncio.wait_for(
-                    self._backend.get_proximity_sensor(), timeout=CAMERA_TIMEOUT
-                )
-                distance_frente = sensor_data.get("frente", 999)
-            except (asyncio.TimeoutError, Exception):
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Sensor indisponivel, assumindo caminho livre")
-                distance_frente = 999
-
-            safe_advance = min(offset_cm, max(0, distance_frente - MIN_SAFE_DISTANCE_CM))
-            if safe_advance <= 0:
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Obstaculo muito perto (sensor={distance_frente:.0f}cm), pulando direcao")
-                await self._rotate(-STAR_STEP_DEGREES)
-                continue
-
-            if safe_advance < offset_cm:
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Obstaculo a {distance_frente:.0f}cm, avancando apenas {safe_advance}cm (seguro)")
-            else:
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Avancando {safe_advance}cm")
-
-            await self._move_forward(safe_advance)
-
-            frame = await self._capture_frame()
-            if frame is None:
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Frame vazio, recuando")
-                await self._move_backward(safe_advance)
-                continue
-
-            camera_data = await asyncio.wait_for(
-                self._backend.get_camera(), timeout=CAMERA_TIMEOUT
-            )
-            image_base64 = camera_data["image"]
-
-            llm_description = self._original_description
-            if not llm_description:
-                llm_description = f"{object_color} {object_type}" if object_color else object_type
-
-            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] Perguntando para LLM...")
-            llm_sees = await ask_llm_if_object_visible(
-                self._llm_client, self._llm_model,
-                image_base64, llm_description,
-            )
-
-            if not llm_sees:
-                self._steps_taken.append(f"star_{offset_cm}cm_dir_{direction}_llm_not_found")
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] LLM: NAO VIU. Recuando {safe_advance}cm")
-                await self._move_backward(safe_advance)
-                continue
-
-            self._steps_taken.append(f"star_{offset_cm}cm_dir_{direction}_llm_detected")
-            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] LLM: AVISTOU! Confirmando com OpenCV...")
-            result = detect_object(frame, object_type, object_color)
-
-            if result is not None:
-                self._steps_taken.append(f"star_{offset_cm}cm_cv_confirmed_dir_{direction}")
-                _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] OpenCV: CONFIRMOU! bbox={result['bbox']}")
-                return {"object": result, "angle": direction * STAR_STEP_DEGREES}
-
-            self._steps_taken.append(f"star_{offset_cm}cm_cv_not_confirmed_dir_{direction}")
-            _log(f"  [star {offset_cm}cm {direction}/{STAR_STEPS}] OpenCV: NAO CONFIRMOU. Recuando {safe_advance}cm")
-            await self._move_backward(safe_advance)
-
-        _log(f"  [star {offset_cm}cm] Fim da exploracao em estrela. Nada encontrado")
-        return None
-
-    async def _retry_detect_with_advance(self) -> dict | None:
-        _log("  [retry_detect] Avancando 50cm para tentar detectar...")
-        self._steps_taken.append("retry_detect_forward_50cm")
-        await self._move_forward(OPENCV_RETRY_FORWARD_1)
-        frame = await self._capture_frame()
-        if frame is not None:
-            result = detect_object(frame, self._object_type, self._object_color)
-            if result is not None:
-                _log(f"  [retry_detect] DETECTOU apos 50cm! bbox={result['bbox']}")
-                return result
-            _log("  [retry_detect] Nao detectou apos 50cm")
-
-        _log("  [retry_detect] Avancando mais 30cm...")
-        self._steps_taken.append("retry_detect_forward_30cm")
-        await self._move_forward(OPENCV_RETRY_FORWARD_2)
-        frame = await self._capture_frame()
-        if frame is not None:
-            result = detect_object(frame, self._object_type, self._object_color)
-            if result is not None:
-                _log(f"  [retry_detect] DETECTOU apos +30cm! bbox={result['bbox']}")
-                return result
-            _log("  [retry_detect] Nao detectou apos +30cm")
-
-        _log("  [retry_detect] Fim. Nao encontrou")
-        return None
-
-    async def _center(self, object_center: tuple[int, int]) -> bool:
-        cx, cy = object_center
-        _log(f"  [center] Iniciando centralizacao. centro=({cx},{cy}) frame_center=({FRAME_WIDTH/2},{FRAME_HEIGHT/2})")
-
-        for attempt in range(MAX_CENTER_ATTEMPTS):
-            erro_x = cx - FRAME_WIDTH / 2
-
-            if abs(erro_x) < CENTER_THRESHOLD_PX:
-                self._steps_taken.append(f"centered_attempt_{attempt + 1}")
-                _log(f"  [center] OK! Objeto centralizado na tentativa {attempt + 1}. erro_x={erro_x:.0f}px (threshold={CENTER_THRESHOLD_PX}px)")
-                return True
-
-            graus = (erro_x / FRAME_WIDTH) * FOV_HORIZONTAL
-            _log(f"  [center] Tentativa {attempt + 1}/{MAX_CENTER_ATTEMPTS}: erro_x={erro_x:.0f}px = {graus:.1f} graus de ajuste")
-
-            if abs(graus) < 1:
-                self._steps_taken.append(f"centered_attempt_{attempt + 1}")
-                _log(f"  [center] OK! Ajuste < 1 grau, considerando centralizado")
-                return True
-
-            self._steps_taken.append(f"center_attempt_{attempt + 1}_error_{erro_x:.0f}px")
-            await self._rotate(graus)
-
-            frame = await self._capture_frame()
-            if frame is None:
-                _log(f"  [center] Frame vazio apos rotacao, tentando de novo")
-                continue
-
-            result = detect_object(frame, self._object_type, self._object_color)
-            if result is None:
-                _log(f"  [center] PERDEU TRACKING! Tentando recuperar com avanco (50cm + 30cm)...")
-                result = await self._retry_detect_with_advance()
-                if result is None:
-                    _log(f"  [center] NAO RECUPEROU tracking apos avanco")
+    async def _center(self):
+        for _ in range(8):
+            data = await self._observe(track=True)
+            if data["status"] != "detected":
+                # Recover by looking, never by advancing blind.
+                recovered = False
+                for delta in (-15, 30):
+                    await self._rotate(delta)
+                    data = await self._observe()
+                    if data["status"] == "detected":
+                        recovered = True
+                        break
+                if not recovered:
                     return False
-                cx, cy = result["center"]
-                self._last_bbox = result["bbox"]
-                _log(f"  [center] RECUPEROU tracking! Novo centro=({cx},{cy})")
-                continue
-
-            cx, cy = result["center"]
-            self._last_bbox = result["bbox"]
-            _log(f"  [center] Re-detectado em ({cx},{cy}) bbox={result['bbox']}")
-
-        _log(f"  [center] Maximo de tentativas ({MAX_CENTER_ATTEMPTS}) excedido")
+            box = data["bbox"]
+            intr = self.camera["intrinsics"]
+            error = box[0] + box[2] / 2 - intr["cx"]
+            if abs(error) <= min(16, max(4, box[2] / 4)):
+                return True
+            degrees = math.degrees(math.atan(error / intr["fx"]))
+            await self._rotate(-max(-45, min(45, degrees)))
         return False
 
-    async def _approach(self, object_type: str, object_color: str | None) -> dict:
-        step_count = 0
-        rescan_count = 0
-        _log("  [approach] Iniciando aproximacao (passos de 1/3 da distancia, centralizando a cada passo)")
-
-        while step_count < MAX_APPROACH_STEPS:
-            sensor = await self._backend.get_proximity_sensor()
-            distance = sensor["frente"]
-
-            self._steps_taken.append(f"approach_step_{step_count + 1}_sensor_{distance:.0f}cm")
-            _log(f"  [approach] Passo {step_count + 1}/{MAX_APPROACH_STEPS}: sensor_frente={distance:.0f}cm")
-
-            if distance < MIN_SAFE_DISTANCE_CM:
-                _log(f"  [approach] OBSTACULO MUITO PERTO! distancia={distance:.0f}cm < seguro={MIN_SAFE_DISTANCE_CM}cm")
-                return {"status": "not_found", "reason": "obstacle too close"}
-
-            if distance <= TARGET_DISTANCE_CM:
-                _log(f"  [approach] Distancia alvo atingida ({distance:.0f}cm <= {TARGET_DISTANCE_CM}cm). Confirmando com camera...")
-                self._steps_taken.append("approach_target_reached_confirming")
-                confirmed = await self._confirm_via_camera()
-                if confirmed:
-                    self._steps_taken.append("camera_confirmed_object")
-                    _log("  [approach] Camera CONFIRMOU o objeto! Busca concluida com sucesso")
-                    return {"status": "found", "final_distance_cm": distance}
-                self._steps_taken.append("camera_did_not_confirm")
-                _log("  [approach] Camera NAO CONFIRMOU o objeto")
-                return {"status": "not_found", "reason": "camera did not confirm object"}
-
-            step = max(5, int(distance / 3))
-            self._steps_taken.append(f"approach_step_{step}cm")
-            _log(f"  [approach] Avancando {step}cm (1/3 de {distance:.0f}cm)")
-            await self._move_forward(step)
-            step_count += 1
-
-            frame = await self._capture_frame()
-            if frame is None:
-                _log(f"  [approach] Frame vazio, pulando verificacao")
-                continue
-
-            result = detect_object(frame, object_type, object_color)
-
-            if result is None:
-                _log(f"  [approach] OpenCV PERDEU TRACKING! Tentando rescan ({rescan_count + 1}/{MAX_RESCANS})")
-                self._steps_taken.append("tracking_lost_rescan")
-                if rescan_count >= MAX_RESCANS:
-                    return {"status": "not_found", "reason": "lost tracking after rescan"}
-                rescan_count += 1
-                scan_result = await self._scan(object_type, object_color)
-                if scan_result is None:
-                    return {"status": "not_found", "reason": "lost tracking after rescan"}
-                obj = scan_result["object"]
-                cx, cy = obj["center"]
-                self._last_bbox = obj["bbox"]
-                _log(f"  [approach] Rescan SUCESSO! Objeto re-encontrado em ({cx},{cy})")
-            else:
-                cx, cy = result["center"]
-                self._last_bbox = result["bbox"]
-                _log(f"  [approach] OpenCV detectou em ({cx},{cy}) bbox={result['bbox']}")
-
-            _log(f"  [approach] Recentralizando apos movimento (obrigatorio)...")
-            centered = await self._center((cx, cy))
-            if not centered:
-                _log(f"  [approach] FALHA na recentralizacao! Tentando rescan ({rescan_count + 1}/{MAX_RESCANS})")
-                self._steps_taken.append("recenter_failed")
-                if rescan_count >= MAX_RESCANS:
-                    return {"status": "not_found", "reason": "lost tracking after rescan"}
-                rescan_count += 1
-                scan_result = await self._scan(object_type, object_color)
-                if scan_result is None:
-                    return {"status": "not_found", "reason": "lost tracking after rescan"}
-                obj = scan_result["object"]
-                self._last_bbox = obj["bbox"]
-                _log(f"  [approach] Rescan SUCESSO! Objeto re-encontrado apos falha de center. bbox={obj['bbox']}")
-
-        _log(f"  [approach] Maximo de passos ({MAX_APPROACH_STEPS}) excedido")
-        return {"status": "not_found", "reason": "max approach steps exceeded"}
-
-    async def _confirm_via_camera(self) -> bool:
-        self._steps_taken.append("camera_confirmation_check")
-        _log("  [confirm] Verificando se camera ve o objeto...")
-        try:
-            camera_data = await asyncio.wait_for(
-                self._backend.get_camera(), timeout=CAMERA_TIMEOUT
-            )
-            image_base64 = camera_data["image"]
-        except (asyncio.TimeoutError, Exception):
-            self._steps_taken.append("camera_confirmation_error")
-            _log("  [confirm] ERRO ao capturar camera")
+    def _associate_range(self, observation, distance):
+        projection = self.camera.get("range_projection")
+        if not projection:
+            return bool(observation.get("sensor_association"))
+        _, color = parse_description(self.description)
+        if not color or color not in COLOR_RANGES:
+            return bool(observation.get("sensor_association"))
+        point = [
+            o + d * distance
+            for o, d in zip(projection["origin_cm"], projection["direction"])
+        ]
+        if point[2] <= 0:
             return False
-
-        llm_description = self._original_description
-        if not llm_description:
-            llm_description = (
-                f"{self._object_color} {self._object_type}"
-                if self._object_color else self._object_type
-            )
-
-        result = await ask_llm_if_object_visible(
-            self._llm_client, self._llm_model,
-            image_base64, llm_description,
+        intr = self.camera["intrinsics"]
+        px = round(intr["cx"] + intr["fx"] * point[0] / point[2])
+        py = round(intr["cy"] + intr["fy"] * point[1] / point[2])
+        x, y, w, h = observation["bbox"]
+        if not (x <= px <= x + w and y <= py <= y + h):
+            return False
+        frame = decode_frame(self.camera["image"])
+        if not (0 <= px < frame.shape[1] and 0 <= py < frame.shape[0]):
+            return False
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        pixel = hsv[py, px]
+        ranges = [COLOR_RANGES[color]] + (
+            [COLOR_RANGES["vermelho2"]] if color == "vermelho" else []
         )
-        _log(f"  [confirm] LLM: {'SIM' if result else 'NAO'}")
-        return result
+        return any(
+            bool(((pixel >= lower) & (pixel <= upper)).all()) for lower, upper in ranges
+        )
+
+    async def approach(self, target, description=None, stop_distance_cm=50):
+        if not 20 <= stop_distance_cm <= 200:
+            raise ValueError("stop_distance_cm must be between 20 and 200")
+        initial_sensor = await self.backend.get_proximity()
+        self._check_session(initial_sensor)
+        initial_distance = initial_sensor.get("readings", {}).get("frente")
+        if (
+            initial_distance is None
+            or initial_sensor.get("validity", {}).get("frente") == "unavailable"
+        ):
+            raise RuntimeError("sensor_unavailable")
+        if initial_distance < 20:
+            return {
+                "status": "blocked",
+                "reason": "obstacle_too_close",
+                "detected": False,
+                "approached": False,
+                "evidence": {"sensor": initial_sensor},
+            }
+        detected = target == "object"
+        if detected:
+            result = await self.run(description)
+            if not result["detected"]:
+                return {
+                    **result,
+                    "status": "failed",
+                    "reason": "target_not_located"
+                    if result["coverage"]["search_complete"]
+                    else "search_budget_exhausted",
+                }
+            if not await self._center():
+                return {
+                    "status": "failed",
+                    "reason": "tracking_lost",
+                    "detected": True,
+                    "approached": False,
+                }
+        for _ in range(40):
+            if detected:
+                if not await self._center():
+                    return {
+                        "status": "failed",
+                        "reason": "tracking_lost",
+                        "detected": True,
+                        "approached": False,
+                    }
+                # Semantic confirmation of the range beam association, not just a nearby colored patch.
+                observation = await self._observe()
+                if observation["status"] != "detected":
+                    return {
+                        "status": "blocked",
+                        "reason": "target_range_unassociated",
+                        "detected": True,
+                        "approached": False,
+                    }
+            sensor = await self.backend.get_proximity()
+            self._check_session(sensor)
+            distance = sensor.get("readings", {}).get("frente")
+            if (
+                distance is None
+                or sensor.get("validity", {}).get("frente") == "unavailable"
+            ):
+                raise RuntimeError("sensor_unavailable")
+            if detected and not self._associate_range(observation, distance):
+                return {
+                    "status": "blocked",
+                    "reason": "target_range_unassociated",
+                    "detected": True,
+                    "approached": False,
+                }
+            if distance < 20:
+                return {
+                    "status": "blocked",
+                    "reason": "obstacle_too_close",
+                    "detected": detected,
+                    "approached": False,
+                }
+            if distance <= stop_distance_cm + 5:
+                if distance < stop_distance_cm - 5:
+                    await self._travel(
+                        min(20, max(1, math.ceil(stop_distance_cm - distance))), False
+                    )
+                    continue
+                return {
+                    "status": "completed",
+                    "detected": detected,
+                    "centered": detected,
+                    "approached": True,
+                    "front_obstacle_distance_cm": distance,
+                    "target_distance_cm": distance if detected else None,
+                    "evidence": {
+                        "sensor": {
+                            k: sensor.get(k)
+                            for k in ("session_id", "revision", "captured_at")
+                        },
+                        "observation": self.last if detected else None,
+                    },
+                    "steps": self.steps,
+                }
+            if sensor.get("validity", {}).get("frente") != "valid":
+                return {
+                    "status": "blocked",
+                    "reason": "no_obstacle_in_range",
+                    "approached": False,
+                }
+            await self._travel(
+                min(20, max(1, round((distance - stop_distance_cm) / 2)))
+            )
+        return {
+            "status": "failed",
+            "reason": "approach_budget_exhausted",
+            "detected": detected,
+            "approached": False,
+        }

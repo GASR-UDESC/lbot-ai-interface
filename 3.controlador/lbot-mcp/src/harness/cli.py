@@ -5,9 +5,13 @@ import signal
 import sys
 
 from .agent import ReActAgent
-from .mcp_client import MCPClient, ConnectionError
+from .mcp_client import ConnectionError, MCPClient
 
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s", stream=sys.stderr)
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+    stream=sys.stderr,
+)
 
 
 def _print_event(event: str, data: dict) -> None:
@@ -23,10 +27,12 @@ def _print_event(event: str, data: dict) -> None:
     elif event == "tool_result":
         result = str(data.get("result", ""))
         print(f"  -> {result[:100]}{'...' if len(result) > 100 else ''}")
+    elif event == "runtime_check":
+        print("Qwen local: imagem e ferramentas validadas.")
     elif event == "final_answer":
         print(data.get("content", ""))
     elif event == "error":
-        print(f"Erro: {data.get('error', '')}")
+        print(f"Erro: {data.get('reason', '')}")
     elif event == "cancelled":
         print("Interrompido")
     elif event == "max_steps_reached":
@@ -54,10 +60,16 @@ async def _async_main(show_thinking: bool):
         sys.exit(1)
     except KeyboardInterrupt:
         print("\nAté logo!")
+    finally:
+        from mcp_server.services.inference import close_inference
+
+        await close_inference()
 
 
 async def _run_repl(client: MCPClient, show_thinking: bool):
-    agent = await ReActAgent.create(client, on_event=_print_event if show_thinking else None)
+    agent = await ReActAgent.create(
+        client, on_event=_print_event if show_thinking else None
+    )
     loop = asyncio.get_running_loop()
     running_task = None
 

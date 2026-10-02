@@ -1,0 +1,82 @@
+[
+  {
+    "id": "approach-01",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo vermelho.",
+    "answer": "Cheguei perto do cubo vermelho.",
+    "state": {
+      "x": 0,
+      "z": 41,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:17:35.880Z",
+      "session_id": "eef4d565-4d95-4d73-a10a-4c6827472b74",
+      "revision": 2049,
+      "operation": {
+        "accepted": true,
+        "command": "D3F;",
+        "command_id": "795617e4-3662-4f2f-8162-c985a0a909e6",
+        "session_id": "eef4d565-4d95-4d73-a10a-4c6827472b74",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 3.0000000000000027,
+        "rotation_degrees": 0,
+        "revision": 1638
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 33.98684620799031
+    },
+    "elapsed_seconds": 33.987923915992724,
+    "process_max_rss": 127369216,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-02",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Aproxime do cubo amarelo e pare a 50 cm.",
+    "answer": "Aproximei-me do cubo amarelo e parei a 53,9 cm.",
+    "state": {
+      "x": 0,
+      "z": 41,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:18:08.364Z",
+      "session_id": "80ba0504-3859-4347-bd34-e34359352162",
+      "revision": 1958,
+      "operation": {
+        "accepted": true,
+        "command": "D3F;",
+        "command_id": "31537b6d-00d6-4d0a-ae87-13ff5bc84ae7",
+        "session_id": "80ba0504-3859-4347-bd34-e34359352162",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 3.0000000000000027,
+        "rotation_degrees": 0,
+        "revision": 1521
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 32.472372457996244
+    },
+    "elapsed_seconds": 32.47404766699765,
+    "process_max_rss": 127369216,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  }
+]

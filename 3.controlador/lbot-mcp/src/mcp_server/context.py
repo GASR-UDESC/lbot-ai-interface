@@ -19,3 +19,16 @@ def get_translator() -> "TranslatorWrapper":
     from .translator import TranslatorWrapper
 
     return TranslatorWrapper()
+
+
+_control = None
+
+
+def get_control():
+    global _control
+    from .services.control import ControlService
+
+    current = get_backend()
+    if _control is None or _control.backend is not current:
+        _control = ControlService(current)
+    return _control

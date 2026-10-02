@@ -1,0 +1,4612 @@
+[
+  {
+    "id": "conversation-06",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Bom dia!",
+    "answer": "Bom dia! Como posso ajudar?",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:14.581Z",
+      "session_id": "d160feb4-6a38-49b8-a1fb-5057db64cc81",
+      "revision": 35,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 0.5520255420124158,
+      "total_inference_calls": 1,
+      "inference_seconds": 0.5513192499929573
+    },
+    "inference": [
+      {
+        "at": 1790908994.578594,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.5513192499929573,
+        "usage": {
+          "completion_tokens": 9,
+          "prompt_tokens": 1156,
+          "total_tokens": 1165,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [],
+    "elapsed_seconds": 0.5530501250177622,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "conversation-07",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Boa tarde!",
+    "answer": "Boa tarde! Como sou o LBot, estou pronto para ajudar. Posso usar minhas ferramentas para observar o ambiente, buscar objetos específicos ou navegar até um alvo que você indicar. O que deseja fazer?",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:16.214Z",
+      "session_id": "0a253d25-baf0-4ad7-ba49-1ca81444131f",
+      "revision": 98,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 1.6264931250188965,
+      "total_inference_calls": 1,
+      "inference_seconds": 1.6253436660044827
+    },
+    "inference": [
+      {
+        "at": 1790908996.2128808,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.6253436660044827,
+        "usage": {
+          "completion_tokens": 43,
+          "prompt_tokens": 1156,
+          "total_tokens": 1199,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [],
+    "elapsed_seconds": 1.6270640000002459,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "conversation-08",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Você consegue voar?",
+    "answer": "Não, não consigo voar. Sou um robô móvel que se move no chão.",
+    "state": {
+      "x": 20,
+      "z": -20,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:17.067Z",
+      "session_id": "78798abf-0817-47b8-8b28-00fda2e6d84f",
+      "revision": 51,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 0.8459879999863915,
+      "total_inference_calls": 1,
+      "inference_seconds": 0.8448484580148943
+    },
+    "inference": [
+      {
+        "at": 1790908997.064758,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.8448484580148943,
+        "usage": {
+          "completion_tokens": 20,
+          "prompt_tokens": 1157,
+          "total_tokens": 1177,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [],
+    "elapsed_seconds": 0.8466996249917429,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "conversation-09",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Você é um robô?",
+    "answer": "Sim, sou o LBot.",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:17.510Z",
+      "session_id": "37169731-37e0-4904-9452-6c874111e9f2",
+      "revision": 27,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 0.43726058400352485,
+      "total_inference_calls": 1,
+      "inference_seconds": 0.4367473330057692
+    },
+    "inference": [
+      {
+        "at": 1790908997.509256,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.4367473330057692,
+        "usage": {
+          "completion_tokens": 8,
+          "prompt_tokens": 1158,
+          "total_tokens": 1166,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [],
+    "elapsed_seconds": 0.437501540989615,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "conversation-10",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Você tem rodas?",
+    "answer": "Não tenho rodas. Sou um robô móvel que se move, mas não posso afirmar que tenho rodas porque isso é uma informação sobre meu corpo físico e não algo que percebo através das minhas ferramentas de sensor (câmera ou proximidade).",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:19.416Z",
+      "session_id": "a9cdc81a-9ac9-4389-8975-3eb98f6606c8",
+      "revision": 116,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 1.9012045419949573,
+      "total_inference_calls": 1,
+      "inference_seconds": 1.900232916988898
+    },
+    "inference": [
+      {
+        "at": 1790908999.4140952,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.900232916988898,
+        "usage": {
+          "completion_tokens": 51,
+          "prompt_tokens": 1156,
+          "total_tokens": 1207,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [],
+    "elapsed_seconds": 1.9021824579976965,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "observation-06",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Mostre o que está vendo agora.",
+    "answer": "Estou vendo um cubo amarelo sobre uma superfície marrom com fundo azul claro e preto.",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:24.261Z",
+      "session_id": "44923363-938c-431a-86d0-9b8a9d2ebba0",
+      "revision": 291,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 4.836010208004154,
+      "total_inference_calls": 2,
+      "inference_seconds": 4.2739478340081405
+    },
+    "inference": [
+      {
+        "at": 1790909000.077796,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.6548895419982728,
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 1160,
+          "total_tokens": 1174,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909004.25804,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.6190582920098677,
+        "usage": {
+          "completion_tokens": 22,
+          "prompt_tokens": 1932,
+          "total_tokens": 1954,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909000.638329,
+        "episode_id": "dc32f2ef-b468-41b2-9b21-e0d7d7aa09ae",
+        "tool": "camera",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "frame_id": "fd399c65-1a67-4ede-baa5-e47bf7c9dd93",
+          "session_id": "44923363-938c-431a-86d0-9b8a9d2ebba0",
+          "revision": 43,
+          "captured_at": "2026-10-02T02:43:20.124Z",
+          "intrinsics": {
+            "width": 640,
+            "height": 480,
+            "fx": 342.75552161810754,
+            "fy": 342.75552161810754,
+            "cx": 320,
+            "cy": 240
+          },
+          "range_projection": {
+            "origin_cm": [
+              0,
+              2,
+              3.1
+            ],
+            "direction": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 4.836536042013904,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "observation-07",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Olhe pela câmera e descreva a cena.",
+    "answer": "A câmera mostra um quadrado vermelho no centro de uma superfície marrom. Acima há um fundo azul claro e abaixo uma área preta.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:31.003Z",
+      "session_id": "353a72a5-2dca-4f46-80a2-9731d488c522",
+      "revision": 405,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 6.72558391597704,
+      "total_inference_calls": 2,
+      "inference_seconds": 6.088197626027977
+    },
+    "inference": [
+      {
+        "at": 1790909005.595428,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.3250822920235805,
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 1163,
+          "total_tokens": 1177,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909010.994794,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.763115334004397,
+        "usage": {
+          "completion_tokens": 30,
+          "prompt_tokens": 1945,
+          "total_tokens": 1975,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909006.2287822,
+        "episode_id": "5354e8cf-917b-4d85-8d08-d1ee21a87465",
+        "tool": "camera",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "frame_id": "4e7536e4-e655-42fc-8dc1-a309a32f3b5c",
+          "session_id": "353a72a5-2dca-4f46-80a2-9731d488c522",
+          "revision": 81,
+          "captured_at": "2026-10-02T02:43:25.611Z",
+          "intrinsics": {
+            "width": 640,
+            "height": 480,
+            "fx": 342.75552161810754,
+            "fy": 342.75552161810754,
+            "cx": 320,
+            "cy": 240
+          },
+          "range_projection": {
+            "origin_cm": [
+              0,
+              2,
+              3.1
+            ],
+            "direction": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 6.726501750003081,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "observation-08",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Existe um objeto visível à frente?",
+    "answer": "Sim, há um objeto visível à frente: um cubo amarelo.",
+    "state": {
+      "x": 20,
+      "z": -20,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:35.926Z",
+      "session_id": "5d8d4f39-f4bc-474a-bb90-3dc18254c974",
+      "revision": 296,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 4.906622625014279,
+      "total_inference_calls": 2,
+      "inference_seconds": 4.369319125020411
+    },
+    "inference": [
+      {
+        "at": 1790909011.738521,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.7190237500180956,
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 1161,
+          "total_tokens": 1175,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909015.925545,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.6502953750023153,
+        "usage": {
+          "completion_tokens": 18,
+          "prompt_tokens": 1939,
+          "total_tokens": 1957,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909012.274865,
+        "episode_id": "2a609e42-7293-4494-833f-61cc2928fdb5",
+        "tool": "camera",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "frame_id": "33a0b52e-2080-4cd1-8b7b-abd562355832",
+          "session_id": "5d8d4f39-f4bc-474a-bb90-3dc18254c974",
+          "revision": 47,
+          "captured_at": "2026-10-02T02:43:31.765Z",
+          "intrinsics": {
+            "width": 640,
+            "height": 480,
+            "fx": 342.75552161810754,
+            "fy": 342.75552161810754,
+            "cx": 320,
+            "cy": 240
+          },
+          "range_projection": {
+            "origin_cm": [
+              0,
+              2,
+              3.1
+            ],
+            "direction": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 4.9069474170100875,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "observation-09",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Descreva o objeto que aparece na imagem.",
+    "answer": "A imagem mostra um cubo vermelho sobre uma superfície marrom escura, com o fundo em azul claro e preto.",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:40.841Z",
+      "session_id": "8d943a29-b08f-4b45-9831-504ee3ad0989",
+      "revision": 296,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 4.909376750001684,
+      "total_inference_calls": 2,
+      "inference_seconds": 4.57406654098304
+    },
+    "inference": [
+      {
+        "at": 1790909016.628874,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.6975579579884652,
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 1162,
+          "total_tokens": 1176,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909020.840063,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.8765085829945747,
+        "usage": {
+          "completion_tokens": 25,
+          "prompt_tokens": 1940,
+          "total_tokens": 1965,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909016.9629729,
+        "episode_id": "44932cef-49d7-4d05-a5ff-f6ae52938a4f",
+        "tool": "camera",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "frame_id": "03355374-5ee8-4f3e-926d-4bf69dbc6c8c",
+          "session_id": "8d943a29-b08f-4b45-9831-504ee3ad0989",
+          "revision": 44,
+          "captured_at": "2026-10-02T02:43:36.633Z",
+          "intrinsics": {
+            "width": 640,
+            "height": 480,
+            "fx": 342.75552161810754,
+            "fy": 342.75552161810754,
+            "cx": 320,
+            "cy": 240
+          },
+          "range_projection": {
+            "origin_cm": [
+              0,
+              2,
+              3.1
+            ],
+            "direction": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 4.909806583018508,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "observation-10",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Veja qual é a cor do cubo na frente.",
+    "answer": "O cubo à frente é amarelo.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:45.280Z",
+      "session_id": "e34820d4-dedc-4fd5-832a-ac45c28dbf5c",
+      "revision": 267,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 4.429690999997547,
+      "total_inference_calls": 2,
+      "inference_seconds": 4.109189750015503
+    },
+    "inference": [
+      {
+        "at": 1790909021.501018,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.6514273330103606,
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 1164,
+          "total_tokens": 1178,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909025.278603,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.457762417005142,
+        "usage": {
+          "completion_tokens": 11,
+          "prompt_tokens": 1938,
+          "total_tokens": 1949,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909021.820406,
+        "episode_id": "f0de4c21-779f-48c4-b06d-c8c292553ab1",
+        "tool": "camera",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "frame_id": "6fa9126c-5918-44f8-af8e-28365855ff10",
+          "session_id": "e34820d4-dedc-4fd5-832a-ac45c28dbf5c",
+          "revision": 41,
+          "captured_at": "2026-10-02T02:43:41.503Z",
+          "intrinsics": {
+            "width": 640,
+            "height": 480,
+            "fx": 342.75552161810754,
+            "fy": 342.75552161810754,
+            "cx": 320,
+            "cy": 240
+          },
+          "range_projection": {
+            "origin_cm": [
+              0,
+              2,
+              3.1
+            ],
+            "direction": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 4.430293583020102,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "sensors-06",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Meça a proximidade frontal.",
+    "answer": "A proximidade frontal é de 99,9 cm e a traseira é de 194,9 cm.",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:47.482Z",
+      "session_id": "c936a03c-05c6-4544-a5a0-59f00b7073d1",
+      "revision": 134,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 2.1977045829989947,
+      "total_inference_calls": 2,
+      "inference_seconds": 2.186590499972226
+    },
+    "inference": [
+      {
+        "at": 1790909025.9716742,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.6873714579851367,
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 1159,
+          "total_tokens": 1174,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909027.4813912,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.4992190419870894,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1322,
+          "total_tokens": 1350,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909025.981718,
+        "episode_id": "062fa3f6-d50b-4faa-9005-4e6ac6b90a36",
+        "tool": "proximity",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "connected": true,
+          "readings": {
+            "frente": 99.9,
+            "tras": 194.9
+          },
+          "session_id": "c936a03c-05c6-4544-a5a0-59f00b7073d1",
+          "revision": 43,
+          "captured_at": "2026-10-02T02:43:45.977Z",
+          "validity": {
+            "frente": "valid",
+            "tras": "valid"
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 2.1980321670125704,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "sensors-07",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Qual é a distância do que está atrás?",
+    "answer": "A distância do que está atrás é de 184,9 cm.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:49.295Z",
+      "session_id": "844761bc-f5d4-45f3-a6e9-6d181da8a5ef",
+      "revision": 109,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 1.8089059590129182,
+      "total_inference_calls": 2,
+      "inference_seconds": 1.7994008740060963
+    },
+    "inference": [
+      {
+        "at": 1790909028.155715,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.669448041007854,
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 1161,
+          "total_tokens": 1176,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909029.294243,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1299528329982422,
+        "usage": {
+          "completion_tokens": 17,
+          "prompt_tokens": 1334,
+          "total_tokens": 1351,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909028.163796,
+        "episode_id": "98936a1f-739a-4973-bf70-a7514126947c",
+        "tool": "proximity",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "connected": true,
+          "readings": {
+            "frente": 104.89999999999999,
+            "tras": 184.9
+          },
+          "session_id": "844761bc-f5d4-45f3-a6e9-6d181da8a5ef",
+          "revision": 41,
+          "captured_at": "2026-10-02T02:43:48.159Z",
+          "validity": {
+            "frente": "valid",
+            "tras": "valid"
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 1.8094105409982149,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "sensors-08",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Verifique o sensor traseiro.",
+    "answer": "O sensor traseiro detectou um obstáculo a 165 cm de distância.",
+    "state": {
+      "x": 20,
+      "z": -20,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:51.283Z",
+      "session_id": "f3e68ce1-df29-406e-975c-732aed754ec4",
+      "revision": 120,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 1.9818044170096982,
+      "total_inference_calls": 2,
+      "inference_seconds": 1.9765068330452777
+    },
+    "inference": [
+      {
+        "at": 1790909029.9748118,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.673047458025394,
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 1160,
+          "total_tokens": 1175,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909031.2829812,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.3034593750198837,
+        "usage": {
+          "completion_tokens": 20,
+          "prompt_tokens": 1333,
+          "total_tokens": 1353,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909029.9792068,
+        "episode_id": "ef7e1b82-6318-42b2-982e-30a511624dc1",
+        "tool": "proximity",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "connected": true,
+          "readings": {
+            "frente": 109.89999999999998,
+            "tras": 164.9
+          },
+          "session_id": "f3e68ce1-df29-406e-975c-732aed754ec4",
+          "revision": 41,
+          "captured_at": "2026-10-02T02:43:49.976Z",
+          "validity": {
+            "frente": "valid",
+            "tras": "valid"
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 1.9821312909771223,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "sensors-09",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Informe a distância do obstáculo à frente em centímetros.",
+    "answer": "O obstáculo à frente está a 114,9 cm de distância.",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:53.130Z",
+      "session_id": "96064f1c-9479-43bc-ac65-84fc9b505318",
+      "revision": 111,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 1.8415748749976046,
+      "total_inference_calls": 2,
+      "inference_seconds": 1.8346684579737484
+    },
+    "inference": [
+      {
+        "at": 1790909031.9603672,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.6728280409879517,
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 1164,
+          "total_tokens": 1179,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909033.128394,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1618404169857968,
+        "usage": {
+          "completion_tokens": 18,
+          "prompt_tokens": 1325,
+          "total_tokens": 1343,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909031.966111,
+        "episode_id": "1d97df1c-afcd-4f3c-9536-d9430176299f",
+        "tool": "proximity",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "connected": true,
+          "readings": {
+            "frente": 114.9,
+            "tras": 194.9
+          },
+          "session_id": "96064f1c-9479-43bc-ac65-84fc9b505318",
+          "revision": 41,
+          "captured_at": "2026-10-02T02:43:51.962Z",
+          "validity": {
+            "frente": "valid",
+            "tras": "valid"
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 1.8423610419849865,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "sensors-10",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Leia a distância frontal e traseira.",
+    "answer": "A distância frontal é de aproximadamente 120 cm e a traseira é de cerca de 185 cm.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:43:55.294Z",
+      "session_id": "af845803-9bb6-4d8a-887c-45afeb76075b",
+      "revision": 130,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 2.1568502500012983,
+      "total_inference_calls": 2,
+      "inference_seconds": 2.1478941239765845
+    },
+    "inference": [
+      {
+        "at": 1790909033.7998521,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 0.6633537909947336,
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 1161,
+          "total_tokens": 1176,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909035.2924201,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.484540332981851,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1335,
+          "total_tokens": 1363,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909033.8073752,
+        "episode_id": "9997f34a-dfa5-48c1-9168-171f0390223e",
+        "tool": "proximity",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "connected": true,
+          "readings": {
+            "frente": 119.89999999999998,
+            "tras": 184.9
+          },
+          "session_id": "af845803-9bb6-4d8a-887c-45afeb76075b",
+          "revision": 41,
+          "captured_at": "2026-10-02T02:43:53.803Z",
+          "validity": {
+            "frente": "valid",
+            "tras": "valid"
+          }
+        }
+      }
+    ],
+    "elapsed_seconds": 2.157598499994492,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "movement-06",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Ande 25 cm para frente e vire 90 graus para esquerda.",
+    "answer": "Andei 25 cm para frente e virei 90 graus para esquerda.",
+    "state": {
+      "x": 0,
+      "z": 25,
+      "rotation": 90,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:04.396Z",
+      "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+      "revision": 555,
+      "operation": {
+        "accepted": true,
+        "command": "R45L;",
+        "command_id": "9ea59393-b08d-4ce8-9913-5d98aa5bd8df",
+        "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 0,
+        "rotation_degrees": 45,
+        "revision": 420
+      }
+    },
+    "metrics": {
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 2,
+      "elapsed_seconds": 9.093759125011275,
+      "total_inference_calls": 3,
+      "inference_seconds": 6.2015499170229305
+    },
+    "inference": [
+      {
+        "at": 1790909036.5505621,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.2506413749943022,
+        "usage": {
+          "completion_tokens": 32,
+          "prompt_tokens": 1170,
+          "total_tokens": 1202,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909041.08301,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.754461625008844,
+        "usage": {
+          "completion_tokens": 33,
+          "prompt_tokens": 1738,
+          "total_tokens": 1771,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909044.3931031,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.1964469170197845,
+        "usage": {
+          "completion_tokens": 20,
+          "prompt_tokens": 2247,
+          "total_tokens": 2267,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909038.327862,
+        "episode_id": "3a9a7832-cb4d-4e9c-823d-b19dafedc278",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 159.9,
+              "tras": 209.90000000000003
+            },
+            "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+            "revision": 187,
+            "captured_at": "2026-10-02T02:43:58.322Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "D25F;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "D20F;",
+              "command_id": "587e521d-0ef5-4b8d-a3d9-4684e6edc791",
+              "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 19.999999999999986,
+              "rotation_degrees": 0,
+              "revision": 170
+            },
+            {
+              "accepted": true,
+              "command": "D5F;",
+              "command_id": "30272487-567e-402f-b5fe-1ef8d485ab8f",
+              "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 4.999999999999998,
+              "rotation_degrees": 0,
+              "revision": 184
+            }
+          ],
+          "distance_cm": 24.999999999999986,
+          "rotation_degrees": 0,
+          "operation_id": "b66df3f9-031d-4df2-a3eb-175f735284be",
+          "commands_count": 2
+        }
+      },
+      {
+        "event": "tool_result",
+        "at": 1790909042.1958468,
+        "episode_id": "3a9a7832-cb4d-4e9c-823d-b19dafedc278",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 184.9,
+              "tras": 184.9
+            },
+            "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+            "revision": 422,
+            "captured_at": "2026-10-02T02:44:02.186Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "R90L;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "cb9d74c4-4266-4643-a39e-47c8589f2293",
+              "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 386
+            },
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "9ea59393-b08d-4ce8-9913-5d98aa5bd8df",
+              "session_id": "4c4ef006-8898-4bec-824c-36e98df2d401",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 420
+            }
+          ],
+          "distance_cm": 0,
+          "rotation_degrees": 90,
+          "operation_id": "319170a2-534b-4dfc-baaa-31c9e89856be",
+          "commands_count": 2
+        }
+      }
+    ],
+    "elapsed_seconds": 9.09458133301814,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "movement-07",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Avance 15 cm e depois vire 90 graus para direita.",
+    "answer": "Avancei 15 cm e virei 90 graus para direita.",
+    "state": {
+      "x": 0,
+      "z": 15,
+      "rotation": -90,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:11.764Z",
+      "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+      "revision": 449,
+      "operation": {
+        "accepted": true,
+        "command": "R45R;",
+        "command_id": "0d2c8f28-0729-4c93-8b36-861d017d6b9c",
+        "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 0,
+        "rotation_degrees": -45,
+        "revision": 316
+      }
+    },
+    "metrics": {
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 2,
+      "elapsed_seconds": 7.356189041980542,
+      "total_inference_calls": 3,
+      "inference_seconds": 5.762052708974807
+    },
+    "inference": [
+      {
+        "at": 1790909045.671173,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.265166124998359,
+        "usage": {
+          "completion_tokens": 32,
+          "prompt_tokens": 1169,
+          "total_tokens": 1201,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909048.502031,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.2771317919832654,
+        "usage": {
+          "completion_tokens": 33,
+          "prompt_tokens": 1583,
+          "total_tokens": 1616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909051.76126,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.219754791993182,
+        "usage": {
+          "completion_tokens": 19,
+          "prompt_tokens": 2100,
+          "total_tokens": 2119,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909046.22426,
+        "episode_id": "31eec30b-bb63-40f7-bd38-f03ec988ab29",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 169.9,
+              "tras": 199.9
+            },
+            "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+            "revision": 113,
+            "captured_at": "2026-10-02T02:44:06.216Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "D15F;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "D15F;",
+              "command_id": "b9e0c925-36b8-429f-a4c3-616e0d9ffcb4",
+              "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 14.99999999999999,
+              "rotation_degrees": 0,
+              "revision": 110
+            }
+          ],
+          "distance_cm": 14.99999999999999,
+          "rotation_degrees": 0,
+          "operation_id": "f59424d5-d3bb-40bb-98af-4f30680c3e9c",
+          "commands_count": 1
+        }
+      },
+      {
+        "event": "tool_result",
+        "at": 1790909049.540666,
+        "episode_id": "31eec30b-bb63-40f7-bd38-f03ec988ab29",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 184.9,
+              "tras": 184.9
+            },
+            "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+            "revision": 316,
+            "captured_at": "2026-10-02T02:44:09.533Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "R90R;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "R45R;",
+              "command_id": "68e90d3e-c52f-4083-8b4e-490167634826",
+              "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": -45,
+              "revision": 282
+            },
+            {
+              "accepted": true,
+              "command": "R45R;",
+              "command_id": "0d2c8f28-0729-4c93-8b36-861d017d6b9c",
+              "session_id": "587e8973-a360-48bd-9ad4-7a8f4328fc1e",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": -45,
+              "revision": 316
+            }
+          ],
+          "distance_cm": 0,
+          "rotation_degrees": -90,
+          "operation_id": "c685d28c-2d88-4a75-8d5e-afdc00eacb81",
+          "commands_count": 2
+        }
+      }
+    ],
+    "elapsed_seconds": 7.357230125024216,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "movement-08",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Vire 90 graus para esquerda e ande 20 cm para frente.",
+    "answer": "Virei 90 graus para esquerda e andei 20 cm para frente.",
+    "state": {
+      "x": 20,
+      "z": 7.275354877314957e-15,
+      "rotation": 90,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:17.764Z",
+      "session_id": "7b1f3b31-c3e5-4b36-b884-7c4e5f164558",
+      "revision": 367,
+      "operation": {
+        "accepted": true,
+        "command": "D20F;",
+        "command_id": "32f8fb7e-6d37-4d09-9eeb-050d31dd4e93",
+        "session_id": "7b1f3b31-c3e5-4b36-b884-7c4e5f164558",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 19.999999999999993,
+        "rotation_degrees": 0,
+        "revision": 206
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 5.990205625013914,
+      "total_inference_calls": 2,
+      "inference_seconds": 4.2155529169831425
+    },
+    "inference": [
+      {
+        "at": 1790909053.321077,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.5487296249775682,
+        "usage": {
+          "completion_tokens": 42,
+          "prompt_tokens": 1170,
+          "total_tokens": 1212,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909057.761748,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.6668232920055743,
+        "usage": {
+          "completion_tokens": 20,
+          "prompt_tokens": 1860,
+          "total_tokens": 1880,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909055.094269,
+        "episode_id": "35515cbc-fad7-464c-af3b-68cb8cf8b134",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 164.9,
+              "tras": 204.9
+            },
+            "session_id": "7b1f3b31-c3e5-4b36-b884-7c4e5f164558",
+            "revision": 206,
+            "captured_at": "2026-10-02T02:44:15.086Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "R90L;D20F;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "33f21a3d-a7ad-4d31-9b16-652bde98504a",
+              "session_id": "7b1f3b31-c3e5-4b36-b884-7c4e5f164558",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 128
+            },
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "46298cc5-6cbe-4b59-b9b6-ed85670525e8",
+              "session_id": "7b1f3b31-c3e5-4b36-b884-7c4e5f164558",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 162
+            },
+            {
+              "accepted": true,
+              "command": "D20F;",
+              "command_id": "32f8fb7e-6d37-4d09-9eeb-050d31dd4e93",
+              "session_id": "7b1f3b31-c3e5-4b36-b884-7c4e5f164558",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 19.999999999999993,
+              "rotation_degrees": 0,
+              "revision": 206
+            }
+          ],
+          "distance_cm": 19.999999999999993,
+          "rotation_degrees": 90,
+          "operation_id": "a8fb2e6f-84fd-44d2-86f2-fe4e324ffe85",
+          "commands_count": 3
+        }
+      }
+    ],
+    "elapsed_seconds": 5.990980083995964,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "movement-09",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Faça um giro de 360 graus para a esquerda.",
+    "answer": "Girei 360 graus para a esquerda.",
+    "state": {
+      "x": 0,
+      "z": 1.4521668619599672e-14,
+      "rotation": 360,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:26.747Z",
+      "session_id": "9f4ef091-59a1-4f92-bb3c-b762af9da3c4",
+      "revision": 555,
+      "operation": {
+        "accepted": true,
+        "command": "R45L;",
+        "command_id": "feea85b1-6828-411d-9040-9248da257b06",
+        "session_id": "9f4ef091-59a1-4f92-bb3c-b762af9da3c4",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 0,
+        "rotation_degrees": 45,
+        "revision": 406
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 8.97397954200278,
+      "total_inference_calls": 2,
+      "inference_seconds": 4.622677042003488
+    },
+    "inference": [
+      {
+        "at": 1790909059.965159,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.1936216670146678,
+        "usage": {
+          "completion_tokens": 59,
+          "prompt_tokens": 1166,
+          "total_tokens": 1225,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909066.744011,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.4290553749888204,
+        "usage": {
+          "completion_tokens": 13,
+          "prompt_tokens": 1867,
+          "total_tokens": 1880,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909064.313956,
+        "episode_id": "05e083ed-89b2-43f8-a545-c4f626f35cbe",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 184.89999999999998,
+              "tras": 184.90000000000003
+            },
+            "session_id": "9f4ef091-59a1-4f92-bb3c-b762af9da3c4",
+            "revision": 409,
+            "captured_at": "2026-10-02T02:44:24.304Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "R90L;R90L;R90L;R90L;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "0b46a870-d693-4e14-b4e3-c43c4d5a3ce4",
+              "session_id": "9f4ef091-59a1-4f92-bb3c-b762af9da3c4",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 337
+            },
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "c1d67f6b-6579-42d1-b68b-b47fe37aeb79",
+              "session_id": "9f4ef091-59a1-4f92-bb3c-b762af9da3c4",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 372
+            },
+            {
+              "accepted": true,
+              "command": "R45L;",
+              "command_id": "feea85b1-6828-411d-9040-9248da257b06",
+              "session_id": "9f4ef091-59a1-4f92-bb3c-b762af9da3c4",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 0,
+              "rotation_degrees": 45,
+              "revision": 406
+            }
+          ],
+          "distance_cm": 0,
+          "rotation_degrees": 360,
+          "operation_id": "ce66217a-a4a6-4e8b-8ad1-1dc5447b6108",
+          "commands_count": 8
+        }
+      }
+    ],
+    "elapsed_seconds": 8.974926416995004,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "movement-10",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Ande 20 cm para frente e depois 10 cm para trás.",
+    "answer": "Andei 20 cm para frente e depois 10 cm para trás.",
+    "state": {
+      "x": 0,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:33.156Z",
+      "session_id": "1afee34c-80ee-4815-a504-f0900ce5c215",
+      "revision": 389,
+      "operation": {
+        "accepted": true,
+        "command": "D10B;",
+        "command_id": "9fe89c06-306e-4048-8106-5b89ab977492",
+        "session_id": "1afee34c-80ee-4815-a504-f0900ce5c215",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 9.999999999999996,
+        "rotation_degrees": 0,
+        "revision": 281
+      }
+    },
+    "metrics": {
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 2,
+      "elapsed_seconds": 6.398762249998981,
+      "total_inference_calls": 3,
+      "inference_seconds": 5.276249166985508
+    },
+    "inference": [
+      {
+        "at": 1790909068.038579,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.282672500004992,
+        "usage": {
+          "completion_tokens": 32,
+          "prompt_tokens": 1169,
+          "total_tokens": 1201,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909071.009021,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.248997166985646,
+        "usage": {
+          "completion_tokens": 32,
+          "prompt_tokens": 1580,
+          "total_tokens": 1612,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909073.153825,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.7445794999948703,
+        "usage": {
+          "completion_tokens": 18,
+          "prompt_tokens": 1989,
+          "total_tokens": 2007,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909068.759295,
+        "episode_id": "ce325db2-a23c-4ba9-895e-77517a52a1cd",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 164.9,
+              "tras": 204.9
+            },
+            "session_id": "1afee34c-80ee-4815-a504-f0900ce5c215",
+            "revision": 123,
+            "captured_at": "2026-10-02T02:44:28.750Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "D20F;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "D20F;",
+              "command_id": "97d46757-59d4-438d-a4d8-fbfb203bd324",
+              "session_id": "1afee34c-80ee-4815-a504-f0900ce5c215",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 19.999999999999986,
+              "rotation_degrees": 0,
+              "revision": 120
+            }
+          ],
+          "distance_cm": 19.999999999999986,
+          "rotation_degrees": 0,
+          "operation_id": "83e38fd1-481c-42b1-ae1b-bc653dd1462e",
+          "commands_count": 1
+        }
+      },
+      {
+        "event": "tool_result",
+        "at": 1790909071.4087381,
+        "episode_id": "ce325db2-a23c-4ba9-895e-77517a52a1cd",
+        "tool": "move",
+        "result": "completed",
+        "structured": {
+          "status": "completed",
+          "verification": {
+            "connected": true,
+            "readings": {
+              "frente": 174.9,
+              "tras": 194.9
+            },
+            "session_id": "1afee34c-80ee-4815-a504-f0900ce5c215",
+            "revision": 283,
+            "captured_at": "2026-10-02T02:44:31.401Z",
+            "validity": {
+              "frente": "valid",
+              "tras": "valid"
+            }
+          },
+          "lbml": "D10B;",
+          "commands": [
+            {
+              "accepted": true,
+              "command": "D10B;",
+              "command_id": "9fe89c06-306e-4048-8106-5b89ab977492",
+              "session_id": "1afee34c-80ee-4815-a504-f0900ce5c215",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 9.999999999999996,
+              "rotation_degrees": 0,
+              "revision": 281
+            }
+          ],
+          "distance_cm": 9.999999999999996,
+          "rotation_degrees": 0,
+          "operation_id": "23b8335e-f89a-4cc9-8cd9-57d0cf61aaec",
+          "commands_count": 1
+        }
+      }
+    ],
+    "elapsed_seconds": 6.399810041999444,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "search-06",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Veja se encontra um cubo amarelo na arena.",
+    "answer": "Encontrei um cubo amarelo na arena.",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:41.515Z",
+      "session_id": "8fdceb74-e7a3-4335-806f-af6123e8760f",
+      "revision": 503,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 8.348485541006085,
+      "total_inference_calls": 3,
+      "inference_seconds": 7.965309915976832
+    },
+    "inference": [
+      {
+        "at": 1790909074.328939,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1648252079903614,
+        "usage": {
+          "completion_tokens": 30,
+          "prompt_tokens": 1165,
+          "total_tokens": 1195,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909079.981149,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.27685733299586,
+        "usage": {
+          "completion_tokens": 56,
+          "prompt_tokens": 542,
+          "total_tokens": 598,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909081.511837,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.5236273749906104,
+        "usage": {
+          "completion_tokens": 13,
+          "prompt_tokens": 1437,
+          "total_tokens": 1450,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909079.9873831,
+        "episode_id": "5a983fbc-d213-44dc-98d0-9f8513573ac5",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              47,
+              194,
+              115,
+              77
+            ],
+            "sensor_association": false,
+            "frame_id": "0a216372-2334-48f2-ad66-651a33cd766b",
+            "session_id": "8fdceb74-e7a3-4335-806f-af6123e8760f",
+            "revision": 72
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "0b411b0b-7cca-41ff-bce7-741973fc1c4f",
+          "steps_count": 0
+        }
+      }
+    ],
+    "elapsed_seconds": 8.349234624998644,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "search-07",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Procure o cubo vermelho e diga se localizou.",
+    "answer": "Localizei o cubo vermelho.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:49.540Z",
+      "session_id": "2bb3275d-7873-41a6-bef9-fd7f0c04483e",
+      "revision": 482,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 8.011566208006116,
+      "total_inference_calls": 3,
+      "inference_seconds": 7.674888083012775
+    },
+    "inference": [
+      {
+        "at": 1790909082.6272151,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1005925410136115,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1164,
+          "total_tokens": 1192,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909088.2432551,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.28652641698136,
+        "usage": {
+          "completion_tokens": 61,
+          "prompt_tokens": 541,
+          "total_tokens": 602,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909089.537351,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.2877691250178032,
+        "usage": {
+          "completion_tokens": 8,
+          "prompt_tokens": 1436,
+          "total_tokens": 1444,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909088.24864,
+        "episode_id": "be2d18c7-3293-4888-bad7-c153013b776b",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              478,
+              193,
+              115,
+              78
+            ],
+            "sensor_association": false,
+            "frame_id": "c9d61f6f-b0fa-4c31-bcae-92e28c1c331d",
+            "session_id": "2bb3275d-7873-41a6-bef9-fd7f0c04483e",
+            "revision": 67
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "752a4e0c-e1b3-4c9c-a4e3-71a16ccfbd98",
+          "steps_count": 0
+        }
+      }
+    ],
+    "elapsed_seconds": 8.012290917016799,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "search-08",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Encontre um cubo amarelo sem chegar perto dele.",
+    "answer": "Encontrei um cubo amarelo sem chegar perto dele.",
+    "state": {
+      "x": 20,
+      "z": -20,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:44:56.650Z",
+      "session_id": "f12341c5-0acf-4520-8d52-de14c99bfc1c",
+      "revision": 428,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 7.099593207996804,
+      "total_inference_calls": 3,
+      "inference_seconds": 6.771075082971947
+    },
+    "inference": [
+      {
+        "at": 1790909090.7185512,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1691599999903701,
+        "usage": {
+          "completion_tokens": 30,
+          "prompt_tokens": 1165,
+          "total_tokens": 1195,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909095.256707,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.215301791991806,
+        "usage": {
+          "completion_tokens": 58,
+          "prompt_tokens": 542,
+          "total_tokens": 600,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909096.648269,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.3866132909897715,
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 1442,
+          "total_tokens": 1457,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909095.261041,
+        "episode_id": "aa5a7ad9-b651-4ce6-995b-62da4131203c",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              47,
+              194,
+              115,
+              77
+            ],
+            "sensor_association": false,
+            "frame_id": "7d878f6f-481c-4830-900b-39c19b7b5d5e",
+            "session_id": "f12341c5-0acf-4520-8d52-de14c99bfc1c",
+            "revision": 72
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "01b92845-03ae-42f5-a870-758eca603335",
+          "steps_count": 0
+        }
+      }
+    ],
+    "elapsed_seconds": 7.100287874985952,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "search-09",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Procure o cubo azul.",
+    "answer": "Não localizei o cubo azul na busca limitada. Posso continuar a procura.",
+    "state": {
+      "x": 15.355339059327333,
+      "z": -4.644660940672603,
+      "rotation": 1305,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:47:22.695Z",
+      "session_id": "4a994f91-b24a-441b-a13c-37d7053fedd7",
+      "revision": 8853,
+      "operation": {
+        "accepted": true,
+        "command": "D10B;",
+        "command_id": "cba382b4-a6f5-42ae-a5f6-6f92261017d3",
+        "session_id": "4a994f91-b24a-441b-a13c-37d7053fedd7",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 9.999999999999996,
+        "rotation_degrees": 0,
+        "revision": 8669
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 146.03628616698552,
+      "total_inference_calls": 27,
+      "inference_seconds": 114.2378619981464
+    },
+    "inference": [
+      {
+        "at": 1790909097.8263948,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1667980420170352,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1159,
+          "total_tokens": 1187,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909101.9557061,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.799983292003162,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909107.343509,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.736954208987299,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909112.517667,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.592046457983088,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909118.1058948,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.982688000018243,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909122.829408,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.1341968330089,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909127.624514,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.200534333009273,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909131.736562,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.525635666010203,
+        "usage": {
+          "completion_tokens": 36,
+          "prompt_tokens": 460,
+          "total_tokens": 496,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909136.740024,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.412856333015952,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909143.503434,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.406611624988727,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909148.417705,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.318732125015231,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909153.2853498,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.285126291011693,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909158.131016,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.254603334004059,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909163.063547,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.339848917006748,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909168.093612,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.426943375001429,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909173.112133,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.459944375004852,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909178.4413812,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.7846853750234,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909188.941943,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.380348833015887,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909194.1820061,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.63985016598599,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909199.179193,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.383502000011504,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909204.326122,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.5496846250025555,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909209.136076,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.2135232080181595,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909214.0819972,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.357822833000682,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909218.844676,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.181070708000334,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909223.82396,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.377371875016252,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909233.3522801,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.384293749986682,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909242.689386,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.942205416999059,
+        "usage": {
+          "completion_tokens": 18,
+          "prompt_tokens": 1743,
+          "total_tokens": 1761,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909239.741337,
+        "episode_id": "76bab9d0-af7d-4746-b087-e1459754edf1",
+        "tool": "search_object",
+        "result": "completed: objeto não localizado na busca limitada (not_located_within_search)",
+        "structured": {
+          "status": "completed",
+          "detected": false,
+          "centered": false,
+          "approached": false,
+          "observation": null,
+          "reason": "not_located_within_search",
+          "coverage": {
+            "observations": 25,
+            "search_complete": false,
+            "limit_reason": "time_budget"
+          },
+          "steps": [
+            {
+              "command": "D20B;",
+              "accepted": true,
+              "command_id": "dec3e5d9-84c1-4b74-acba-8c7b249c2441",
+              "session_id": "4a994f91-b24a-441b-a13c-37d7053fedd7",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 20.000000000000007,
+              "rotation_degrees": 0,
+              "revision": 8601
+            },
+            {
+              "command": "D20B;",
+              "accepted": true,
+              "command_id": "1f641775-ff0f-42c0-a98a-429d9b1be6cd",
+              "session_id": "4a994f91-b24a-441b-a13c-37d7053fedd7",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 19.99999999999999,
+              "rotation_degrees": 0,
+              "revision": 8644
+            },
+            {
+              "command": "D10B;",
+              "accepted": true,
+              "command_id": "cba382b4-a6f5-42ae-a5f6-6f92261017d3",
+              "session_id": "4a994f91-b24a-441b-a13c-37d7053fedd7",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 9.999999999999996,
+              "rotation_degrees": 0,
+              "revision": 8669
+            }
+          ],
+          "operation_id": "e3e3bda3-003b-490e-835a-8cb854b66048",
+          "steps_count": 45
+        }
+      }
+    ],
+    "elapsed_seconds": 146.03802041697782,
+    "process_max_rss": 134709248,
+    "passed": false,
+    "tool_selection_correct": true,
+    "reasons": [
+      "search_return_unverified"
+    ]
+  },
+  {
+    "id": "search-10",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Busque uma esfera roxa na arena.",
+    "answer": "Não localizei a esfera roxa na busca atual. Vou continuar procurando em outras partes da arena.",
+    "state": {
+      "x": 35.3553390593274,
+      "z": -14.644660940672447,
+      "rotation": 1305,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:49:48.956Z",
+      "session_id": "1b96733a-f1ee-4084-90a1-6307dca354b6",
+      "revision": 8866,
+      "operation": {
+        "accepted": true,
+        "command": "D10B;",
+        "command_id": "f8e91512-434b-4a27-8295-5fa79c7785ec",
+        "session_id": "1b96733a-f1ee-4084-90a1-6307dca354b6",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 9.999999999999996,
+        "rotation_degrees": 0,
+        "revision": 8692
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 146.24869341601152,
+      "total_inference_calls": 27,
+      "inference_seconds": 114.91605587306549
+    },
+    "inference": [
+      {
+        "at": 1790909244.2568178,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.552691542019602,
+        "usage": {
+          "completion_tokens": 29,
+          "prompt_tokens": 1161,
+          "total_tokens": 1190,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909250.646299,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 6.276316208008211,
+        "usage": {
+          "completion_tokens": 51,
+          "prompt_tokens": 460,
+          "total_tokens": 511,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909254.933137,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.7383659580082167,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909259.8505442,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.314761415997054,
+        "usage": {
+          "completion_tokens": 51,
+          "prompt_tokens": 460,
+          "total_tokens": 511,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909264.850708,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.415299749991391,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909269.232766,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.7833582499879412,
+        "usage": {
+          "completion_tokens": 51,
+          "prompt_tokens": 460,
+          "total_tokens": 511,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909274.293011,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.466941541002598,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909279.110254,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.221359541988932,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909284.3326452,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.625126958009787,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909291.4000158,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.7138765410054475,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909296.0883021,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.088650999998208,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909300.987849,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.303835541999433,
+        "usage": {
+          "completion_tokens": 51,
+          "prompt_tokens": 460,
+          "total_tokens": 511,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909305.997619,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.461460042017279,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909310.712062,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.1333266670117155,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909315.963445,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.650035084021511,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909320.9520278,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.38804066699231,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909326.043356,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.4994671670137905,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909335.3455691,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.185378082998795,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909340.6213272,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.669498000002932,
+        "usage": {
+          "completion_tokens": 54,
+          "prompt_tokens": 460,
+          "total_tokens": 514,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909345.7340732,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.568233750003856,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909350.752815,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.4160509160137735,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909355.527922,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.22966829201323,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909360.240617,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.131048415991245,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909365.435189,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.593014249985572,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909370.55601,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.515127708000364,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 460,
+          "total_tokens": 513,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909379.782939,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.148657207988435,
+        "usage": {
+          "completion_tokens": 51,
+          "prompt_tokens": 460,
+          "total_tokens": 511,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909388.950946,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.826465374993859,
+        "usage": {
+          "completion_tokens": 21,
+          "prompt_tokens": 1752,
+          "total_tokens": 1773,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909386.123101,
+        "episode_id": "368bc5b5-e1bd-46aa-9744-2d5d6dcb9671",
+        "tool": "search_object",
+        "result": "completed: objeto não localizado na busca limitada (not_located_within_search)",
+        "structured": {
+          "status": "completed",
+          "detected": false,
+          "centered": false,
+          "approached": false,
+          "observation": null,
+          "reason": "not_located_within_search",
+          "coverage": {
+            "observations": 25,
+            "search_complete": false,
+            "limit_reason": "time_budget"
+          },
+          "steps": [
+            {
+              "command": "D20B;",
+              "accepted": true,
+              "command_id": "bc91964d-371e-4429-bd35-134579bdba30",
+              "session_id": "1b96733a-f1ee-4084-90a1-6307dca354b6",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 20.000000000000018,
+              "rotation_degrees": 0,
+              "revision": 8623
+            },
+            {
+              "command": "D20B;",
+              "accepted": true,
+              "command_id": "365155e5-53e0-4c02-9541-8774bfbabef8",
+              "session_id": "1b96733a-f1ee-4084-90a1-6307dca354b6",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 19.99999999999999,
+              "rotation_degrees": 0,
+              "revision": 8667
+            },
+            {
+              "command": "D10B;",
+              "accepted": true,
+              "command_id": "f8e91512-434b-4a27-8295-5fa79c7785ec",
+              "session_id": "1b96733a-f1ee-4084-90a1-6307dca354b6",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 9.999999999999996,
+              "rotation_degrees": 0,
+              "revision": 8692
+            }
+          ],
+          "operation_id": "ba0c2c47-4b62-410d-b099-231719551efa",
+          "steps_count": 45
+        }
+      }
+    ],
+    "elapsed_seconds": 146.2500462080061,
+    "process_max_rss": 134709248,
+    "passed": false,
+    "tool_selection_correct": true,
+    "reasons": [
+      "search_return_unverified"
+    ]
+  },
+  {
+    "id": "approach-06",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Aproxime do cubo amarelo a 50 cm.",
+    "answer": "Aproximei-me do cubo amarelo a 50 cm.",
+    "state": {
+      "x": -20,
+      "z": 51,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:50:28.236Z",
+      "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+      "revision": 2365,
+      "operation": {
+        "accepted": true,
+        "command": "D3F;",
+        "command_id": "638de165-fa42-4ff2-b383-85468cab5cdd",
+        "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 2.999999999999997,
+        "rotation_degrees": 0,
+        "revision": 1825
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 39.25406245898921,
+      "total_inference_calls": 8,
+      "inference_seconds": 36.5938692940108
+    },
+    "inference": [
+      {
+        "at": 1790909391.045405,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.0780110839987174,
+        "usage": {
+          "completion_tokens": 57,
+          "prompt_tokens": 1167,
+          "total_tokens": 1224,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909397.239176,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.734898458991665,
+        "usage": {
+          "completion_tokens": 59,
+          "prompt_tokens": 542,
+          "total_tokens": 601,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909401.881609,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.329717042011907,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 542,
+          "total_tokens": 597,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909408.126365,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.42273250001017,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 542,
+          "total_tokens": 597,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909413.484311,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.829498334001983,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 544,
+          "total_tokens": 599,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909419.1201432,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.327050749998307,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 544,
+          "total_tokens": 599,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909424.704651,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.380044499994256,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 544,
+          "total_tokens": 599,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909428.2204502,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.491916625003796,
+        "usage": {
+          "completion_tokens": 17,
+          "prompt_tokens": 2011,
+          "total_tokens": 2028,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909424.72652,
+        "episode_id": "acc86263-85b6-43b0-bdf2-516791597dec",
+        "tool": "approach",
+        "result": "completed: aproximação verificada (53.89999999999999 cm)",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": true,
+          "approached": true,
+          "front_obstacle_distance_cm": 53.89999999999999,
+          "target_distance_cm": 53.89999999999999,
+          "evidence": {
+            "sensor": {
+              "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+              "revision": 2153,
+              "captured_at": "2026-10-02T02:50:24.707Z"
+            },
+            "observation": {
+              "status": "detected",
+              "candidate_id": 0,
+              "bbox": [
+                260,
+                168,
+                120,
+                120
+              ],
+              "sensor_association": true,
+              "frame_id": "2b5e7f65-0d08-43ee-8e42-02f1341ece08",
+              "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+              "revision": 1828
+            }
+          },
+          "steps": [
+            {
+              "command": "D12F;",
+              "accepted": true,
+              "command_id": "5fb1908e-aba6-4d27-9213-f2f0d81d3f48",
+              "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 11.999999999999993,
+              "rotation_degrees": 0,
+              "revision": 1180
+            },
+            {
+              "command": "D6F;",
+              "accepted": true,
+              "command_id": "bc90bcc2-5878-4ce7-b2fb-bcf038c93c1e",
+              "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 5.999999999999998,
+              "rotation_degrees": 0,
+              "revision": 1491
+            },
+            {
+              "command": "D3F;",
+              "accepted": true,
+              "command_id": "638de165-fa42-4ff2-b383-85468cab5cdd",
+              "session_id": "02d6a011-02b3-461f-884f-03c616151fe2",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 2.999999999999997,
+              "rotation_degrees": 0,
+              "revision": 1825
+            }
+          ],
+          "operation_id": "cb8d10d1-b196-4037-b12f-57cb89bab7da",
+          "steps_count": 4
+        }
+      }
+    ],
+    "elapsed_seconds": 39.25570333300857,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-07",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Chegue a 40 cm do cubo vermelho.",
+    "answer": "Cheguei a 40 cm do cubo vermelho.",
+    "state": {
+      "x": 0,
+      "z": 49.99999999999999,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:51:11.274Z",
+      "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+      "revision": 2590,
+      "operation": {
+        "accepted": true,
+        "command": "D4F;",
+        "command_id": "b25b5db1-b742-4c90-a096-69c6e0618b99",
+        "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 3.9999999999999982,
+        "rotation_degrees": 0,
+        "revision": 2094
+      }
+    },
+    "metrics": {
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 2,
+      "elapsed_seconds": 43.00834416699945,
+      "total_inference_calls": 10,
+      "inference_seconds": 40.32199900003616
+    },
+    "inference": [
+      {
+        "at": 1790909429.413455,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.154809416999342,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1164,
+          "total_tokens": 1192,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909434.8928902,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.119908666005358,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 540,
+          "total_tokens": 595,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909437.9903429,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.089542250003433,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 1441,
+          "total_tokens": 1496,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909442.946225,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.898097124998458,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 540,
+          "total_tokens": 595,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909445.018062,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.972168625012273,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 540,
+          "total_tokens": 595,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909450.937748,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.121479583991459,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 540,
+          "total_tokens": 595,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909456.447937,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.829304959013825,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 542,
+          "total_tokens": 597,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909462.8497221,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.990581332996953,
+        "usage": {
+          "completion_tokens": 67,
+          "prompt_tokens": 542,
+          "total_tokens": 609,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909467.702975,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.605121208005585,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 542,
+          "total_tokens": 597,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909471.26625,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.540985833009472,
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 2252,
+          "total_tokens": 2266,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909434.9001842,
+        "episode_id": "07953811-e6b6-493f-baf4-8c604237b524",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              285,
+              198,
+              70,
+              70
+            ],
+            "sensor_association": true,
+            "frame_id": "6219a4a3-9b33-4456-8d99-86f2994131cf",
+            "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+            "revision": 71
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "752a0b73-cc0a-4f30-917e-38153998c3c7",
+          "steps_count": 0
+        }
+      },
+      {
+        "event": "tool_result",
+        "at": 1790909467.723575,
+        "episode_id": "07953811-e6b6-493f-baf4-8c604237b524",
+        "tool": "approach",
+        "result": "completed: aproximação verificada (44.9 cm)",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": true,
+          "approached": true,
+          "front_obstacle_distance_cm": 44.9,
+          "target_distance_cm": 44.9,
+          "evidence": {
+            "sensor": {
+              "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+              "revision": 2376,
+              "captured_at": "2026-10-02T02:51:07.704Z"
+            },
+            "observation": {
+              "status": "detected",
+              "candidate_id": 0,
+              "bbox": [
+                248,
+                154,
+                144,
+                143
+              ],
+              "sensor_association": true,
+              "frame_id": "098cb8b8-b98a-4051-9686-509e097f555e",
+              "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+              "revision": 2098
+            }
+          },
+          "steps": [
+            {
+              "command": "D17F;",
+              "accepted": true,
+              "command_id": "184772f6-0960-44a6-b90d-ceef56f7c0e0",
+              "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 16.999999999999986,
+              "rotation_degrees": 0,
+              "revision": 1401
+            },
+            {
+              "command": "D9F;",
+              "accepted": true,
+              "command_id": "f084a943-a499-41a4-994d-a17c7a42fe09",
+              "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 8.999999999999993,
+              "rotation_degrees": 0,
+              "revision": 1718
+            },
+            {
+              "command": "D4F;",
+              "accepted": true,
+              "command_id": "b25b5db1-b742-4c90-a096-69c6e0618b99",
+              "session_id": "bcb465d9-7bf5-4fc7-81e3-7ad6dd69e267",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 3.9999999999999982,
+              "rotation_degrees": 0,
+              "revision": 2094
+            }
+          ],
+          "operation_id": "5945a715-9c45-494b-ac10-fb767b0a7386",
+          "steps_count": 4
+        }
+      }
+    ],
+    "elapsed_seconds": 43.01179670798592,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-08",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Aproxime do obstáculo à frente a 60 cm.",
+    "answer": "Aproximei-me do obstáculo à frente até uma distância de aproximadamente 60 cm (o sensor indicou 64,9 cm).",
+    "state": {
+      "x": 20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:51:17.478Z",
+      "session_id": "328502f2-baa5-4686-8e47-dc97893baf10",
+      "revision": 379,
+      "operation": {
+        "accepted": true,
+        "command": "D4F;",
+        "command_id": "8a0d3278-bdf2-44b9-a2a8-ac60627e7ec7",
+        "session_id": "328502f2-baa5-4686-8e47-dc97893baf10",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 4.000000000000001,
+        "rotation_degrees": 0,
+        "revision": 190
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 6.179453207994811,
+      "total_inference_calls": 2,
+      "inference_seconds": 5.087575374986045
+    },
+    "inference": [
+      {
+        "at": 1790909473.2830122,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.9866933339799289,
+        "usage": {
+          "completion_tokens": 43,
+          "prompt_tokens": 1166,
+          "total_tokens": 1209,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909477.4740381,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.100882041006116,
+        "usage": {
+          "completion_tokens": 32,
+          "prompt_tokens": 1828,
+          "total_tokens": 1860,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909474.3716822,
+        "episode_id": "e2bb6c0c-b6f8-459f-8fa7-c77ee061cfca",
+        "tool": "approach",
+        "result": "completed: aproximação verificada (64.9 cm)",
+        "structured": {
+          "status": "completed",
+          "detected": false,
+          "centered": false,
+          "approached": true,
+          "front_obstacle_distance_cm": 64.9,
+          "target_distance_cm": null,
+          "evidence": {
+            "sensor": {
+              "session_id": "328502f2-baa5-4686-8e47-dc97893baf10",
+              "revision": 192,
+              "captured_at": "2026-10-02T02:51:14.365Z"
+            },
+            "observation": null
+          },
+          "steps": [
+            {
+              "command": "D17F;",
+              "accepted": true,
+              "command_id": "feda3732-84c6-45a8-9b58-84259e466ad3",
+              "session_id": "328502f2-baa5-4686-8e47-dc97893baf10",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 16.99999999999999,
+              "rotation_degrees": 0,
+              "revision": 158
+            },
+            {
+              "command": "D9F;",
+              "accepted": true,
+              "command_id": "d68f5185-fc4c-4ba6-9735-2c493990699e",
+              "session_id": "328502f2-baa5-4686-8e47-dc97893baf10",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 8.999999999999996,
+              "rotation_degrees": 0,
+              "revision": 180
+            },
+            {
+              "command": "D4F;",
+              "accepted": true,
+              "command_id": "8a0d3278-bdf2-44b9-a2a8-ac60627e7ec7",
+              "session_id": "328502f2-baa5-4686-8e47-dc97893baf10",
+              "status": "completed",
+              "source": "http",
+              "distance_cm": 4.000000000000001,
+              "rotation_degrees": 0,
+              "revision": 190
+            }
+          ],
+          "operation_id": "476c7964-8fe5-4918-a783-dd76cd768c69",
+          "steps_count": 3
+        }
+      }
+    ],
+    "elapsed_seconds": 6.1809530000027735,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-09",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Aproxime do cubo vermelho, mas pare se houver bloqueio.",
+    "answer": "Execução interrompida: obstacle_too_close",
+    "state": {
+      "x": -20,
+      "z": 10,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:51:19.554Z",
+      "session_id": "3a9d3993-c175-45f5-b843-b89ffa40a65c",
+      "revision": 125,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 2.0634089169907384,
+      "total_inference_calls": 1,
+      "inference_seconds": 2.0386075419955887
+    },
+    "inference": [
+      {
+        "at": 1790909479.5286558,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.0386075419955887,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 1167,
+          "total_tokens": 1222,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909479.5455701,
+        "episode_id": "54e6c7ba-6369-493b-b10e-21b507e013d4",
+        "tool": "approach",
+        "result": "blocked: objeto não localizado na busca limitada (obstacle_too_close)",
+        "structured": {
+          "status": "blocked",
+          "reason": "obstacle_too_close",
+          "detected": false,
+          "approached": false,
+          "evidence": {
+            "sensor": {
+              "connected": true,
+              "readings": {
+                "frente": 4.900000000000004,
+                "tras": 194.9
+              },
+              "session_id": "3a9d3993-c175-45f5-b843-b89ffa40a65c",
+              "revision": 124,
+              "captured_at": "2026-10-02T02:51:19.539Z",
+              "validity": {
+                "frente": "valid",
+                "tras": "valid"
+              }
+            }
+          },
+          "operation_id": "0585c788-13a0-4a60-a253-4cb7576ae3fc"
+        }
+      }
+    ],
+    "elapsed_seconds": 2.064458457985893,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-10",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo amarelo, sem contornar obstáculos.",
+    "answer": "Execução interrompida: obstacle_too_close",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:51:21.658Z",
+      "session_id": "1c7abf8b-d223-4d48-a482-17b9234d0d58",
+      "revision": 127,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 2.096441874979064,
+      "total_inference_calls": 1,
+      "inference_seconds": 2.0778200829809066
+    },
+    "inference": [
+      {
+        "at": 1790909481.6390002,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.0778200829809066,
+        "usage": {
+          "completion_tokens": 57,
+          "prompt_tokens": 1168,
+          "total_tokens": 1225,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909481.6527941,
+        "episode_id": "d009f3ee-80be-40d3-91ec-88587f7d2943",
+        "tool": "approach",
+        "result": "blocked: objeto não localizado na busca limitada (obstacle_too_close)",
+        "structured": {
+          "status": "blocked",
+          "reason": "obstacle_too_close",
+          "detected": false,
+          "approached": false,
+          "evidence": {
+            "sensor": {
+              "connected": true,
+              "readings": {
+                "frente": 4.899999999999999,
+                "tras": 184.9
+              },
+              "session_id": "1c7abf8b-d223-4d48-a482-17b9234d0d58",
+              "revision": 126,
+              "captured_at": "2026-10-02T02:51:21.646Z",
+              "validity": {
+                "frente": "valid",
+                "tras": "valid"
+              }
+            }
+          },
+          "operation_id": "3609d2d9-c217-4dbc-92c8-b09fc99b0ea6"
+        }
+      }
+    ],
+    "elapsed_seconds": 2.0972078749909997,
+    "process_max_rss": 134709248,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  }
+]

@@ -1,0 +1,1770 @@
+[
+  {
+    "id": "conversation-01",
+    "split": "development",
+    "category": "conversation",
+    "prompt": "Olá!",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-02",
+    "split": "development",
+    "category": "conversation",
+    "prompt": "Oi, tudo bem?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-03",
+    "split": "development",
+    "category": "conversation",
+    "prompt": "Qual é seu nome?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-04",
+    "split": "development",
+    "category": "conversation",
+    "prompt": "Quem é você?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-05",
+    "split": "development",
+    "category": "conversation",
+    "prompt": "O que você é?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-06",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Bom dia!",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-07",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Boa tarde!",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-08",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Você consegue voar?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-09",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Você é um robô?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "conversation-10",
+    "split": "acceptance",
+    "category": "conversation",
+    "prompt": "Você tem rodas?",
+    "expected_tools": [],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {}
+  },
+  {
+    "id": "observation-01",
+    "split": "development",
+    "category": "observation",
+    "prompt": "O que você vê à frente?",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "vermelh"
+    }
+  },
+  {
+    "id": "observation-02",
+    "split": "development",
+    "category": "observation",
+    "prompt": "Descreva a imagem da câmera.",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "amarel"
+    }
+  },
+  {
+    "id": "observation-03",
+    "split": "development",
+    "category": "observation",
+    "prompt": "Qual objeto está na sua frente?",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 130,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "vermelh"
+    }
+  },
+  {
+    "id": "observation-04",
+    "split": "development",
+    "category": "observation",
+    "prompt": "Observe o ambiente à frente.",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "amarel"
+    }
+  },
+  {
+    "id": "observation-05",
+    "split": "development",
+    "category": "observation",
+    "prompt": "Que cor tem o objeto visível?",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "vermelh"
+    }
+  },
+  {
+    "id": "observation-06",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Mostre o que está vendo agora.",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 130,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "amarel"
+    }
+  },
+  {
+    "id": "observation-07",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Olhe pela câmera e descreva a cena.",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "vermelh"
+    }
+  },
+  {
+    "id": "observation-08",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Existe um objeto visível à frente?",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "amarel"
+    }
+  },
+  {
+    "id": "observation-09",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Descreva o objeto que aparece na imagem.",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 130,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "vermelh"
+    }
+  },
+  {
+    "id": "observation-10",
+    "split": "acceptance",
+    "category": "observation",
+    "prompt": "Veja qual é a cor do cubo na frente.",
+    "expected_tools": [
+      "camera"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "text_contains": "amarel"
+    }
+  },
+  {
+    "id": "sensors-01",
+    "split": "development",
+    "category": "sensors",
+    "prompt": "Meça a distância à frente.",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 100,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 74.9,
+        "tras": 184.9
+      }
+    }
+  },
+  {
+    "id": "sensors-02",
+    "split": "development",
+    "category": "sensors",
+    "prompt": "Qual a distância do obstáculo frontal?",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 85,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 79.9,
+        "tras": 164.9
+      }
+    }
+  },
+  {
+    "id": "sensors-03",
+    "split": "development",
+    "category": "sensors",
+    "prompt": "Leia os sensores de proximidade.",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 84.9,
+        "tras": 194.9
+      }
+    }
+  },
+  {
+    "id": "sensors-04",
+    "split": "development",
+    "category": "sensors",
+    "prompt": "Quanto espaço tenho à frente?",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 115,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 89.9,
+        "tras": 184.9
+      }
+    }
+  },
+  {
+    "id": "sensors-05",
+    "split": "development",
+    "category": "sensors",
+    "prompt": "Existe um obstáculo próximo pelo sensor?",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 94.9,
+        "tras": 164.9
+      }
+    }
+  },
+  {
+    "id": "sensors-06",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Meça a proximidade frontal.",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 135,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 99.9,
+        "tras": 194.9
+      }
+    }
+  },
+  {
+    "id": "sensors-07",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Qual é a distância do que está atrás?",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 130,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 104.9,
+        "tras": 184.9
+      }
+    }
+  },
+  {
+    "id": "sensors-08",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Verifique o sensor traseiro.",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 115,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 109.9,
+        "tras": 164.9
+      }
+    }
+  },
+  {
+    "id": "sensors-09",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Informe a distância do obstáculo à frente em centímetros.",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 150,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 114.9,
+        "tras": 194.9
+      }
+    }
+  },
+  {
+    "id": "sensors-10",
+    "split": "acceptance",
+    "category": "sensors",
+    "prompt": "Leia a distância frontal e traseira.",
+    "expected_tools": [
+      "proximity"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 145,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "readings": {
+        "frente": 119.9,
+        "tras": 184.9
+      }
+    }
+  },
+  {
+    "id": "movement-01",
+    "split": "development",
+    "category": "movement",
+    "prompt": "Ande 20 cm para frente.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        20,
+        0
+      ]
+    }
+  },
+  {
+    "id": "movement-02",
+    "split": "development",
+    "category": "movement",
+    "prompt": "Avance 30 centímetros.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        30,
+        0
+      ]
+    }
+  },
+  {
+    "id": "movement-03",
+    "split": "development",
+    "category": "movement",
+    "prompt": "Recue 10 cm.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        -10,
+        0
+      ]
+    }
+  },
+  {
+    "id": "movement-04",
+    "split": "development",
+    "category": "movement",
+    "prompt": "Vire 90 graus para a esquerda.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        0,
+        90
+      ]
+    }
+  },
+  {
+    "id": "movement-05",
+    "split": "development",
+    "category": "movement",
+    "prompt": "Gire 180 graus para a direita.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        0,
+        -180
+      ]
+    }
+  },
+  {
+    "id": "movement-06",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Ande 25 cm para frente e vire 90 graus para esquerda.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        25,
+        90
+      ]
+    }
+  },
+  {
+    "id": "movement-07",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Avance 15 cm e depois vire 90 graus para direita.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        15,
+        -90
+      ]
+    }
+  },
+  {
+    "id": "movement-08",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Vire 90 graus para esquerda e ande 20 cm para frente.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        20,
+        0,
+        90
+      ]
+    }
+  },
+  {
+    "id": "movement-09",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Faça um giro de 360 graus para a esquerda.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        0,
+        360
+      ]
+    }
+  },
+  {
+    "id": "movement-10",
+    "split": "acceptance",
+    "category": "movement",
+    "prompt": "Ande 20 cm para frente e depois 10 cm para trás.",
+    "expected_tools": [
+      "move"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "pose": [
+        0,
+        10,
+        0
+      ]
+    }
+  },
+  {
+    "id": "search-01",
+    "split": "development",
+    "category": "search",
+    "prompt": "Procure o cubo vermelho.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -60,
+          "z": 110,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-02",
+    "split": "development",
+    "category": "search",
+    "prompt": "Encontre o cubo amarelo.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 80,
+          "z": 90,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-03",
+    "split": "development",
+    "category": "search",
+    "prompt": "Busque um cubo vermelho na arena.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 40,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-04",
+    "split": "development",
+    "category": "search",
+    "prompt": "Localize o cubo amarelo.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -60,
+          "z": 110,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-05",
+    "split": "development",
+    "category": "search",
+    "prompt": "Procure um cubo vermelho ao redor.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 80,
+          "z": 90,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-06",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Veja se encontra um cubo amarelo na arena.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 40,
+          "z": 120,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-07",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Procure o cubo vermelho e diga se localizou.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -60,
+          "z": 110,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-08",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Encontre um cubo amarelo sem chegar perto dele.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 80,
+          "z": 90,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": true,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-09",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Procure o cubo azul.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": false,
+      "approached": false
+    }
+  },
+  {
+    "id": "search-10",
+    "split": "acceptance",
+    "category": "search",
+    "prompt": "Busque uma esfera roxa na arena.",
+    "expected_tools": [
+      "search_object"
+    ],
+    "scenario": {
+      "objects": [],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "detected": false,
+      "approached": false
+    }
+  },
+  {
+    "id": "approach-01",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo vermelho.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-02",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Aproxime do cubo amarelo e pare a 50 cm.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-03",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Vá até o cubo vermelho mantendo 50 cm.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 130,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-04",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Aproxime do obstáculo à frente e pare a 50 cm.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-05",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Chegue a 50 cm do obstáculo frontal.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-06",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Aproxime do cubo amarelo a 50 cm.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 130,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-07",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Chegue a 40 cm do cubo vermelho.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 40
+    }
+  },
+  {
+    "id": "approach-08",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Aproxime do obstáculo à frente a 60 cm.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 20,
+          "z": 100,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 20,
+        "z": -20,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": true,
+      "stop_distance_cm": 60
+    }
+  },
+  {
+    "id": "approach-09",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Aproxime do cubo vermelho, mas pare se houver bloqueio.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": -20,
+          "z": 130,
+          "color": "#ff0000",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        },
+        {
+          "id": "blocker",
+          "type": "cube",
+          "x": -20,
+          "z": 40,
+          "color": "#0000ff",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": -20,
+        "z": 10,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": false,
+      "stop_distance_cm": 50
+    }
+  },
+  {
+    "id": "approach-10",
+    "split": "acceptance",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo amarelo, sem contornar obstáculos.",
+    "expected_tools": [
+      "approach"
+    ],
+    "scenario": {
+      "objects": [
+        {
+          "id": "target",
+          "type": "cube",
+          "x": 0,
+          "z": 120,
+          "color": "#ffff00",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        },
+        {
+          "id": "blocker",
+          "type": "cube",
+          "x": 0,
+          "z": 30,
+          "color": "#0000ff",
+          "size": {
+            "width": 20,
+            "height": 20,
+            "depth": 20
+          }
+        }
+      ],
+      "pose": {
+        "x": 0,
+        "z": 0,
+        "rotation": 0
+      }
+    },
+    "expected": {
+      "approached": false,
+      "stop_distance_cm": 50
+    }
+  }
+]

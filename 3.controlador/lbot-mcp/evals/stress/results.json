@@ -1,0 +1,616 @@
+[
+  {
+    "id": "stress-sphere",
+    "split": "stress",
+    "category": "search",
+    "prompt": "Localize uma esfera azul, sem se aproximar.",
+    "answer": "Localizei uma esfera azul.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:53:32.893Z",
+      "session_id": "f6080efb-c3de-4a45-905e-18e3f41dc25c",
+      "revision": 486,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 8.07194116699975,
+      "total_inference_calls": 3,
+      "inference_seconds": 7.639837374998024
+    },
+    "inference": [
+      {
+        "at": 1790909606.37829,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.5593904580164235,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1163,
+          "total_tokens": 1191,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909611.7944572,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.996156624983996,
+        "usage": {
+          "completion_tokens": 50,
+          "prompt_tokens": 539,
+          "total_tokens": 589,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909612.889798,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.084290291997604,
+        "usage": {
+          "completion_tokens": 7,
+          "prompt_tokens": 1433,
+          "total_tokens": 1440,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909611.803623,
+        "episode_id": "74129d42-2459-44d1-b22f-f2c86754afe4",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              57,
+              183,
+              100,
+              85
+            ],
+            "sensor_association": false,
+            "frame_id": "150b7ebb-efd8-4b8f-92a3-10057826c3ac",
+            "session_id": "f6080efb-c3de-4a45-905e-18e3f41dc25c",
+            "revision": 99
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "1252665d-0e8d-4568-adbe-56c814cf60ed",
+          "steps_count": 0
+        }
+      }
+    ],
+    "elapsed_seconds": 8.072657165990677,
+    "process_max_rss": 134529024,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "stress-cone",
+    "split": "stress",
+    "category": "search",
+    "prompt": "Procure o cone laranja.",
+    "answer": "Encontrei o cone laranja.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:53:41.079Z",
+      "session_id": "28458911-5da1-4992-acf7-5112f372a830",
+      "revision": 492,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 8.171849667007336,
+      "total_inference_calls": 3,
+      "inference_seconds": 7.829044333979255
+    },
+    "inference": [
+      {
+        "at": 1790909614.05132,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.1469047919963486,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1159,
+          "total_tokens": 1187,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909619.7876852,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.401030749984784,
+        "usage": {
+          "completion_tokens": 56,
+          "prompt_tokens": 540,
+          "total_tokens": 596,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909621.075242,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.2811087919981219,
+        "usage": {
+          "completion_tokens": 9,
+          "prompt_tokens": 1430,
+          "total_tokens": 1439,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909619.793407,
+        "episode_id": "191727cd-b3c8-41fa-a600-6b96ee4ca204",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              0,
+              163,
+              640,
+              113
+            ],
+            "sensor_association": true,
+            "frame_id": "0ee5ae0d-de39-41bf-9a1a-1d4e7a0de2cf",
+            "session_id": "28458911-5da1-4992-acf7-5112f372a830",
+            "revision": 71
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "af9dfe87-f5c7-44b2-9d07-65b7d898b15e",
+          "steps_count": 0
+        }
+      }
+    ],
+    "elapsed_seconds": 8.173198625008808,
+    "process_max_rss": 134529024,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "stress-partial",
+    "split": "stress",
+    "category": "search",
+    "prompt": "Procure um cubo vermelho que pode estar parcialmente visível.",
+    "answer": "Execução interrompida: target_range_unassociated",
+    "state": {
+      "x": 22.497566339028886,
+      "z": 26.811555509164243,
+      "rotation": 40,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:54:22.535Z",
+      "session_id": "5b95bf32-9f89-4765-ba1c-29124da947fc",
+      "revision": 2496,
+      "operation": {
+        "accepted": true,
+        "command": "D5F;",
+        "command_id": "34b1a7c0-ebc7-46e8-8644-36372b713170",
+        "session_id": "5b95bf32-9f89-4765-ba1c-29124da947fc",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 4.999999999999998,
+        "rotation_degrees": 0,
+        "revision": 2164
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 41.43874445898109,
+      "total_inference_calls": 9,
+      "inference_seconds": 38.75759620900499
+    },
+    "inference": [
+      {
+        "at": 1790909622.241581,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 1.153691792016616,
+        "usage": {
+          "completion_tokens": 28,
+          "prompt_tokens": 1165,
+          "total_tokens": 1193,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909627.172061,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.601330415986013,
+        "usage": {
+          "completion_tokens": 58,
+          "prompt_tokens": 538,
+          "total_tokens": 596,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909631.530536,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.3513374169997405,
+        "usage": {
+          "completion_tokens": 89,
+          "prompt_tokens": 1432,
+          "total_tokens": 1521,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909636.984386,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.37403904099483,
+        "usage": {
+          "completion_tokens": 62,
+          "prompt_tokens": 538,
+          "total_tokens": 600,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909643.2080462,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.6300259589916095,
+        "usage": {
+          "completion_tokens": 67,
+          "prompt_tokens": 540,
+          "total_tokens": 607,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909645.8951418,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 2.6106580829946324,
+        "usage": {
+          "completion_tokens": 67,
+          "prompt_tokens": 540,
+          "total_tokens": 607,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909651.5119328,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.815907375013921,
+        "usage": {
+          "completion_tokens": 67,
+          "prompt_tokens": 541,
+          "total_tokens": 608,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909656.822409,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.825794792006491,
+        "usage": {
+          "completion_tokens": 67,
+          "prompt_tokens": 542,
+          "total_tokens": 609,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909662.483202,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 5.394811334001133,
+        "usage": {
+          "completion_tokens": 72,
+          "prompt_tokens": 542,
+          "total_tokens": 614,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909627.178248,
+        "episode_id": "79fc3b29-7d13-4632-86d4-47090a3661cf",
+        "tool": "search_object",
+        "result": "completed: objeto localizado",
+        "structured": {
+          "status": "completed",
+          "detected": true,
+          "centered": false,
+          "approached": false,
+          "observation": {
+            "status": "detected",
+            "candidate_id": 0,
+            "bbox": [
+              0,
+              181,
+              67,
+              98
+            ],
+            "sensor_association": false,
+            "frame_id": "5113edbb-e70c-44ff-b32a-6f7a54e39d54",
+            "session_id": "5b95bf32-9f89-4765-ba1c-29124da947fc",
+            "revision": 71
+          },
+          "reason": null,
+          "coverage": {
+            "observations": 1,
+            "search_complete": true,
+            "limit_reason": null
+          },
+          "steps": [],
+          "operation_id": "69ff1932-ac71-4c54-bb41-4ed75fb02066",
+          "steps_count": 0
+        }
+      },
+      {
+        "event": "tool_result",
+        "at": 1790909662.49759,
+        "episode_id": "79fc3b29-7d13-4632-86d4-47090a3661cf",
+        "tool": "approach",
+        "result": "blocked: objeto localizado (target_range_unassociated)",
+        "structured": {
+          "status": "blocked",
+          "reason": "target_range_unassociated",
+          "detected": true,
+          "approached": false,
+          "operation_id": "c8e3074e-f9de-4014-8e26-89899db842ae"
+        }
+      }
+    ],
+    "elapsed_seconds": 41.44237570799305,
+    "process_max_rss": 134529024,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "stress-occlusion",
+    "split": "stress",
+    "category": "approach",
+    "prompt": "Aproxime-se do cubo vermelho, sem desviar de obstáculos.",
+    "answer": "Execução interrompida: target_range_unassociated",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:54:34.789Z",
+      "session_id": "f10f683c-0e1c-477c-b210-18bad03a9c4e",
+      "revision": 736,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 12.236959207977634,
+      "total_inference_calls": 3,
+      "inference_seconds": 11.777708042005543
+    },
+    "inference": [
+      {
+        "at": 1790909665.6119192,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 3.0608368329994846,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 1167,
+          "total_tokens": 1222,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909670.2821739,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.322259834007127,
+        "usage": {
+          "completion_tokens": 55,
+          "prompt_tokens": 540,
+          "total_tokens": 595,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      },
+      {
+        "at": 1790909674.770644,
+        "event": "completed",
+        "model": "qwen3.5-4b",
+        "seconds": 4.394611374998931,
+        "usage": {
+          "completion_tokens": 53,
+          "prompt_tokens": 540,
+          "total_tokens": 593,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          },
+          "prompt_tokens_details": null
+        }
+      }
+    ],
+    "tool_results": [
+      {
+        "event": "tool_result",
+        "at": 1790909674.7811358,
+        "episode_id": "ece83301-efbc-45a8-8285-34860a8d9ecc",
+        "tool": "approach",
+        "result": "blocked: objeto localizado (target_range_unassociated)",
+        "structured": {
+          "status": "blocked",
+          "reason": "target_range_unassociated",
+          "detected": true,
+          "approached": false,
+          "operation_id": "53e5dd4a-ca42-4ec6-86b1-43b4d7a63b22"
+        }
+      }
+    ],
+    "elapsed_seconds": 12.237698957993416,
+    "process_max_rss": 134529024,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  }
+]

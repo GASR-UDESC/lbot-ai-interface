@@ -1,0 +1,84 @@
+[
+  {
+    "id": "approach-01",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo vermelho.",
+    "answer": "Execução interrompida: already_too_close",
+    "state": {
+      "x": -1.2246467991473505e-14,
+      "z": 50.00000000000002,
+      "rotation": 360,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:14:29.979Z",
+      "session_id": "b32ec2e5-c3a1-4325-8ae6-fc7b4d1bf78b",
+      "revision": 2841,
+      "operation": {
+        "accepted": true,
+        "command": "D10F;",
+        "command_id": "2fa53168-443e-4c12-9fab-5f84de08a7ae",
+        "session_id": "b32ec2e5-c3a1-4325-8ae6-fc7b4d1bf78b",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 9.999999999999998,
+        "rotation_degrees": 0,
+        "revision": 2081
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 46.97040229200502
+    },
+    "elapsed_seconds": 46.97274237498641,
+    "process_max_rss": 135217152,
+    "passed": false,
+    "tool_selection_correct": true,
+    "reasons": [
+      "arrival_unverified"
+    ]
+  },
+  {
+    "id": "approach-02",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Aproxime do cubo amarelo e pare a 50 cm.",
+    "answer": "Aproximei-me do cubo amarelo e parei a aproximadamente 54 cm.",
+    "state": {
+      "x": 0,
+      "z": 41,
+      "rotation": 1,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:15:23.637Z",
+      "session_id": "6d7cdd8e-fb69-4b37-8095-53258366bf31",
+      "revision": 3242,
+      "operation": {
+        "accepted": true,
+        "command": "R4L;",
+        "command_id": "955d43f3-cb7d-409c-83d8-5ed96b690021",
+        "session_id": "6d7cdd8e-fb69-4b37-8095-53258366bf31",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 0,
+        "rotation_degrees": 4,
+        "revision": 2822
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 53.650285874988185
+    },
+    "elapsed_seconds": 53.65148391699768,
+    "process_max_rss": 135217152,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  }
+]

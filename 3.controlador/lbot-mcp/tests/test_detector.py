@@ -1,9 +1,10 @@
 import numpy as np
+import pytest
 
 from mcp_server.services.detector import (
     decode_frame,
-    detect_cubes,
     detect_cones,
+    detect_cubes,
     detect_object,
     detect_spheres,
     parse_description,
@@ -17,10 +18,9 @@ class TestDecodeFrame:
         assert isinstance(frame, np.ndarray)
         assert frame.shape == (480, 640, 3)
 
-    def test_decode_invalid_base64_returns_black_frame(self):
-        frame = decode_frame("AAAA")
-        assert isinstance(frame, np.ndarray)
-        assert frame.shape == (480, 640, 3)
+    def test_decode_invalid_base64_raises(self):
+        with pytest.raises(ValueError, match="invalid_camera_frame"):
+            decode_frame("AAAA")
 
 
 class TestParseDescription:
@@ -34,14 +34,14 @@ class TestParseDescription:
         assert tipo == "esfera"
         assert cor is None
 
-    def test_unknown_word_fallback_cubo(self):
+    def test_unknown_word_has_no_assumed_shape(self):
         tipo, cor = parse_description("foobar")
-        assert tipo == "cubo"
+        assert tipo == "unknown"
         assert cor is None
 
-    def test_color_only_fallback_cubo(self):
+    def test_color_only_has_no_assumed_shape(self):
         tipo, cor = parse_description("azul")
-        assert tipo == "cubo"
+        assert tipo == "unknown"
         assert cor == "azul"
 
     def test_cone_with_color(self):
@@ -153,15 +153,41 @@ class TestDetectObject:
 class TestSelectBestMatch:
     def test_selects_largest_area(self):
         matches = [
-            {"type": "cubo", "color": None, "bbox": (0, 0, 10, 10), "center": (5, 5), "area": 100},
-            {"type": "cubo", "color": None, "bbox": (0, 0, 50, 50), "center": (25, 25), "area": 2500},
-            {"type": "cubo", "color": None, "bbox": (0, 0, 20, 20), "center": (10, 10), "area": 400},
+            {
+                "type": "cubo",
+                "color": None,
+                "bbox": (0, 0, 10, 10),
+                "center": (5, 5),
+                "area": 100,
+            },
+            {
+                "type": "cubo",
+                "color": None,
+                "bbox": (0, 0, 50, 50),
+                "center": (25, 25),
+                "area": 2500,
+            },
+            {
+                "type": "cubo",
+                "color": None,
+                "bbox": (0, 0, 20, 20),
+                "center": (10, 10),
+                "area": 400,
+            },
         ]
         best = select_best_match(matches)
         assert best["area"] == 2500
 
     def test_single_match(self):
-        matches = [{"type": "esfera", "color": None, "bbox": (0, 0, 30, 30), "center": (15, 15), "area": 900}]
+        matches = [
+            {
+                "type": "esfera",
+                "color": None,
+                "bbox": (0, 0, 30, 30),
+                "center": (15, 15),
+                "area": 900,
+            }
+        ]
         best = select_best_match(matches)
         assert best is matches[0]
 

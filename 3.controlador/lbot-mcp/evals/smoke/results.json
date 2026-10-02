@@ -1,0 +1,104 @@
+[
+  {
+    "id": "observation-01",
+    "split": "development",
+    "category": "observation",
+    "prompt": "O que você vê à frente?",
+    "answer": "À frente há um cubo vermelho sobre uma superfície marrom escura.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:02:40.980Z",
+      "session_id": "f8ad1150-a4bb-433c-bc9e-5c893cf576f7",
+      "revision": 334,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 5.514856792025967
+    },
+    "elapsed_seconds": 5.516804791986942,
+    "process_max_rss": 135970816,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "search-01",
+    "split": "development",
+    "category": "search",
+    "prompt": "Procure o cubo vermelho.",
+    "answer": "Localizei o cubo vermelho.",
+    "state": {
+      "x": 0,
+      "z": 0,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:02:47.988Z",
+      "session_id": "dda40f2b-dcab-490c-87cf-2b8efe484650",
+      "revision": 421,
+      "operation": null
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 6.993490749999182
+    },
+    "elapsed_seconds": 6.995534375018906,
+    "process_max_rss": 135970816,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-01",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo vermelho.",
+    "answer": "Execução interrompida: target_range_unassociated",
+    "state": {
+      "x": 35.54294824589686,
+      "z": 34.05867957774037,
+      "rotation": 1057,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:05:01.149Z",
+      "session_id": "cc81c3dd-d6c3-4cce-bb25-d398e66fc94d",
+      "revision": 8060,
+      "operation": {
+        "accepted": true,
+        "command": "D17F;",
+        "command_id": "f9768701-67ce-4cd7-8db0-28cb61f277f1",
+        "session_id": "cc81c3dd-d6c3-4cce-bb25-d398e66fc94d",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 16.999999999999996,
+        "rotation_degrees": 0,
+        "revision": 7628
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 133.13412183400942
+    },
+    "elapsed_seconds": 133.14737545800745,
+    "process_max_rss": 135970816,
+    "passed": false,
+    "tool_selection_correct": true,
+    "reasons": [
+      "arrival_unverified"
+    ]
+  }
+]

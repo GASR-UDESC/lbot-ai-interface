@@ -1,0 +1,126 @@
+[
+  {
+    "id": "search-02",
+    "split": "development",
+    "category": "search",
+    "prompt": "Encontre o cubo amarelo.",
+    "answer": "Localizei o cubo amarelo. Ele está à minha direita e não estou próximo a ele.",
+    "state": {
+      "x": 0,
+      "z": 1.8152144228096793e-15,
+      "rotation": 45,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:08:06.403Z",
+      "session_id": "49fb78f9-f25a-4176-a20d-cb3f569f2bd4",
+      "revision": 749,
+      "operation": {
+        "accepted": true,
+        "command": "R45L;",
+        "command_id": "6e5f1a0b-d3b3-462b-9850-7a63499703b9",
+        "session_id": "49fb78f9-f25a-4176-a20d-cb3f569f2bd4",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 0,
+        "rotation_degrees": 45,
+        "revision": 411
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 12.433605666010408
+    },
+    "elapsed_seconds": 12.434773457993288,
+    "process_max_rss": 132120576,
+    "passed": true,
+    "tool_selection_correct": true,
+    "reasons": []
+  },
+  {
+    "id": "approach-01",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Chegue perto do cubo vermelho.",
+    "answer": "Execução interrompida: target_range_unassociated",
+    "state": {
+      "x": 0,
+      "z": 32,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:08:29.744Z",
+      "session_id": "d74aa25a-6578-4194-8411-f7b579f6bf0e",
+      "revision": 1405,
+      "operation": {
+        "accepted": true,
+        "command": "D12F;",
+        "command_id": "d88155af-c199-496c-a62e-a8779363bce0",
+        "session_id": "d74aa25a-6578-4194-8411-f7b579f6bf0e",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 11.999999999999993,
+        "rotation_degrees": 0,
+        "revision": 1135
+      }
+    },
+    "metrics": {
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "invalid_calls": 0,
+      "completed_operations": 1,
+      "elapsed_seconds": 23.32815037498949
+    },
+    "elapsed_seconds": 23.329446832998656,
+    "process_max_rss": 132120576,
+    "passed": false,
+    "tool_selection_correct": true,
+    "reasons": [
+      "arrival_unverified"
+    ]
+  },
+  {
+    "id": "approach-02",
+    "split": "development",
+    "category": "approach",
+    "prompt": "Aproxime do cubo amarelo e pare a 50 cm.",
+    "answer": "Execução interrompida: target_range_unassociated",
+    "state": {
+      "x": 0,
+      "z": 32,
+      "rotation": 0,
+      "currentCommand": "-",
+      "isAnimating": false,
+      "updatedAt": "2026-10-02T02:08:49.153Z",
+      "session_id": "befa2e3c-0b9b-480c-abbf-46aff927af52",
+      "revision": 1169,
+      "operation": {
+        "accepted": true,
+        "command": "D12F;",
+        "command_id": "13013ff6-c59b-4fbf-9d26-6e312c72b7d6",
+        "session_id": "befa2e3c-0b9b-480c-abbf-46aff927af52",
+        "status": "completed",
+        "source": "http",
+        "distance_cm": 11.999999999999993,
+        "rotation_degrees": 0,
+        "revision": 904
+      }
+    },
+    "metrics": {
+      "llm_calls": 1,
+      "tool_calls": 1,
+      "invalid_calls": 0,
+      "completed_operations": 0,
+      "elapsed_seconds": 19.400021459005075
+    },
+    "elapsed_seconds": 19.401036250026664,
+    "process_max_rss": 132120576,
+    "passed": false,
+    "tool_selection_correct": true,
+    "reasons": [
+      "arrival_unverified"
+    ]
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "camera": {
+    "count": 30,
+    "p50_ms": 20.104228489799425,
+    "p95_ms": 26.746790972538292,
+    "max_ms": 109.72645800211467
+  },
+  "stop": {
+    "count": 20,
+    "p50_ms": 0.4903335066046566,
+    "p95_ms": 0.861415988765657,
+    "max_ms": 1.3550420117098838
+  },
+  "note": "Warm camera and HTTP request-to-confirmed-stop latency, including loopback transport, on a dedicated simulator instance. This benchmark does not invoke the model; other local workloads are not controlled."
+}

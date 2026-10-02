@@ -1,5 +1,4 @@
 import base64
-import re
 
 import cv2
 import numpy as np
@@ -40,11 +39,13 @@ COLOR_RANGES: dict[str, tuple[np.ndarray, np.ndarray]] = {
 
 
 def decode_frame(image_base64: str) -> np.ndarray:
-    raw = base64.b64decode(image_base64)
-    arr = np.frombuffer(raw, dtype=np.uint8)
-    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    try:
+        raw = base64.b64decode(image_base64, validate=True)
+        frame = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_COLOR)
+    except Exception as e:
+        raise ValueError("invalid_camera_frame") from e
     if frame is None or frame.shape[:2] != (FRAME_HEIGHT, FRAME_WIDTH):
-        frame = np.zeros((FRAME_HEIGHT, FRAME_WIDTH, 3), dtype=np.uint8)
+        raise ValueError("invalid_camera_frame")
     return frame
 
 
@@ -58,7 +59,9 @@ def apply_color_mask(frame: np.ndarray, color: str) -> np.ndarray:
         mask2 = cv2.inRange(hsv, lower2, upper2)
         mask = cv2.bitwise_or(mask1, mask2)
     else:
-        lower, upper = COLOR_RANGES.get(color, (np.array([0, 0, 0]), np.array([180, 255, 255])))
+        lower, upper = COLOR_RANGES.get(
+            color, (np.array([0, 0, 0]), np.array([180, 255, 255]))
+        )
         mask = cv2.inRange(hsv, lower, upper)
 
     return cv2.bitwise_and(frame, frame, mask=mask)
@@ -211,6 +214,22 @@ def parse_description(description: str) -> tuple[str, str | None]:
 
     for color in COLOR_RANGES:
         if color in text:
-            return ("cubo", color)
+            return ("unknown", color)
 
-    return ("cubo", None)
+    return ("unknown", None)
+
+
+def propose_regions(frame: np.ndarray, color: str | None) -> list[list[int]]:
+    if not color or color not in COLOR_RANGES:
+        return []
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    lower, upper = COLOR_RANGES[color]
+    mask = cv2.inRange(hsv, lower, upper)
+    if color == "vermelho":
+        mask = cv2.bitwise_or(mask, cv2.inRange(hsv, *COLOR_RANGES["vermelho2"]))
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return [
+        list(cv2.boundingRect(c))
+        for c in contours
+        if 50 < cv2.contourArea(c) < frame.shape[0] * frame.shape[1] * 0.25
+    ]

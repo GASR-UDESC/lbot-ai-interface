@@ -1,17 +1,24 @@
+import logging
 import os
 import sys
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-_repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_current_dir)))))
-_translator_dir = os.path.join(_repo_root, "2.treinamento-de-modelo", "lbot-natural-language-controller", "lbot-v7")
+_repo_root = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_current_dir))))
+)
+_translator_dir = os.path.join(
+    _repo_root, "2.treinamento-de-modelo", "lbot-natural-language-controller", "lbot-v7"
+)
 
 if _translator_dir not in sys.path:
     sys.path.insert(0, _translator_dir)
 
-_MODEL_PATH = os.path.join(_translator_dir, "lbot_translator_v7.pt")
+_MODEL_PATH = os.environ.get(
+    "LBOT_TRANSLATOR_MODEL", os.path.join(_translator_dir, "lbot_translator_v7.pt")
+)
 
 
 class TranslationError(Exception):
@@ -20,7 +27,7 @@ class TranslationError(Exception):
 
 class TranslatorWrapper:
     _instance: "TranslatorWrapper | None" = None
-    _translator = None
+    _translator: Any = None
 
     def __new__(cls) -> "TranslatorWrapper":
         if cls._instance is None:
@@ -59,6 +66,11 @@ class TranslatorWrapper:
             "BahdanauAttention",
             "Vocabulary",
         ]
+        originals = {
+            name: getattr(__main__, name)
+            for name in _patch_main
+            if hasattr(__main__, name)
+        }
         for name in _patch_main:
             if hasattr(lbot_v7, name):
                 setattr(__main__, name, getattr(lbot_v7, name))
@@ -67,7 +79,9 @@ class TranslatorWrapper:
             self._translator = LBotTranslatorV7(model_path=_MODEL_PATH)
         finally:
             for name in _patch_main:
-                if hasattr(__main__, name):
+                if name in originals:
+                    setattr(__main__, name, originals[name])
+                elif hasattr(__main__, name):
                     delattr(__main__, name)
 
         logger.info(

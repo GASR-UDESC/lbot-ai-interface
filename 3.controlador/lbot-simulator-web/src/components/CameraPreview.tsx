@@ -1,92 +1,73 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
+import { getCamera, getState } from "../lib/api.js";
 
-interface CameraPreviewProps {
-  connected: boolean;
-  onCanvasReady?: (canvas: HTMLCanvasElement) => (() => void) | void;
-}
-
-type PreviewState =
-  | { kind: 'idle' }
-  | { kind: 'loading' }
-  | { kind: 'ready' }
-  | { kind: 'error'; text: string };
-
-export function CameraPreview({ connected, onCanvasReady }: CameraPreviewProps) {
-  const [state, setState] = useState<PreviewState>({ kind: 'idle' });
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
-  const onCanvasReadyRef = useRef(onCanvasReady);
-  onCanvasReadyRef.current = onCanvasReady;
-
+export function CameraPreview({ connected }: { connected: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState("Aguardando câmera.");
   useEffect(() => {
-    if (!connected) {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-      setState({ kind: 'idle' });
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      setState({ kind: 'error', text: 'Canvas indisponivel.' });
-      return;
-    }
-
-    setState({ kind: 'loading' });
-
-    const callback = onCanvasReadyRef.current;
-    if (callback) {
-      const cleanup = callback(canvas);
-      if (cleanup) {
-        cleanupRef.current = cleanup;
-      }
-    }
-
-    setState({ kind: 'ready' });
-
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
+    let disposed = false,
+      fetching = false;
+    setReady(false);
+    setStatus(connected ? "Carregando câmera…" : "Servidor desconectado.");
+    if (!connected) return;
+    const update = async () => {
+      if (fetching || disposed) return;
+      fetching = true;
+      try {
+        const data = await getCamera();
+        if (!data.image) throw new Error("camera_unavailable");
+        const current = await getState();
+        if (data.session_id !== current.state.session_id)
+          throw new Error("Captura de uma sessão anterior.");
+        const image = new Image();
+        image.src = `data:image/png;base64,${data.image}`;
+        await image.decode();
+        if (!disposed) {
+          canvasRef.current?.getContext("2d")?.drawImage(image, 0, 0, 640, 480);
+          setReady(true);
+          setStatus(
+            `Quadro ${data.frame_id.slice(0, 8)} · revisão ${data.revision} · ${data.captured_at}`,
+          );
+        }
+      } catch (error) {
+        if (!disposed) {
+          setReady(false);
+          setStatus(
+            error instanceof Error ? error.message : "camera_unavailable",
+          );
+          canvasRef.current?.getContext("2d")?.clearRect(0, 0, 640, 480);
+        }
+      } finally {
+        fetching = false;
       }
     };
+    void update();
+    const timer = setInterval(() => void update(), 1000);
+    return () => {
+      disposed = true;
+      clearInterval(timer);
+    };
   }, [connected]);
-
   return (
     <div className="camera-preview-card">
       <div className="camera-preview-header">
-        <h3>Visao do Robo</h3>
-        {state.kind === 'loading' && <span className="camera-preview-loading" />}
+        <h3>Visão do robô</h3>
       </div>
-
       <div className="camera-preview-frame">
-        {state.kind === 'idle' && (
+        {!ready && (
           <div className="camera-preview-placeholder">
-            <p>Conecte o simulador para visualizar a camera.</p>
+            <p role="status">{status}</p>
           </div>
         )}
-
-        {state.kind === 'loading' && (
-          <div className="camera-preview-placeholder">
-            <p>Carregando visao...</p>
-          </div>
-        )}
-
-        {state.kind === 'error' && (
-          <div className="camera-preview-placeholder camera-preview-placeholder--error">
-            <p>{state.text}</p>
-          </div>
-        )}
-
         <canvas
           ref={canvasRef}
-          className={`camera-preview-canvas ${state.kind !== 'ready' ? 'camera-preview-canvas--hidden' : ''}`}
+          className={`camera-preview-canvas ${ready ? "" : "camera-preview-canvas--hidden"}`}
           width={640}
           height={480}
         />
       </div>
+      {ready && <small>{status}</small>}
     </div>
   );
 }

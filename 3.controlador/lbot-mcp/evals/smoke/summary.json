@@ -1,0 +1,24 @@
+{
+  "model": "qwen3.5-4b",
+  "count": 3,
+  "success_rate": 0.6666666666666666,
+  "tool_selection_rate": 1.0,
+  "categories": {
+    "approach": {
+      "count": 1,
+      "success_rate": 0.0
+    },
+    "observation": {
+      "count": 1,
+      "success_rate": 1.0
+    },
+    "search": {
+      "count": 1,
+      "success_rate": 1.0
+    }
+  },
+  "latency_p50_s": 6.995534375018906,
+  "latency_p95_s": 133.14737545800745,
+  "invalid_calls": 0,
+  "evaluation_note": "Success thresholds are goals, not automatically considered achieved."
+}

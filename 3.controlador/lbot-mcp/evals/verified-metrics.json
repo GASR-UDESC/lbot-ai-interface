@@ -1,0 +1,138 @@
+{
+  "primary_cases": 60,
+  "primary_successes": 60,
+  "development_successes": 30,
+  "final_acceptance_successes": 30,
+  "stress_successes": 4,
+  "invalid_calls": 0,
+  "movement": [
+    {
+      "id": "movement-01",
+      "distance_error_cm": 0.0,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-02",
+      "distance_error_cm": 3.552713678800501e-15,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-03",
+      "distance_error_cm": 0.0,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-04",
+      "distance_error_cm": 3.6304221810880324e-15,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-05",
+      "distance_error_cm": 7.260830959007741e-15,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-06",
+      "distance_error_cm": 0.0,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-07",
+      "distance_error_cm": 0.0,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-08",
+      "distance_error_cm": 7.275354877314957e-15,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-09",
+      "distance_error_cm": 1.4521668619599672e-14,
+      "rotation_error_degrees": 0
+    },
+    {
+      "id": "movement-10",
+      "distance_error_cm": 0.0,
+      "rotation_error_degrees": 0
+    }
+  ],
+  "approach": [
+    {
+      "id": "approach-01",
+      "distance_cm": 54.0,
+      "error_cm": 4.0
+    },
+    {
+      "id": "approach-02",
+      "distance_cm": 54.0,
+      "error_cm": 4.0
+    },
+    {
+      "id": "approach-03",
+      "distance_cm": 54.0,
+      "error_cm": 4.0
+    },
+    {
+      "id": "approach-04",
+      "distance_cm": 54.0,
+      "error_cm": 4.0
+    },
+    {
+      "id": "approach-05",
+      "distance_cm": 54.0,
+      "error_cm": 4.0
+    },
+    {
+      "id": "approach-06",
+      "distance_cm": 54.0,
+      "error_cm": 4.0
+    },
+    {
+      "id": "approach-07",
+      "distance_cm": 45.0,
+      "error_cm": 5.0
+    },
+    {
+      "id": "approach-08",
+      "distance_cm": 65.0,
+      "error_cm": 5.0
+    }
+  ],
+  "final_command_audit": {
+    "terminal_records": 126,
+    "collisions": 0,
+    "blocked_commands": 0,
+    "unfinished_episodes": 0
+  },
+  "max_prompt_tokens": 2255,
+  "negative_search_coverage": [
+    {
+      "id": "search-09",
+      "coverage": {
+        "observations": 26,
+        "search_complete": false,
+        "limit_reason": "time_budget"
+      },
+      "final_position": [
+        -20,
+        10.00000000000001
+      ],
+      "rotation_degrees": 1080
+    },
+    {
+      "id": "search-10",
+      "coverage": {
+        "observations": 25,
+        "search_complete": false,
+        "limit_reason": "time_budget"
+      },
+      "final_position": [
+        1.0495077029659705e-14,
+        1.4126822620203227e-13
+      ],
+      "rotation_degrees": 1080
+    }
+  ],
+  "sample_note": "Development and final regression executions are combined by case; final acceptance was rerun after failures and is not an untouched independent sample."
+}

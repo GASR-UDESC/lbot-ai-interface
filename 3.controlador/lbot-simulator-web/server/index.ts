@@ -1,280 +1,230 @@
-import { createRequire } from 'node:module';
-import cors from 'cors';
-import express, { type Request, type Response } from 'express';
-import {
-  type CameraResponse,
-  type ClientStateUpdate,
-  type CommandResponse,
-  type ExecuteCommandRequest,
-  type ResetRequest,
-  type ResetResponse,
-  type SensorsResponse,
-  type ServerEvent,
-  type SimulatorStateResponse,
-  type SimulatorStatusResponse,
-} from '../shared/protocol.js';
-import { normalizeLbml, validateLbml } from '../shared/lbml.js';
-import { computeProximity } from './sensors.js';
-
-const require = createRequire(import.meta.url);
-
-let HeadlessSceneRenderer: typeof import('./scene-renderer.js').HeadlessSceneRenderer | null = null;
-try {
-  HeadlessSceneRenderer = require('./scene-renderer.js').HeadlessSceneRenderer as typeof import('./scene-renderer.js').HeadlessSceneRenderer;
-} catch (e) {
-  console.error('Falha ao carregar HeadlessSceneRenderer:', e instanceof Error ? e.message : e);
-  HeadlessSceneRenderer = null;
-}
-
-type EventSink = {
-  clientId: string;
-  response: Response;
-};
-
+import cors from "cors";
+import express from "express";
+import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
+import { mkdir, appendFile } from "node:fs/promises";
+import type { ArenaObject } from "../shared/arena-objects.js";
+import { Simulation } from "./engine.js";
+import { HeadlessSceneRenderer } from "./scene-renderer.js";
+import { INTRINSICS, RANGE_PROJECTION } from "../shared/camera-config.js";
+import type { ExecuteCommandRequest } from "../shared/protocol.js";
 const app = express();
-const port = Number.parseInt(process.env.PORT ?? '3001', 10);
-
-let activeClient: EventSink | null = null;
-let lastKnownState: ClientStateUpdate['state'] | null = null;
-let pendingEvents = 0;
-let renderer: import('./scene-renderer.js').HeadlessSceneRenderer | null = null;
-
 app.use(cors());
-app.use(express.json());
-
-function createClientId(): string {
-  return `sim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+app.use(express.json({ limit: "1mb" }));
+const port = Number(process.env.PORT ?? 3001);
+let logging = Promise.resolve();
+function trace(event: string, data: object) {
+  const directory = process.env.LBOT_TRACE_DIR ?? resolve("runs");
+  logging = logging
+    .then(async () => {
+      await mkdir(directory, { recursive: true });
+      await appendFile(
+        resolve(directory, "simulator.jsonl"),
+        JSON.stringify({ at: Date.now() / 1000, event, ...data }) + "\n",
+      );
+    })
+    .catch((e) => console.error("trace_unavailable:", String(e)));
 }
-
-function writeEvent(response: Response, event: ServerEvent): void {
-  response.write(`data: ${JSON.stringify(event)}\n\n`);
+function createSimulation(objects?: ArenaObject[]) {
+  return new Simulation(objects, (event, record) => trace(event, record));
 }
-
-function ensureActiveClient(response: Response): response is never {
-  if (activeClient) {
-    return false;
-  }
-
-  response.status(409).json({ error: 'Nenhuma aba do simulador esta conectada.' });
-  return true;
-}
-
-function publish(event: ServerEvent): string {
-  if (!activeClient) {
-    throw new Error('Nenhuma aba do simulador esta conectada.');
-  }
-
-  pendingEvents += 1;
-  writeEvent(activeClient.response, event);
-  return activeClient.clientId;
-}
-
-function setSseHeaders(response: Response): void {
-  response.setHeader('Content-Type', 'text/event-stream');
-  response.setHeader('Cache-Control', 'no-cache, no-transform');
-  response.setHeader('Connection', 'keep-alive');
-  response.setHeader('X-Accel-Buffering', 'no');
-  response.flushHeaders();
-}
-
-function getRenderer(): import('./scene-renderer.js').HeadlessSceneRenderer | null {
-  if (renderer) return renderer;
-  if (!HeadlessSceneRenderer) return null;
+let sim = createSimulation();
+const renderer = new HeadlessSceneRenderer(
+  `http://127.0.0.1:${port}/camera.html`,
+);
+app.get("/api/health", (_req, res) =>
+  res.json({ status: "online", session_id: sim.session }),
+);
+app.get("/api/status", (_req, res) =>
+  res.json({
+    connected: true,
+    activeClientId: null,
+    pendingEvents: 0,
+    session_id: sim.session,
+    operation: sim.snapshot().operation,
+  }),
+);
+app.get("/api/state", (_req, res) =>
+  res.json({ connected: true, activeClientId: null, state: sim.snapshot() }),
+);
+app.post("/api/state", (_req, res) =>
+  res.status(405).json({ error: "server_authoritative" }),
+);
+app.get("/api/sensors", (_req, res) => res.json(sim.sensors()));
+app.get("/api/camera", async (_req, res) => {
+  const state = sim.snapshot();
   try {
-    renderer = new HeadlessSceneRenderer();
-  } catch {
-    renderer = null;
-  }
-  return renderer;
-}
-
-app.get('/api/health', (_request, response) => {
-  response.json({ status: 'online' });
-});
-
-app.get('/api/status', (_request, response: Response<SimulatorStatusResponse>) => {
-  response.json({
-    connected: Boolean(activeClient),
-    activeClientId: activeClient?.clientId ?? null,
-    pendingEvents,
-  });
-});
-
-app.get('/api/state', (_request, response: Response<SimulatorStateResponse>) => {
-  response.json({
-    connected: Boolean(activeClient),
-    activeClientId: activeClient?.clientId ?? null,
-    state: lastKnownState,
-  });
-});
-
-app.get('/api/camera', (_request, response: Response<CameraResponse>) => {
-  try {
-    const r = getRenderer();
-    if (!r || !r.available) {
-      response.json({
-        connected: false,
-        image: null,
-        format: 'png',
-        encoding: 'base64',
-        error: 'camera indisponivel',
-      });
-      return;
-    }
-
-    const state = lastKnownState;
-    const x = state?.x ?? 0;
-    const z = state?.z ?? 0;
-    const rotation = state?.rotation ?? 0;
-    const base64 = r.render(x, z, rotation);
-
-    response.json({
+    const image = await renderer.render(state, sim.objects);
+    res.json({
       connected: true,
-      image: base64,
-      format: 'png',
-      encoding: 'base64',
-      renderMethod: r.renderMethod,
-      robotPosition: { x, z, rotation },
+      image,
+      format: "png",
+      encoding: "base64",
+      renderMethod: "webgl",
+      frame_id: randomUUID(),
+      session_id: state.session_id,
+      revision: state.revision,
+      captured_at: state.updatedAt,
+      intrinsics: INTRINSICS,
+      range_projection: RANGE_PROJECTION,
     });
-  } catch (err) {
-    response.json({
+  } catch (e) {
+    res.status(503).json({
       connected: false,
       image: null,
-      format: 'png',
-      encoding: 'base64',
-      error: `camera indisponivel: ${err instanceof Error ? err.message : 'erro desconhecido'}`,
+      error: "camera_unavailable",
+      detail: String(e),
     });
   }
 });
-
-app.get('/api/sensors', (_request, response: Response<SensorsResponse>) => {
+app.post("/api/commands", (req, res) => {
   try {
-    const state = lastKnownState;
-    const x = state?.x ?? 0;
-    const z = state?.z ?? 0;
-    const rotation = state?.rotation ?? 0;
-    const readings = computeProximity(x, z, rotation);
-
-    response.json({
-      connected: true,
-      readings,
-    });
-  } catch (err) {
-    response.json({
-      connected: false,
-      readings: null,
-      error: `sensor indisponivel: ${err instanceof Error ? err.message : 'erro desconhecido'}`,
-    });
+    if (typeof req.body?.command !== "string")
+      throw new Error("invalid_command");
+    for (const field of ["command_id", "session_id"]) {
+      const value = req.body[field];
+      if (
+        value !== undefined &&
+        (typeof value !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(value))
+      )
+        throw new Error("invalid_identifier");
+    }
+    if (
+      req.body.source !== undefined &&
+      !["ui", "http"].includes(req.body.source)
+    )
+      throw new Error("invalid_source");
+    res.json(sim.submit(req.body as ExecuteCommandRequest));
+  } catch (e) {
+    const error = (e as Error).message;
+    res
+      .status(
+        ["busy", "stale_session", "id_conflict"].includes(error) ? 409 : 400,
+      )
+      .json({ error });
   }
 });
-
-app.get('/api/events', (request, response) => {
-  setSseHeaders(response);
-
-  const clientId = createClientId();
-
-  if (activeClient) {
-    writeEvent(activeClient.response, {
-      type: 'disconnect',
-      reason: 'Uma nova aba do simulador assumiu a conexao ativa.',
-    });
-    activeClient.response.end();
-  }
-
-  activeClient = { clientId, response };
-  writeEvent(response, { type: 'ready', clientId });
-
-  const keepAlive = setInterval(() => {
-    response.write(': keep-alive\n\n');
-  }, 15000);
-
-  request.on('close', () => {
-    clearInterval(keepAlive);
-
-    if (activeClient?.clientId === clientId) {
-      activeClient = null;
-      pendingEvents = 0;
-    }
+app.get("/api/commands/:id", (req, res) => {
+  const record = sim.getCommand(req.params.id);
+  if (!record) res.status(404).json({ error: "unknown_command" });
+  else res.json(record);
+});
+app.post("/api/stop", (_req, res) =>
+  res.json({ status: "completed", state: sim.stop() }),
+);
+app.post("/api/reset", (req, res) => {
+  const state = sim.reset();
+  trace("reset", { session_id: state.session_id, revision: state.revision });
+  res.json({
+    accepted: true,
+    session_id: state.session_id,
+    source: req.body?.source ?? "http",
   });
 });
-
-app.post(
-  '/api/commands',
-  (request: Request<object, object, ExecuteCommandRequest>, response: Response<CommandResponse>) => {
-    if (ensureActiveClient(response)) {
-      return;
-    }
-
-    const rawCommand = request.body?.command ?? '';
-    const command = normalizeLbml(rawCommand);
-
-    if (!validateLbml(command)) {
-      response.status(400).json({ error: 'Comando LBML invalido.' } as never);
-      return;
-    }
-
-    const targetClientId = publish({
-      type: 'execute',
-      command,
-      source: request.body?.source ?? 'http',
-      issuedAt: new Date().toISOString(),
-    });
-
-    response.json({
-      accepted: true,
-      command,
-      targetClientId,
-      source: request.body?.source ?? 'http',
-    });
-  },
-);
-
-app.post(
-  '/api/reset',
-  (request: Request<object, object, ResetRequest>, response: Response<ResetResponse>) => {
-    if (ensureActiveClient(response)) {
-      return;
-    }
-
-    const targetClientId = publish({
-      type: 'reset',
-      source: request.body?.source ?? 'http',
-      issuedAt: new Date().toISOString(),
-    });
-
-    response.json({
-      accepted: true,
-      targetClientId,
-      source: request.body?.source ?? 'http',
-    });
-  },
-);
-
-app.post('/api/state', (request: Request<object, object, ClientStateUpdate>, response) => {
-  const { clientId, state } = request.body ?? {};
-
-  if (!clientId || !state) {
-    response.status(400).json({ error: 'Payload de estado invalido.' });
+app.post("/api/scenario", (req, res) => {
+  if (process.env.LBOT_ENABLE_EVAL !== "1") {
+    res.status(404).json({ error: "eval_disabled" });
     return;
   }
-
-  if (activeClient?.clientId !== clientId) {
-    response.status(409).json({ error: 'Cliente nao e a aba ativa.' });
+  const objects = req.body?.objects;
+  if (
+    !Array.isArray(objects) ||
+    objects.length > 32 ||
+    objects.some(
+      (o) =>
+        !o ||
+        !["cube", "sphere", "cone"].includes(o.type) ||
+        !Number.isFinite(o.x) ||
+        !Number.isFinite(o.z) ||
+        Math.abs(o.x) > 180 ||
+        Math.abs(o.z) > 180 ||
+        !/^#[0-9a-fA-F]{6}$/.test(o.color) ||
+        typeof o.id !== "string" ||
+        !o.id ||
+        !o.size ||
+        (o.type === "cube"
+          ? ["width", "height", "depth"]
+          : o.type === "sphere"
+            ? ["radius"]
+            : ["radius", "height"]
+        ).some((k) => !Number.isFinite(o.size[k])) ||
+        Object.values(o.size).some(
+          (v) =>
+            typeof v !== "number" || !Number.isFinite(v) || v <= 0 || v > 100,
+        ),
+    )
+  ) {
+    res.status(400).json({ error: "invalid_scenario" });
     return;
   }
-
-  lastKnownState = state;
-  pendingEvents = 0;
-  response.json({ ok: true });
-});
-
-app.listen(port, () => {
-  console.log(`LBot simulator API listening on http://localhost:${port}`);
-
-  const r = getRenderer();
-  if (r?.available) {
-    console.log(`Headless renderer inicializado (modo: ${r.renderMethod}).`);
-  } else {
-    console.log('Headless renderer nao disponivel.');
+  try {
+    const next = createSimulation(objects);
+    next.reset(req.body.pose);
+    sim.stop("scenario_changed");
+    sim = next;
+    trace("scenario", { session_id: sim.session });
+    res.json({ state: sim.snapshot() });
+  } catch (e) {
+    res.status(400).json({ error: String(e) });
   }
 });
+app.get("/api/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.flushHeaders();
+  res.write(
+    `data: ${JSON.stringify({ type: "ready", clientId: randomUUID() })}\n\n`,
+  );
+  let session = "";
+  const publish = () => {
+    if (session !== sim.session) {
+      session = sim.session;
+      res.write(
+        `data: ${JSON.stringify({ type: "scene", objects: sim.objects })}\n\n`,
+      );
+    }
+    res.write(
+      `data: ${JSON.stringify({ type: "state", state: sim.snapshot() })}\n\n`,
+    );
+  };
+  publish();
+  const interval = setInterval(publish, 100);
+  req.on("close", () => clearInterval(interval));
+});
+if (process.env.NODE_ENV === "production")
+  app.use(express.static(resolve("dist")));
+else {
+  const { createServer } = await import("vite");
+  const vite = await createServer({
+    server: { middlewareMode: true, hmr: false },
+    appType: "spa",
+  });
+  app.use(vite.middlewares);
+}
+let previous = performance.now(),
+  accumulator = 0;
+const ticker = setInterval(() => {
+  const now = performance.now();
+  accumulator += Math.min((now - previous) / 1000, 0.25);
+  previous = now;
+  while (accumulator >= 1 / 60) {
+    sim.tick();
+    accumulator -= 1 / 60;
+  }
+}, 8);
+const server = app.listen(port, "127.0.0.1", () => {
+  console.log(`Simulator API http://127.0.0.1:${port}`);
+  void renderer
+    .start()
+    .catch((e) => console.error("camera_unavailable:", String(e)));
+});
+async function shutdown() {
+  clearInterval(ticker);
+  sim.stop("shutdown");
+  await renderer.close();
+  await logging;
+  server.close();
+  process.exit(0);
+}
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

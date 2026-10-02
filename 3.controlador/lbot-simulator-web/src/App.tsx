@@ -1,57 +1,52 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { parseLbmlSequence } from '../shared/lbml.js';
-import type { ServerEvent } from '../shared/protocol.js';
-import { CameraPreview } from './components/CameraPreview.js';
-import { CommandPanel } from './components/CommandPanel.js';
-import { ErrorBoundary } from './components/ErrorBoundary.js';
-import { SimulatorCanvas, type SimulatorCanvasHandle } from './components/SimulatorCanvas.js';
-import { StatusPanel } from './components/StatusPanel.js';
-import { TopNav } from './components/TopNav.js';
-import { getState, getStatus, pushState, sendCommand, sendReset } from './lib/api.js';
-import { connectToServerEvents, type EventConnection } from './lib/events.js';
-import type { SimulatorSnapshot, StatusMessage } from './simulator/types.js';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { parseLbmlSequence } from "../shared/lbml.js";
+import type { ServerEvent } from "../shared/protocol.js";
+import { CameraPreview } from "./components/CameraPreview.js";
+import { CommandPanel } from "./components/CommandPanel.js";
+import { ErrorBoundary } from "./components/ErrorBoundary.js";
+import {
+  SimulatorCanvas,
+  type SimulatorCanvasHandle,
+} from "./components/SimulatorCanvas.js";
+import { StatusPanel } from "./components/StatusPanel.js";
+import { TopNav } from "./components/TopNav.js";
+import {
+  getState,
+  getStatus,
+  sendCommand,
+  sendReset,
+  sendStop,
+} from "./lib/api.js";
+import { connectToServerEvents, type EventConnection } from "./lib/events.js";
+import type { SimulatorSnapshot, StatusMessage } from "./simulator/types.js";
 
-const DEFAULT_COMMAND = 'D40F;R90L;D20F;';
+const DEFAULT_COMMAND = "D40F;R90L;D20F;";
 
 const INITIAL_SNAPSHOT: SimulatorSnapshot = {
   x: 0,
   z: 0,
   rotation: 0,
   isAnimating: false,
-  currentCommand: '-',
+  currentCommand: "-",
 };
 
 export default function App() {
   const simulatorHandleRef = useRef<SimulatorCanvasHandle | null>(null);
-  const clientIdRef = useRef<string | null>(null);
   const eventConnectionRef = useRef<EventConnection | null>(null);
   const eventQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const [command, setCommand] = useState(DEFAULT_COMMAND);
   const [history, setHistory] = useState<string[]>([]);
   const [connected, setConnected] = useState(false);
-  const [serverStateSummary, setServerStateSummary] = useState('Aguardando conexao com a API');
-  const [cameraModeLabel, setCameraModeLabel] = useState('3a Pessoa');
+  const [serverStateSummary, setServerStateSummary] = useState(
+    "Aguardando conexao com a API",
+  );
+  const [cameraModeLabel, setCameraModeLabel] = useState("3a Pessoa");
   const [snapshot, setSnapshot] = useState<SimulatorSnapshot>(INITIAL_SNAPSHOT);
   const [message, setMessage] = useState<StatusMessage>({
-    kind: 'idle',
-    text: 'Conecte a UI para aceitar comandos via HTTP e via painel local.',
+    kind: "idle",
+    text: "A física roda no servidor; esta interface acompanha o mesmo estado.",
   });
-
-  const syncState = useCallback(async () => {
-    const clientId = clientIdRef.current;
-    const handle = simulatorHandleRef.current;
-
-    if (!clientId || !handle) {
-      return;
-    }
-
-    try {
-      await pushState(clientId, handle.getSnapshot());
-    } catch {
-      // Ignore transient sync failures while reconnecting.
-    }
-  }, []);
 
   const refreshServerSummary = useCallback(async () => {
     try {
@@ -59,8 +54,8 @@ export default function App() {
       setConnected(status.connected);
       setServerStateSummary(
         status.connected
-          ? `Cliente ativo ${status.activeClientId ?? '-'} | fila ${status.pendingEvents}`
-          : 'Nenhuma aba ativa conectada',
+          ? `Servidor ativo | ${status.operation?.status ?? "pronto"} | sessão ${status.session_id.slice(0, 8)}`
+          : "Servidor indisponível",
       );
 
       const nextState = state.state;
@@ -77,7 +72,7 @@ export default function App() {
       }
     } catch {
       setConnected(false);
-      setServerStateSummary('API indisponivel');
+      setServerStateSummary("API indisponivel");
     }
   }, []);
 
@@ -92,36 +87,29 @@ export default function App() {
         return;
       }
 
-      if (event.type === 'ready') {
-        clientIdRef.current = event.clientId;
+      if (event.type === "ready") {
         setConnected(true);
-        setMessage({ kind: 'info', text: 'UI conectada. Esta aba agora aceita comandos HTTP.' });
-        await syncState();
+        setMessage({
+          kind: "info",
+          text: "Interface conectada ao estado do servidor.",
+        });
         await refreshServerSummary();
         return;
       }
 
       const result = await handle.handleRemoteEvent(event);
 
-      if (event.type === 'execute') {
-        addHistory(`${event.source.toUpperCase()}: ${event.command}`);
-      }
-
       if (result) {
         setMessage(result);
       }
 
-      if (event.type === 'disconnect') {
+      if (event.type === "disconnect") {
         setConnected(false);
-        clientIdRef.current = null;
         eventConnectionRef.current?.close();
         eventConnectionRef.current = null;
       }
-
-      await syncState();
-      await refreshServerSummary();
     },
-    [addHistory, refreshServerSummary, syncState],
+    [refreshServerSummary],
   );
 
   const enqueueServerEvent = useCallback(
@@ -131,23 +119,25 @@ export default function App() {
           await runCommandFromServer(event);
         })
         .catch(() => {
-          setMessage({ kind: 'error', text: 'Falha ao processar evento do servidor.' });
+          setMessage({
+            kind: "error",
+            text: "Falha ao processar evento do servidor.",
+          });
         });
     },
     [runCommandFromServer],
   );
 
-  const handleCanvasReady = useCallback(
-    (handle: SimulatorCanvasHandle) => {
-      simulatorHandleRef.current = handle;
-      void syncState();
-    },
-    [syncState],
-  );
-
-  const handleSnapshotChange = useCallback((nextSnapshot: SimulatorSnapshot) => {
-    setSnapshot(nextSnapshot);
+  const handleCanvasReady = useCallback((handle: SimulatorCanvasHandle) => {
+    simulatorHandleRef.current = handle;
   }, []);
+
+  const handleSnapshotChange = useCallback(
+    (nextSnapshot: SimulatorSnapshot) => {
+      setSnapshot(nextSnapshot);
+    },
+    [],
+  );
 
   useEffect(() => {
     refreshServerSummary();
@@ -158,7 +148,7 @@ export default function App() {
       },
       onError() {
         setConnected(false);
-        setServerStateSummary('Conexao com eventos perdida');
+        setServerStateSummary("Conexao com eventos perdida");
       },
     });
 
@@ -173,46 +163,46 @@ export default function App() {
   useEffect(() => {
     const interval = window.setInterval(() => {
       void refreshServerSummary();
-      void syncState();
     }, 2000);
 
     return () => window.clearInterval(interval);
-  }, [refreshServerSummary, syncState]);
+  }, [refreshServerSummary]);
 
   const executeLocally = useCallback(async () => {
     if (!parseLbmlSequence(command)) {
-      setMessage({ kind: 'error', text: 'Comando LBML invalido.' });
+      setMessage({ kind: "error", text: "Comando LBML invalido." });
       return;
     }
 
     try {
-      const response = await sendCommand(command, 'ui');
+      const response = await sendCommand(command, "ui");
       addHistory(`UI: ${response.command}`);
-      setMessage({ kind: 'info', text: 'Comando enviado para execucao.' });
+      setMessage({ kind: "info", text: "Comando enviado para execucao." });
       await refreshServerSummary();
     } catch (error) {
-      setMessage({ kind: 'error', text: toMessage(error) });
+      setMessage({ kind: "error", text: toMessage(error) });
     }
   }, [addHistory, command, refreshServerSummary]);
 
   const resetSimulator = useCallback(async () => {
     try {
-      await sendReset('ui');
-      setMessage({ kind: 'info', text: 'Reset solicitado.' });
+      await sendReset("ui");
+      setMessage({ kind: "info", text: "Reset solicitado." });
       await refreshServerSummary();
     } catch (error) {
-      setMessage({ kind: 'error', text: toMessage(error) });
+      setMessage({ kind: "error", text: toMessage(error) });
     }
   }, [refreshServerSummary]);
 
-  const handlePreviewCanvasReady = useCallback((canvas: HTMLCanvasElement) => {
-    const handle = simulatorHandleRef.current;
-    if (handle) {
-      handle.bindPreviewCanvas(canvas);
-      return () => handle.unbindPreviewCanvas();
+  const stopSimulator = useCallback(async () => {
+    try {
+      await sendStop();
+      setMessage({ kind: "info", text: "Parada confirmada pelo servidor." });
+      await refreshServerSummary();
+    } catch (error) {
+      setMessage({ kind: "error", text: toMessage(error) });
     }
-    return undefined;
-  }, []);
+  }, [refreshServerSummary]);
 
   const toggleCamera = useCallback(() => {
     const handle = simulatorHandleRef.current;
@@ -222,7 +212,7 @@ export default function App() {
     }
 
     const enabled = handle.toggleCamera();
-    setCameraModeLabel(enabled ? 'Vista Normal' : '3a Pessoa');
+    setCameraModeLabel(enabled ? "Vista Normal" : "3a Pessoa");
   }, []);
 
   return (
@@ -238,10 +228,11 @@ export default function App() {
               message={message}
             />
 
-            <CameraPreview
-              connected={connected}
-              onCanvasReady={handlePreviewCanvasReady}
-            />
+            <CameraPreview connected={connected} />
+
+            <button type="button" onClick={() => void stopSimulator()}>
+              Parar robô
+            </button>
 
             <CommandPanel
               value={command}
@@ -274,5 +265,5 @@ function toMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Falha inesperada.';
+  return "Falha inesperada.";
 }

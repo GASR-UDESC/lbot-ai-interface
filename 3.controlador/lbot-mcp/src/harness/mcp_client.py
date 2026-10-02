@@ -27,7 +27,9 @@ class MCPClient:
 
         lbot_mcp_root = os.environ.get(
             "LBOT_MCP_ROOT",
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
         )
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = lbot_mcp_root + "/src" + ":" + env["PYTHONPATH"]
@@ -67,29 +69,39 @@ class MCPClient:
         result = await self._client.list_tools_mcp()
         tools = []
         for tool in result.tools:
-            tools.append({
-                "name": tool.name,
-                "description": tool.description or "",
-                "inputSchema": tool.inputSchema,
-            })
+            tools.append(
+                {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "inputSchema": tool.inputSchema,
+                }
+            )
         return tools
 
-    async def call_tool(self, name: str, arguments: dict[str, Any] | None = None) -> str:
+    async def call_tool(
+        self, name: str, arguments: dict[str, Any] | None = None
+    ) -> dict:
         if self._client is None:
             raise ConnectionError("Cliente não conectado.")
-
         result = await self._client.call_tool_mcp(name, arguments or {})
-
         if result.isError:
-            error_text = ""
-            for content in result.content:
-                if hasattr(content, "text"):
-                    error_text += content.text
-            raise RuntimeError(error_text or f"Erro na ferramenta '{name}'")
+            return {
+                "status": "failed",
+                "reason": "mcp_error",
+                "content": [c.model_dump() for c in result.content],
+            }
+        structured = getattr(result, "structuredContent", None)
+        if structured is not None:
+            return structured
+        import json
 
-        texts = []
-        for content in result.content:
-            if hasattr(content, "text"):
-                texts.append(content.text)
-
-        return "\n".join(texts) if texts else str(result.content)
+        blocks = [c.model_dump() for c in result.content]
+        texts = [c.text for c in result.content if hasattr(c, "text")]
+        if len(texts) == 1:
+            try:
+                value = json.loads(texts[0])
+                if isinstance(value, dict):
+                    return value
+            except ValueError:
+                pass
+        return {"status": "completed", "content": blocks}

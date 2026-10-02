@@ -1,18 +1,20 @@
-import * as THREE from 'three';
-import { ARENA_OBJECTS } from '../../shared/arena-objects.js';
+import * as THREE from "three";
+import { ARENA_OBJECTS, type ArenaObject } from "../../shared/arena-objects.js";
 
-export function createArenaObjects(): THREE.Mesh[] {
+export function createArenaObjects(
+  objects: ArenaObject[] = ARENA_OBJECTS,
+): THREE.Mesh[] {
   const meshes: THREE.Mesh[] = [];
 
-  for (const obj of ARENA_OBJECTS) {
+  for (const obj of objects) {
     let geometry: THREE.BufferGeometry;
     let yPos: number;
 
-    if (obj.type === 'cube') {
+    if (obj.type === "cube") {
       const s = obj.size as { width: number; height: number; depth: number };
       geometry = new THREE.BoxGeometry(s.width, s.height, s.depth);
       yPos = s.height / 2;
-    } else if (obj.type === 'sphere') {
+    } else if (obj.type === "sphere") {
       const s = obj.size as { radius: number };
       geometry = new THREE.SphereGeometry(s.radius, 32, 32);
       yPos = s.radius;

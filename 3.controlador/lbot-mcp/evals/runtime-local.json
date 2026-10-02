@@ -1,0 +1,48 @@
+{
+  "captured_at_utc": "2026-10-02T02:42:50.279995+00:00",
+  "host": {
+    "processor": "Apple M4",
+    "ram_bytes": 17179869184,
+    "platform": "macOS-27.0.1-arm64-arm-64bit"
+  },
+  "model": {
+    "identifier": "qwen3.5-4b",
+    "publisher": "unsloth",
+    "path": "unsloth/Qwen3.5-4B-GGUF/Qwen3.5-4B-Q4_K_S.gguf",
+    "sizeBytes": 3924505440,
+    "quantization": {
+      "name": "Q4_K_S",
+      "bits": 4
+    },
+    "vision": true,
+    "trainedForToolUse": true,
+    "contextLength": 8192,
+    "parallel": 4
+  },
+  "cases_sha256": "1e9f44de049a68901b4c3b73dbbd7dd374935a5d91eb38c259e9fbbb1bf394bc",
+  "software": {
+    "node": "v22.19.0",
+    "base_git_commit": "18fcf2f168955ecda5c2368ca42c03eb8ee041e5",
+    "working_tree_modified": true,
+    "source_sha256": "036290b0a757d5695629e3edae610e506b32423263c2c777445244e1f60a4aca"
+  },
+  "configuration": {
+    "control_temperature": 0.2,
+    "vision_temperature": 0,
+    "seed": 42,
+    "max_completion_tokens": 768,
+    "reasoning_effort": "none",
+    "inference_timeout_s": 60,
+    "skill_timeout_s": 180,
+    "search_budget_s": 150,
+    "episode_timeout_s": 300
+  },
+  "measurement_note": "Model RSS snapshot is separate from shared/Metal GPU memory; it is not a total device memory measurement.",
+  "model_process_samples": [
+    {
+      "pid": 59406,
+      "rss_bytes": 3180609536,
+      "cpu_percent_snapshot": 0.0
+    }
+  ]
+}
